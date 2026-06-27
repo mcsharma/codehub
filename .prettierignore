@@ -1,0 +1,4 @@
+# Generated files — do not reformat (e.g. quote style)
+**/__generated__/**
+**/node_modules/**
+**/dist/**

@@ -1,0 +1,108 @@
+# @generated - This file is generated, DO NOT modify it directly!
+
+type Commit {
+  author: User
+  created_time: Int
+  id: ID
+  message: String
+  repository: Repository
+  sha: String
+}
+
+type Mutation {
+  """No-op mutation for schema compatibility (e.g. Relay)."""
+  noop: Boolean
+}
+
+type PageInfo {
+  endCursor: ID
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: ID
+}
+
+type Query {
+  repository(id: ID!): Repository
+  repository_by_owner_and_name(name: String!, owner_username: String!): Repository
+  user(id: ID!): User
+  user_by_username(username: String!): User
+}
+
+type Repository {
+  collaborators(after: ID, before: ID, first: Int, last: Int): RepositoryCollaboratorsConnection
+  commits(after: ID, before: ID, first: Int, last: Int): RepositoryCommitsConnection
+  created_time: Int
+  id: ID
+  is_deleted: Boolean
+  name: String
+  owner: User
+  private: Boolean
+  updated_time: Int
+}
+
+type RepositoryCollaboratorsConnection {
+  edges: [RepositoryCollaboratorsConnectionEdge]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type RepositoryCollaboratorsConnectionEdge {
+  cursor: ID!
+  node: User
+}
+
+type RepositoryCommitsConnection {
+  edges: [RepositoryCommitsConnectionEdge]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type RepositoryCommitsConnectionEdge {
+  cursor: ID!
+  node: Commit
+}
+
+type User {
+  collaborated_repositories(after: ID, before: ID, first: Int, last: Int): UserCollaborated_repositoriesConnection
+  commits_authored(after: ID, before: ID, first: Int, last: Int): UserCommits_authoredConnection
+  created_time: Int
+  data: String
+  id: ID
+  is_deleted: Boolean
+  owned_repositories(after: ID, before: ID, first: Int, last: Int): UserOwned_repositoriesConnection
+  updated_time: Int
+  username: String
+}
+
+type UserCollaborated_repositoriesConnection {
+  edges: [UserCollaborated_repositoriesConnectionEdge]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type UserCollaborated_repositoriesConnectionEdge {
+  cursor: ID!
+  node: Repository
+}
+
+type UserCommits_authoredConnection {
+  edges: [UserCommits_authoredConnectionEdge]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type UserCommits_authoredConnectionEdge {
+  cursor: ID!
+  node: Commit
+}
+
+type UserOwned_repositoriesConnection {
+  edges: [UserOwned_repositoriesConnectionEdge]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type UserOwned_repositoriesConnectionEdge {
+  cursor: ID!
+  node: Repository
+}

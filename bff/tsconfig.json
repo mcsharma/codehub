@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@bff/*": ["./src/*"]
+    },
+    "module": "NodeNext",
+    "target": "ES2023",
+    "moduleResolution": "NodeNext",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "erasableSyntaxOnly": true,
+    
+    /* Project Reference Settings */
+    "composite": true,          // Essential for monorepo linking
+    "declaration": true,        // Required by composite
+    "declarationMap": true      // Allows 'Go to Definition' to jump to .ts instead of .d.ts
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

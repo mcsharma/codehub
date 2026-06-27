@@ -1,0 +1,42 @@
+  {
+    "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+        "@ch/*": ["src/*"]
+      },
+      /* 1. Core Environment */
+      "module": "ESNext",
+      "target": "ES2023",
+      "lib": ["ES2023", "DOM", "DOM.Iterable"],
+      "types": ["vite/client"],
+      "jsx": "react-jsx",
+      "skipLibCheck": true,
+
+      /* 2. Modern Bundler Mode (Optimized for Vite + Relay) */
+      "moduleResolution": "bundler",
+      "allowImportingTsExtensions": true,
+      "verbatimModuleSyntax": true,
+      "moduleDetection": "force",
+
+      /* 3. Strict Safety Flags (Borrowed from your previous project) */
+      "strict": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noFallthroughCasesInSwitch": true,
+      "noUncheckedSideEffectImports": true,
+      "erasableSyntaxOnly": true, // Ensures fast build times by avoiding complex TS transforms
+      "useDefineForClassFields": true,
+
+      /* 4. Monorepo & Project Reference Architecture */
+      "composite": true,
+      "noEmit": false,                 // Must be false for Project References
+      "emitDeclarationOnly": true,     // Only output type files, not JS
+      "declaration": true,             // Required by composite
+      "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo"
+      },
+    "include": ["src"],
+    "references": [
+      { "path": "../bff" },
+      { "path": "./tsconfig.node.json" }
+    ]
+  }

@@ -1,0 +1,56 @@
+// bff/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator pothos {
+  provider      = "prisma-pothos-types"
+  output        = "../src/__generated__/pothos-prisma-types.ts"
+  clientOutput  = "../../node_modules/@prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ModelUser {
+  id                BigInt       @id @default(autoincrement())
+  createdTime       DateTime     @default(now()) @map("created_time")
+  updatedTime       DateTime     @updatedAt      @map("updated_time")
+  isDeleted         Boolean      @default(false)  @map("is_deleted")
+  username          String       @unique         @map("username")
+  data              Json         @map("data")
+  ownedRepositories    Repository[] @relation("RepositoryOwner")
+  collaboratedRepositories Repository[] @relation("RepositoryCollaborators")
+  commitsAuthored   Commit[]     @relation("CommitAuthor")
+  @@map("users")
+}
+
+model Repository {
+  id            BigInt     @id @default(autoincrement())
+  createdTime   DateTime   @default(now()) @map("created_time")
+  updatedTime   DateTime   @updatedAt      @map("updated_time")
+  isDeleted     Boolean    @default(false)  @map("is_deleted")
+  name          String     @map("name")
+  private       Boolean    @default(false) @map("private")
+  ownerId       BigInt     @map("owner_id")
+  owner         ModelUser  @relation("RepositoryOwner", fields: [ownerId], references: [id])
+  collaborators ModelUser[] @relation("RepositoryCollaborators")
+  commits       Commit[]
+  @@unique([ownerId, name])
+  @@map("repositories")
+}
+
+model Commit {
+  id           BigInt     @id @default(autoincrement())
+  createdTime  DateTime   @default(now()) @map("created_time")
+  repositoryId BigInt     @map("repository_id")
+  repository   Repository @relation(fields: [repositoryId], references: [id])
+  sha          String     @map("sha")
+  message      String?    @map("message")
+  authorId     BigInt?    @map("author_id")
+  author       ModelUser? @relation("CommitAuthor", fields: [authorId], references: [id])
+  @@unique([repositoryId, sha])
+  @@map("commits")
+}
