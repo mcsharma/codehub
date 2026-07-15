@@ -21,6 +21,9 @@
     "declaration": true,        // Required by composite
     "declarationMap": true      // Allows 'Go to Definition' to jump to .ts instead of .d.ts
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*",
+    "node_modules/@prisma/client/index.d.ts"
+  ],
+  "exclude": ["dist"]
 }

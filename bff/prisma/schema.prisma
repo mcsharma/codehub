@@ -21,24 +21,52 @@ model ModelUser {
   isDeleted         Boolean      @default(false)  @map("is_deleted")
   username          String       @unique         @map("username")
   data              Json         @map("data")
+
+  adminOfOrganizations ModelOrganization[] @relation("OrganizationAdmins")
+
   ownedRepositories    Repository[] @relation("RepositoryOwner")
-  collaboratedRepositories Repository[] @relation("RepositoryCollaborators")
+  adminOfRepositories  Repository[] @relation("RepositoryAdmins")
   commitsAuthored   Commit[]     @relation("CommitAuthor")
   @@map("users")
 }
 
+model ModelOrganization {
+  id                BigInt       @id @default(autoincrement())
+  createdTime       DateTime     @default(now()) @map("created_time")
+  updatedTime       DateTime     @updatedAt      @map("updated_time")
+  isDeleted         Boolean      @default(false)  @map("is_deleted")
+  name              String       @unique         @map("name")
+  data              Json         @map("data")
+
+  repositories      Repository[] @relation("OrganizationRepositories")
+  admins            ModelUser[]  @relation("OrganizationAdmins")
+  @@map("organizations")
+}
+
+enum RepositoryVisibility {
+  PUBLIC
+  PRIVATE
+}
+
 model Repository {
-  id            BigInt     @id @default(autoincrement())
-  createdTime   DateTime   @default(now()) @map("created_time")
-  updatedTime   DateTime   @updatedAt      @map("updated_time")
-  isDeleted     Boolean    @default(false)  @map("is_deleted")
-  name          String     @map("name")
-  private       Boolean    @default(false) @map("private")
-  ownerId       BigInt     @map("owner_id")
-  owner         ModelUser  @relation("RepositoryOwner", fields: [ownerId], references: [id])
-  collaborators ModelUser[] @relation("RepositoryCollaborators")
-  commits       Commit[]
-  @@unique([ownerId, name])
+  id                  BigInt             @id @default(autoincrement())
+  createdTime         DateTime           @default(now()) @map("created_time")
+  updatedTime         DateTime           @updatedAt      @map("updated_time")
+  isDeleted           Boolean            @default(false)  @map("is_deleted")
+  name                String             @map("name")
+  visibility          RepositoryVisibility @default(PUBLIC) @map("visibility")
+
+  ownerUserId         BigInt?            @map("owner_user_id")
+  ownerUser           ModelUser?         @relation("RepositoryOwner", fields: [ownerUserId], references: [id])
+
+  ownerOrganizationId BigInt?            @map("owner_organization_id")
+  ownerOrganization   ModelOrganization? @relation("OrganizationRepositories", fields: [ownerOrganizationId], references: [id])
+
+  admins              ModelUser[]  @relation("RepositoryAdmins")
+  commits             Commit[]
+
+  @@unique([ownerUserId, name])
+  @@unique([ownerOrganizationId, name])
   @@map("repositories")
 }
 

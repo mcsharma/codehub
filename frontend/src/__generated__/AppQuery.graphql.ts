@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<98b79b9b70def5d10a95045399cb654a>>
+ * @generated SignedSource<<87a4f3ec1a25b6f3aad9ef8b3bc3dfb7>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -14,12 +14,17 @@ export type AppQuery$variables = {
 };
 export type AppQuery$data = {
   readonly user: {
+    readonly admin_of_organizations: {
+      readonly edges: ReadonlyArray<{
+        readonly node: {
+          readonly data: string | null | undefined;
+          readonly id: string | null | undefined;
+          readonly name: string | null | undefined;
+        } | null | undefined;
+      } | null | undefined> | null | undefined;
+    } | null | undefined;
     readonly data: string | null | undefined;
     readonly id: string | null | undefined;
-    readonly organization: {
-      readonly data: string | null | undefined;
-      readonly id: string | null | undefined;
-    } | null | undefined;
   } | null | undefined;
 };
 export type AppQuery = {
@@ -69,13 +74,42 @@ v3 = [
       {
         "alias": null,
         "args": null,
-        "concreteType": "Organization",
+        "concreteType": "UserAdmin_of_organizationsConnection",
         "kind": "LinkedField",
-        "name": "organization",
+        "name": "admin_of_organizations",
         "plural": false,
         "selections": [
-          (v1/*: any*/),
-          (v2/*: any*/)
+          {
+            "alias": null,
+            "args": null,
+            "concreteType": "UserAdmin_of_organizationsConnectionEdge",
+            "kind": "LinkedField",
+            "name": "edges",
+            "plural": true,
+            "selections": [
+              {
+                "alias": null,
+                "args": null,
+                "concreteType": "Organization",
+                "kind": "LinkedField",
+                "name": "node",
+                "plural": false,
+                "selections": [
+                  (v1/*: any*/),
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
+                    "name": "name",
+                    "storageKey": null
+                  },
+                  (v2/*: any*/)
+                ],
+                "storageKey": null
+              }
+            ],
+            "storageKey": null
+          }
         ],
         "storageKey": null
       }
@@ -101,16 +135,16 @@ return {
     "selections": (v3/*: any*/)
   },
   "params": {
-    "cacheID": "9f7b792420f371a00d7c26bf4b36b212",
+    "cacheID": "f76208ed253922c2de202451bf39f3f3",
     "id": null,
     "metadata": {},
     "name": "AppQuery",
     "operationKind": "query",
-    "text": "query AppQuery(\n  $id: ID!\n) {\n  user(id: $id) {\n    id\n    data\n    organization {\n      id\n      data\n    }\n  }\n}\n"
+    "text": "query AppQuery(\n  $id: ID!\n) {\n  user(id: $id) {\n    id\n    data\n    admin_of_organizations {\n      edges {\n        node {\n          id\n          name\n          data\n        }\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "38144917bd5d7c9441ebf234b747018d";
+(node as any).hash = "ee2b15a16b0f44d8988d973b8a9cbad6";
 
 export default node;

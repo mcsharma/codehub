@@ -1,3 +1,7 @@
 packages:
   - bff
   - frontend
+allowBuilds:
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true

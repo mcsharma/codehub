@@ -14,6 +14,39 @@ type Mutation {
   noop: Boolean
 }
 
+type Organization {
+  admins(after: ID, before: ID, first: Int, last: Int): OrganizationAdminsConnection
+  created_time: Int
+  data: String
+  id: ID
+  is_deleted: Boolean
+  name: String
+  repositories(after: ID, before: ID, first: Int, last: Int): OrganizationRepositoriesConnection
+  updated_time: Int
+}
+
+type OrganizationAdminsConnection {
+  edges: [OrganizationAdminsConnectionEdge]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type OrganizationAdminsConnectionEdge {
+  cursor: ID!
+  node: User
+}
+
+type OrganizationRepositoriesConnection {
+  edges: [OrganizationRepositoriesConnectionEdge]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type OrganizationRepositoriesConnectionEdge {
+  cursor: ID!
+  node: Repository
+}
+
 type PageInfo {
   endCursor: ID
   hasNextPage: Boolean!
@@ -22,6 +55,8 @@ type PageInfo {
 }
 
 type Query {
+  organization(id: ID!): Organization
+  organization_by_name(name: String!): Organization
   repository(id: ID!): Repository
   repository_by_owner_and_name(name: String!, owner_username: String!): Repository
   user(id: ID!): User
@@ -29,24 +64,24 @@ type Query {
 }
 
 type Repository {
-  collaborators(after: ID, before: ID, first: Int, last: Int): RepositoryCollaboratorsConnection
+  admins(after: ID, before: ID, first: Int, last: Int): RepositoryAdminsConnection
   commits(after: ID, before: ID, first: Int, last: Int): RepositoryCommitsConnection
   created_time: Int
   id: ID
   is_deleted: Boolean
   name: String
-  owner: User
-  private: Boolean
+  owner: RepositoryOwner
   updated_time: Int
+  visibility: RepositoryVisibility
 }
 
-type RepositoryCollaboratorsConnection {
-  edges: [RepositoryCollaboratorsConnectionEdge]
+type RepositoryAdminsConnection {
+  edges: [RepositoryAdminsConnectionEdge]
   pageInfo: PageInfo!
   totalCount: Int!
 }
 
-type RepositoryCollaboratorsConnectionEdge {
+type RepositoryAdminsConnectionEdge {
   cursor: ID!
   node: User
 }
@@ -62,25 +97,46 @@ type RepositoryCommitsConnectionEdge {
   node: Commit
 }
 
+union RepositoryOwner = Organization | User
+
+enum RepositoryVisibility {
+  PRIVATE
+  PUBLIC
+}
+
 type User {
-  collaborated_repositories(after: ID, before: ID, first: Int, last: Int): UserCollaborated_repositoriesConnection
+  admin_of_organizations(after: ID, before: ID, first: Int, last: Int): UserAdmin_of_organizationsConnection
+  admin_of_repositories(after: ID, before: ID, first: Int, last: Int): UserAdmin_of_repositoriesConnection
   commits_authored(after: ID, before: ID, first: Int, last: Int): UserCommits_authoredConnection
   created_time: Int
   data: String
+  first_name: String
   id: ID
   is_deleted: Boolean
+  last_name: String
   owned_repositories(after: ID, before: ID, first: Int, last: Int): UserOwned_repositoriesConnection
   updated_time: Int
   username: String
 }
 
-type UserCollaborated_repositoriesConnection {
-  edges: [UserCollaborated_repositoriesConnectionEdge]
+type UserAdmin_of_organizationsConnection {
+  edges: [UserAdmin_of_organizationsConnectionEdge]
   pageInfo: PageInfo!
   totalCount: Int!
 }
 
-type UserCollaborated_repositoriesConnectionEdge {
+type UserAdmin_of_organizationsConnectionEdge {
+  cursor: ID!
+  node: Organization
+}
+
+type UserAdmin_of_repositoriesConnection {
+  edges: [UserAdmin_of_repositoriesConnectionEdge]
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type UserAdmin_of_repositoriesConnectionEdge {
   cursor: ID!
   node: Repository
 }
