@@ -18,23 +18,32 @@ const OwnerPage = () => {
   const data = usePreloadedQuery<OwnerPageQuery>(
     graphql`
       query OwnerPageQuery($name: String!) {
-        user_by_username(username: $name) {
-          id
-        }
-        organization_by_name(name: $name) {
-          id
+        owner_by_name(name: $name) {
+          __typename
+          ... on User {
+            ...UserPage_user
+          }
+          ... on Organization {
+            ...OrgPage_org
+          }
         }
       }
     `,
     ownerQueryRef
   );
 
-  if (data.user_by_username) {
-    return <UserPage />;
+  const owner = data.owner_by_name;
+
+  if (!owner) {
+    return <div>&quot;{ownerQueryRef.variables.name}&quot; not found.</div>;
   }
 
-  if (data.organization_by_name) {
-    return <OrgPage />;
+  if (owner.__typename === "User") {
+    return <UserPage user={owner} />;
+  }
+
+  if (owner.__typename === "Organization") {
+    return <OrgPage org={owner} />;
   }
 
   return <div>&quot;{ownerQueryRef.variables.name}&quot; is not a user or organization.</div>;

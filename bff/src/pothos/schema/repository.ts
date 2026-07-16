@@ -106,3 +106,28 @@ builder.queryField('repository_by_owner_and_name', (t) =>
     },
   }),
 )
+
+builder.queryField('owner_by_name', (t) =>
+  t.field({
+    type: RepositoryOwner,
+    nullable: true,
+    args: {
+      name: t.arg.string({ required: true }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const user = await ctx.prisma.modelUser.findUnique({
+        where: { username: args.name },
+      })
+      if (user) {
+        return user
+      }
+      const org = await ctx.prisma.modelOrganization.findUnique({
+        where: { name: args.name },
+      })
+      if (org) {
+        return org
+      }
+      return null
+    },
+  }),
+)

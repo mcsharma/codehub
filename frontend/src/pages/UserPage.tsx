@@ -1,47 +1,41 @@
-import { graphql, useLazyLoadQuery } from "react-relay";
-import { Link, useParams } from "react-router";
-import type { UserPageQuery } from "./__generated__/UserPageQuery.graphql";
+import { graphql, useFragment } from "react-relay";
+import { Link } from "react-router";
+import type { UserPage_user$key } from "./__generated__/UserPage_user.graphql";
 
-const UserPage = () => {
-  const { name } = useParams<{ name: string }>();
+interface Props {
+  user: UserPage_user$key;
+}
 
-  const data = useLazyLoadQuery<UserPageQuery>(
+const UserPage = ({ user: userRef }: Props) => {
+  const user = useFragment(
     graphql`
-      query UserPageQuery($username: String!) {
-        user_by_username(username: $username) {
-          id
-          username
-          first_name
-          last_name
-          data
-          owned_repositories(first: 20) {
-            edges {
-              node {
-                id
-                name
-                visibility
-              }
+      fragment UserPage_user on User {
+        id
+        username
+        first_name
+        last_name
+        data
+        owned_repositories(first: 20) {
+          edges {
+            node {
+              id
+              name
+              visibility
             }
           }
-          admin_of_organizations(first: 20) {
-            edges {
-              node {
-                id
-                name
-              }
+        }
+        admin_of_organizations(first: 20) {
+          edges {
+            node {
+              id
+              name
             }
           }
         }
       }
     `,
-    { username: name! }
+    userRef
   );
-
-  const user = data.user_by_username;
-
-  if (!user) {
-    return <div>User &quot;{name}&quot; not found.</div>;
-  }
 
   const repos = user.owned_repositories?.edges ?? [];
   const orgs = user.admin_of_organizations?.edges ?? [];

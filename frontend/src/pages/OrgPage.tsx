@@ -1,47 +1,41 @@
-import { graphql, useLazyLoadQuery } from "react-relay";
-import { Link, useParams } from "react-router";
-import type { OrgPageQuery } from "./__generated__/OrgPageQuery.graphql";
+import { graphql, useFragment } from "react-relay";
+import { Link } from "react-router";
+import type { OrgPage_org$key } from "./__generated__/OrgPage_org.graphql";
 
-const OrgPage = () => {
-  const { name } = useParams<{ name: string }>();
+interface Props {
+  org: OrgPage_org$key;
+}
 
-  const data = useLazyLoadQuery<OrgPageQuery>(
+const OrgPage = ({ org: orgRef }: Props) => {
+  const org = useFragment(
     graphql`
-      query OrgPageQuery($name: String!) {
-        organization_by_name(name: $name) {
-          id
-          name
-          data
-          repositories(first: 20) {
-            edges {
-              node {
-                id
-                name
-                visibility
-              }
+      fragment OrgPage_org on Organization {
+        id
+        name
+        data
+        repositories(first: 20) {
+          edges {
+            node {
+              id
+              name
+              visibility
             }
           }
-          admins(first: 20) {
-            edges {
-              node {
-                id
-                username
-                first_name
-                last_name
-              }
+        }
+        admins(first: 20) {
+          edges {
+            node {
+              id
+              username
+              first_name
+              last_name
             }
           }
         }
       }
     `,
-    { name: name! }
+    orgRef
   );
-
-  const org = data.organization_by_name;
-
-  if (!org) {
-    return <div>Organization &quot;{name}&quot; not found.</div>;
-  }
 
   const repos = org.repositories?.edges ?? [];
   const admins = org.admins?.edges ?? [];

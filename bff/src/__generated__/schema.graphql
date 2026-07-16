@@ -57,6 +57,7 @@ type PageInfo {
 type Query {
   organization(id: ID!): Organization
   organization_by_name(name: String!): Organization
+  owner_by_name(name: String!): RepositoryOwner
   repository(id: ID!): Repository
   repository_by_owner_and_name(name: String!, owner_username: String!): Repository
   user(id: ID!): User

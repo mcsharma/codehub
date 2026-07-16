@@ -1,18 +1,22 @@
 /**
- * @generated SignedSource<<b9bc08bf67f45a4a4c828e66a446db44>>
+ * @generated SignedSource<<86acbba81fb710f9e909d586f61821c0>>
  * @lightSyntaxTransform
  * @nogrep
  */
 import { ConcreteRequest } from 'relay-runtime';
+import { FragmentRefs } from "relay-runtime";
 export type OwnerPageQuery$variables = {
     name: string;
 };
 export type OwnerPageQuery$data = {
-    readonly organization_by_name: {
-        readonly id: string | null | undefined;
-    } | null | undefined;
-    readonly user_by_username: {
-        readonly id: string | null | undefined;
+    readonly owner_by_name: {
+        readonly __typename: "Organization";
+        readonly " $fragmentSpreads": FragmentRefs<"OrgPage_org">;
+    } | {
+        readonly __typename: "User";
+        readonly " $fragmentSpreads": FragmentRefs<"UserPage_user">;
+    } | {
+        readonly __typename: "%other";
     } | null | undefined;
 };
 export type OwnerPageQuery = {
