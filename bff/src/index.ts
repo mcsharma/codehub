@@ -7,6 +7,8 @@ import '@bff/pothos/schema/index.js'
 import { prisma } from '@bff/prisma/db.js'
 import { writeFileSync } from 'node:fs'
 import { printSchema, lexicographicSortSchema } from 'graphql'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const app = express()
 const port = process.env.PORT || 4000
@@ -39,6 +41,21 @@ const yoga = createYoga({
 // 4. Bind Yoga to Express
 // We use app.all so it handles GET (for the IDE) and POST (for Relay/queries)
 app.use(yoga.graphqlEndpoint, yoga)
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const frontendDistPath = path.resolve(__dirname, '../../frontend/dist')
+
+// Serve static assets from frontend build directory
+app.use(express.static(frontendDistPath))
+
+// Wildcard route to serve the SPA index.html for client-side routing fallback
+app.get('*any', (req, res) => {
+  res.sendFile(path.join(frontendDistPath, 'index.html'), (err) => {
+    if (err) {
+      res.status(404).send('Frontend build not found. Run "pnpm run build" in frontend first.')
+    }
+  })
+})
 
 app.listen(port, () => {
   console.log(`
