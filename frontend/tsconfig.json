@@ -27,12 +27,8 @@
       "erasableSyntaxOnly": true, // Ensures fast build times by avoiding complex TS transforms
       "useDefineForClassFields": true,
 
-      /* 4. Monorepo & Project Reference Architecture */
-      "composite": true,
-      "noEmit": false,                 // Must be false for Project References
-      "emitDeclarationOnly": true,     // Only output type files, not JS
-      "declaration": true,             // Required by composite
-      "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo"
+      /* 4. Standard SPA Mode (Typecheck only, no output files) */
+      "noEmit": true
       },
     "include": ["src"],
     "references": [

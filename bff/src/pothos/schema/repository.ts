@@ -91,18 +91,29 @@ builder.queryField('repository_by_owner_and_name', (t) =>
       name: t.arg.string({ required: true }),
     },
     resolve: async (_query, _root, args, ctx) => {
-      const owner = await ctx.prisma.modelUser.findUnique({
+      const user = await ctx.prisma.modelUser.findUnique({
         where: { username: args.owner_username },
         select: { id: true },
       })
-      if (!owner) {
-        return null
+      if (user) {
+        return ctx.prisma.repository.findUnique({
+          where: {
+            ownerUserId_name: { ownerUserId: user.id, name: args.name },
+          },
+        })
       }
-      return ctx.prisma.repository.findUnique({
-        where: {
-          ownerUserId_name: { ownerUserId: owner.id, name: args.name },
-        },
+      const org = await ctx.prisma.modelOrganization.findUnique({
+        where: { name: args.owner_username },
+        select: { id: true },
       })
+      if (org) {
+        return ctx.prisma.repository.findUnique({
+          where: {
+            ownerOrganizationId_name: { ownerOrganizationId: org.id, name: args.name },
+          },
+        })
+      }
+      return null
     },
   }),
 )

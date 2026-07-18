@@ -1,12 +1,8 @@
-import { lazy } from "react";
+import React from "react";
 import { createBrowserRouter } from "react-router";
 import { loadQuery } from "react-relay";
 import { RelayEnv } from "@ch/RelayEnvironment";
 import { RootLayout, HomePage } from "@ch/App";
-
-// -- Lazy-loaded page components (JS loads in parallel with data) --
-const OwnerPage = lazy(() => import("./pages/OwnerPage"));
-const RepoPage = lazy(() => import("./pages/RepoPage"));
 
 // -- Import compiled query artifacts for use in loaders --
 // These are tiny generated modules, so they stay in the main bundle.
@@ -33,7 +29,7 @@ export const router = createBrowserRouter([
       },
       {
         path: ":name",
-        Component: OwnerPage,
+        Component: React.lazy(() => import("./pages/OwnerPage")),
         loader: ({ params }) => ({
           ownerQueryRef: loadQuery(RelayEnv, OwnerPageQueryNode, {
             name: params.name!,
@@ -42,7 +38,7 @@ export const router = createBrowserRouter([
       },
       {
         path: ":owner/:repo",
-        Component: RepoPage,
+        Component: React.lazy(() => import("./pages/RepoPage")),
         loader: ({ params }) => ({
           repoQueryRef: loadQuery(RelayEnv, RepoPageQueryNode, {
             owner_username: params.owner!,
