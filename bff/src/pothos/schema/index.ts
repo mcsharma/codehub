@@ -5,6 +5,8 @@ import './user.js'
 import './organization.js'
 import './repository.js'
 import './commit.js'
+import './github.js'
+
 
 // --- Global mutations ---
 

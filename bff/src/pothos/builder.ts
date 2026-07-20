@@ -4,10 +4,11 @@ import PrismaPlugin from '@pothos/plugin-prisma'
 import type PrismaTypes from '@bff/__generated__/pothos-prisma-types.js'
 import { getDatamodel } from '@bff/__generated__/pothos-prisma-types.js'
 import { prisma } from '@bff/prisma/db.js'
+import type { Request } from 'express'
 
 export const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes
-  Context: { prisma: typeof prisma }
+  Context: { prisma: typeof prisma; req: Request }
 }>({
   plugins: [RelayPlugin, PrismaPlugin],
   relay: {
@@ -22,3 +23,4 @@ export const builder = new SchemaBuilder<{
 
 builder.queryType({})
 builder.mutationType({})
+

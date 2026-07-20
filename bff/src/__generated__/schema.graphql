@@ -9,6 +9,34 @@ type Commit {
   sha: String
 }
 
+"""A commit returned from the GitHub API."""
+type GitHubCommit {
+  author_date: String
+  author_name: String
+  html_url: String
+  message: String
+  sha: String
+}
+
+"""A GitHub repository returned from the GitHub API."""
+type GitHubRepository {
+  default_branch: String
+  description: String
+  full_name: String
+  html_url: String
+  id: String
+  name: String
+  private: Boolean
+}
+
+"""A GitHub user profile returned from the GitHub API."""
+type GitHubUser {
+  avatar_url: String
+  html_url: String
+  login: String
+  name: String
+}
+
 type Mutation {
   """No-op mutation for schema compatibility (e.g. Relay)."""
   noop: Boolean
@@ -55,6 +83,14 @@ type PageInfo {
 }
 
 type Query {
+  """Returns commits for a GitHub repository."""
+  github_commits(branch: String, owner: String!, repo: String!): [GitHubCommit!]!
+
+  """Returns repositories the connected GitHub user has access to."""
+  github_repositories: [GitHubRepository!]!
+
+  """Returns the currently connected GitHub user, or null if not connected."""
+  github_viewer: GitHubUser
   organization(id: ID!): Organization
   organization_by_name(name: String!): Organization
   owner_by_name(name: String!): RepositoryOwner

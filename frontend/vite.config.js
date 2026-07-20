@@ -5,7 +5,12 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      babel: {
+        // Suppresses Babel deoptimization warnings for large chunks > 500KB (like pre-bundled node_modules)
+        compact: true,
+      },
+    }),
     relay,
     tsconfigPaths(),
   ],
@@ -17,6 +22,10 @@ export default defineConfig({
         target: 'http://localhost:4000',
         changeOrigin: true,
       },
+      '/auth': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
     },
   },
   build: {
@@ -24,11 +33,9 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            // Split out relay since it's large and specific to graphql operations
             if (id.includes('node_modules/relay-runtime') || id.includes('node_modules/react-relay')) {
               return 'relay';
             }
-            // Put exact React core libraries together
             if (
               id.includes('node_modules/react/') ||
               id.includes('node_modules/react-dom/') ||

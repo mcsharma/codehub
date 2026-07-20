@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router';
 import { RelayEnvironmentProvider } from 'react-relay';
 import { RelayEnv } from '@ch/RelayEnvironment';
 import { router } from '@ch/router';
+import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

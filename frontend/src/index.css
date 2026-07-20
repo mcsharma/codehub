@@ -1,0 +1,26 @@
+/* StyleX CSS entrypoint — the unplugin appends generated atomic CSS here during build.
+   Base resets and CSS custom properties live here too. */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color-scheme: light dark;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+body {
+  background: light-dark(#ffffff, #0d1117);
+  color: light-dark(#1a1a2e, #e6edf3);
+  min-height: 100dvh;
+}
