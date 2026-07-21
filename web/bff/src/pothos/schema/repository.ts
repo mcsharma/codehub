@@ -2,10 +2,51 @@ import { builder } from '../builder.js'
 import { exposeID, exposeTime } from '../field-exposers.js'
 import { requireUser } from '../require-user.js'
 import { RepositoryVisibility, Prisma } from '@prisma/client'
+import type { ModelUser } from '@prisma/client'
 import { GraphQLError } from 'graphql'
 import { UserObject } from './user.js'
 import { OrganizationObject } from './organization.js'
 import { provisionRepoOnVm } from '../../repos/provision-on-vm.js'
+import { fetchBookmarks, fetchShortlog } from '../../repos/hgweb-client.js'
+import { canAccessRepo } from '../../auth/repo-access.js'
+import { resolveCursorConnection } from '@pothos/plugin-relay'
+import type { prisma } from '../../prisma/db.js'
+
+// --- Shared helpers for the hgweb-backed fields below ---
+
+async function resolveOwnerName(
+  repository: { ownerUserId: bigint | null; ownerOrganizationId: bigint | null },
+  db: typeof prisma,
+): Promise<string> {
+  if (repository.ownerUserId) {
+    const user = await db.modelUser.findUnique({
+      where: { id: repository.ownerUserId },
+      select: { username: true },
+    })
+    if (user) return user.username
+  }
+  if (repository.ownerOrganizationId) {
+    const org = await db.modelOrganization.findUnique({
+      where: { id: repository.ownerOrganizationId },
+      select: { name: true },
+    })
+    if (org) return org.name
+  }
+  throw new Error('Repository has no owner')
+}
+
+// Repos are looked up by owner+name again here (rather than trusting the
+// already-loaded `repository` row) because canAccessRepo needs the owner's
+// *name* to re-resolve the repo the same way the wire-protocol auth-check
+// does — same function, same shape, just called from the GraphQL side this
+// time. 404-shaped error (not 403) so unauthorized callers can't tell a
+// private repo apart from one that doesn't exist.
+async function requireRepoReadAccess(user: ModelUser | null, ownerName: string, repoName: string): Promise<void> {
+  const allowed = await canAccessRepo(user, ownerName, repoName, 'read')
+  if (!allowed) {
+    throw new GraphQLError('Repository not found', { extensions: { code: 'NOT_FOUND' } })
+  }
+}
 
 // --- Enums ---
 
@@ -23,6 +64,41 @@ const RepositoryOwner = builder.unionType('RepositoryOwner', {
     }
     return 'Organization'
   },
+})
+
+// --- Commit / Bookmark object types ---
+// Backed by hgweb's JSON style, not Prisma — see repos/hgweb-client.ts.
+
+interface CommitShape {
+  node: string
+  short_node: string
+  author: string
+  date: number
+  description: string
+  branch: string
+  tags: string[]
+  bookmarks: string[]
+}
+
+const CommitObject = builder.objectRef<CommitShape>('Commit').implement({
+  fields: (t) => ({
+    node: t.exposeString('node'),
+    short_node: t.exposeString('short_node'),
+    author: t.exposeString('author'),
+    date: t.exposeInt('date'),
+    description: t.exposeString('description'),
+    branch: t.exposeString('branch'),
+    tags: t.exposeStringList('tags'),
+    bookmarks: t.exposeStringList('bookmarks'),
+  }),
+})
+
+const BookmarkObject = builder.objectRef<{ name: string; node: string; short_node: string }>('Bookmark').implement({
+  fields: (t) => ({
+    name: t.exposeString('name'),
+    node: t.exposeString('node'),
+    short_node: t.exposeString('short_node'),
+  }),
 })
 
 // --- Repository object type ---
@@ -63,6 +139,45 @@ builder.prismaObject('Repository', {
       totalCount: true,
       query: () => ({ orderBy: [{ username: 'asc' }, { id: 'asc' }] }),
     }),
+    bookmarks: t.field({
+      type: [BookmarkObject],
+      resolve: async (repository, _args, ctx) => {
+        const ownerName = await resolveOwnerName(repository, ctx.prisma)
+        await requireRepoReadAccess(ctx.user, ownerName, repository.name)
+        const bookmarks = await fetchBookmarks(ownerName, repository.name)
+        return bookmarks.map((b) => ({ name: b.bookmark, node: b.node, short_node: b.node.slice(0, 12) }))
+      },
+    }),
+    commits: t.connection(
+      {
+        type: CommitObject,
+        resolve: async (repository, args, ctx) => {
+          const ownerName = await resolveOwnerName(repository, ctx.prisma)
+          await requireRepoReadAccess(ctx.user, ownerName, repository.name)
+          return resolveCursorConnection<Promise<CommitShape[]>>(
+            { args, toCursor: (changeset) => changeset.node },
+            async ({ after, before: _before, limit, inverted }) => {
+              if (inverted) {
+                throw new GraphQLError('Paginating commits with `last`/`before` is not supported')
+              }
+              const changesets = await fetchShortlog(ownerName, repository.name, { after, count: limit })
+              return changesets.map((c) => ({
+                node: c.node,
+                short_node: c.node.slice(0, 12),
+                author: c.user,
+                date: Math.floor(c.date[0]),
+                description: c.desc,
+                branch: c.branch,
+                tags: c.tags,
+                bookmarks: c.bookmarks,
+              }))
+            },
+          )
+        },
+      },
+      { name: 'CommitConnection' },
+      { name: 'CommitEdge' },
+    ),
   }),
 })
 

@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import crypto from 'node:crypto'
 import express from 'express'
 import { createYoga } from 'graphql-yoga'
 import cors from 'cors'
@@ -86,6 +87,26 @@ app.get('/internal/auth-check', async (req, res) => {
     // Username is unchecked (same convention GitHub uses for PAT-over-Basic-Auth) —
     // everything after the first colon is treated as the token.
     const token = decoded.slice(decoded.indexOf(':') + 1)
+
+    // The BFF itself is also an hgweb caller (browsing commits/bookmarks via
+    // hgweb's JSON style — see repos/hgweb-client.ts) and authenticates with
+    // this shared secret instead of a PAT. It's safe to bypass canAccessRepo
+    // entirely here because the GraphQL resolver making that call has
+    // already done its own canAccessRepo check for the specific user/repo in
+    // question before ever reaching hgweb — this token just proves the
+    // caller *is* the BFF, not that any particular request is authorized.
+    const internalToken = process.env.HG_INTERNAL_TOKEN
+    const tokenBuf = Buffer.from(token)
+    const internalTokenBuf = Buffer.from(internalToken ?? '')
+    if (
+      internalToken &&
+      tokenBuf.length === internalTokenBuf.length &&
+      crypto.timingSafeEqual(tokenBuf, internalTokenBuf)
+    ) {
+      res.sendStatus(200)
+      return
+    }
+
     user = await resolvePersonalAccessToken(token)
   }
 

@@ -39,6 +39,20 @@ const RepoPage = () => {
               }
             }
           }
+          bookmarks {
+            name
+            short_node
+          }
+          commits(first: 20) {
+            edges {
+              node {
+                short_node
+                description
+                author
+                date
+              }
+            }
+          }
         }
       }
     `,
@@ -57,6 +71,8 @@ const RepoPage = () => {
   }
 
   const admins = repository.admins?.edges ?? [];
+  const bookmarks = repository.bookmarks ?? [];
+  const commits = repository.commits?.edges ?? [];
   const ownerName =
     repository.owner?.__typename === "User"
       ? repository.owner.username
@@ -92,6 +108,41 @@ const RepoPage = () => {
         <p>No admins.</p>
       )}
 
+      <h2>Bookmarks</h2>
+      {bookmarks.length > 0 ? (
+        <ul>
+          {bookmarks.map((bookmark) => (
+            <li key={bookmark.name}>
+              {bookmark.name} ({bookmark.short_node})
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No bookmarks.</p>
+      )}
+
+      <h2>Commits</h2>
+      {commits.length > 0 ? (
+        <ul>
+          {commits.map((edge) => {
+            if (!edge?.node) {
+              return null;
+            }
+            const commit = edge.node;
+            return (
+              <li key={commit.short_node}>
+                <code>{commit.short_node}</code> {commit.description} —{" "}
+                {commit.author},{" "}
+                {commit.date
+                  ? new Date(commit.date * 1000).toLocaleString()
+                  : "unknown date"}
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p>No commits.</p>
+      )}
     </div>
   );
 };

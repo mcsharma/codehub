@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<50ec44d267cb3d1c7a50fa819891643e>>
+ * @generated SignedSource<<2e3cd9c3246f3d75ea7d1e444da5f6b3>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -23,6 +23,20 @@ export type RepoPageQuery$data = {
           readonly id: string | null | undefined;
           readonly last_name: string | null | undefined;
           readonly username: string | null | undefined;
+        } | null | undefined;
+      } | null | undefined> | null | undefined;
+    } | null | undefined;
+    readonly bookmarks: ReadonlyArray<{
+      readonly name: string | null | undefined;
+      readonly short_node: string | null | undefined;
+    }> | null | undefined;
+    readonly commits: {
+      readonly edges: ReadonlyArray<{
+        readonly node: {
+          readonly author: string | null | undefined;
+          readonly date: number | null | undefined;
+          readonly description: string | null | undefined;
+          readonly short_node: string | null | undefined;
         } | null | undefined;
       } | null | undefined> | null | undefined;
     } | null | undefined;
@@ -121,15 +135,16 @@ v9 = {
   "name": "last_name",
   "storageKey": null
 },
-v10 = {
+v10 = [
+  {
+    "kind": "Literal",
+    "name": "first",
+    "value": 20
+  }
+],
+v11 = {
   "alias": null,
-  "args": [
-    {
-      "kind": "Literal",
-      "name": "first",
-      "value": 20
-    }
-  ],
+  "args": (v10/*: any*/),
   "concreteType": "RepositoryAdminsConnection",
   "kind": "LinkedField",
   "name": "admins",
@@ -163,6 +178,81 @@ v10 = {
     }
   ],
   "storageKey": "admins(first:20)"
+},
+v12 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "short_node",
+  "storageKey": null
+},
+v13 = {
+  "alias": null,
+  "args": null,
+  "concreteType": "Bookmark",
+  "kind": "LinkedField",
+  "name": "bookmarks",
+  "plural": true,
+  "selections": [
+    (v4/*: any*/),
+    (v12/*: any*/)
+  ],
+  "storageKey": null
+},
+v14 = {
+  "alias": null,
+  "args": (v10/*: any*/),
+  "concreteType": "CommitConnection",
+  "kind": "LinkedField",
+  "name": "commits",
+  "plural": false,
+  "selections": [
+    {
+      "alias": null,
+      "args": null,
+      "concreteType": "CommitEdge",
+      "kind": "LinkedField",
+      "name": "edges",
+      "plural": true,
+      "selections": [
+        {
+          "alias": null,
+          "args": null,
+          "concreteType": "Commit",
+          "kind": "LinkedField",
+          "name": "node",
+          "plural": false,
+          "selections": [
+            (v12/*: any*/),
+            {
+              "alias": null,
+              "args": null,
+              "kind": "ScalarField",
+              "name": "description",
+              "storageKey": null
+            },
+            {
+              "alias": null,
+              "args": null,
+              "kind": "ScalarField",
+              "name": "author",
+              "storageKey": null
+            },
+            {
+              "alias": null,
+              "args": null,
+              "kind": "ScalarField",
+              "name": "date",
+              "storageKey": null
+            }
+          ],
+          "storageKey": null
+        }
+      ],
+      "storageKey": null
+    }
+  ],
+  "storageKey": "commits(first:20)"
 };
 return {
   "fragment": {
@@ -215,7 +305,9 @@ return {
             ],
             "storageKey": null
           },
-          (v10/*: any*/)
+          (v11/*: any*/),
+          (v13/*: any*/),
+          (v14/*: any*/)
         ],
         "storageKey": null
       }
@@ -275,23 +367,25 @@ return {
             ],
             "storageKey": null
           },
-          (v10/*: any*/)
+          (v11/*: any*/),
+          (v13/*: any*/),
+          (v14/*: any*/)
         ],
         "storageKey": null
       }
     ]
   },
   "params": {
-    "cacheID": "95072e6b0c2deafeeab852e8b8933ca4",
+    "cacheID": "8d56275537b6ce746ab90080f04585b1",
     "id": null,
     "metadata": {},
     "name": "RepoPageQuery",
     "operationKind": "query",
-    "text": "query RepoPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    id\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        first_name\n        last_name\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    admins(first: 20) {\n      edges {\n        node {\n          id\n          username\n          first_name\n          last_name\n        }\n      }\n    }\n  }\n}\n"
+    "text": "query RepoPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    id\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        first_name\n        last_name\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    admins(first: 20) {\n      edges {\n        node {\n          id\n          username\n          first_name\n          last_name\n        }\n      }\n    }\n    bookmarks {\n      name\n      short_node\n    }\n    commits(first: 20) {\n      edges {\n        node {\n          short_node\n          description\n          author\n          date\n        }\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "99f8fcb27aa0fc426eed4462ee8bdbe6";
+(node as any).hash = "f8171360400ea1b1fff5cdb032c945de";
 
 export default node;

@@ -1,5 +1,32 @@
 # @generated - This file is generated, DO NOT modify it directly!
 
+type Bookmark {
+  name: String
+  node: String
+  short_node: String
+}
+
+type Commit {
+  author: String
+  bookmarks: [String!]
+  branch: String
+  date: Int
+  description: String
+  node: String
+  short_node: String
+  tags: [String!]
+}
+
+type CommitConnection {
+  edges: [CommitEdge]
+  pageInfo: PageInfo!
+}
+
+type CommitEdge {
+  cursor: ID!
+  node: Commit
+}
+
 type CreatePersonalAccessTokenResult {
   id: ID
   label: String
@@ -80,6 +107,8 @@ type Query {
 
 type Repository {
   admins(after: ID, before: ID, first: Int, last: Int): RepositoryAdminsConnection
+  bookmarks: [Bookmark!]
+  commits(after: ID, before: ID, first: Int, last: Int): CommitConnection
   created_time: Int
   id: ID
   is_deleted: Boolean
