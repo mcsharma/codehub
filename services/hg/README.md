@@ -39,10 +39,12 @@ follow-up, not yet built.
 ## Redeploying a change
 
 ```bash
-scp hgweb.ini root@143.110.207.184:/etc/hgweb.ini
-scp hgweb_wsgi.py root@143.110.207.184:/opt/hgservice/hgweb_wsgi.py
-ssh root@143.110.207.184 'rm -rf /opt/hgservice/__pycache__; systemctl restart hgweb'
-
-scp nginx-hgweb.conf root@143.110.207.184:/etc/nginx/sites-enabled/hgweb
-ssh root@143.110.207.184 'nginx -t && systemctl reload nginx'
+./deploy.sh          # or ./deploy.sh --dry-run to preview first
 ```
+
+Change-detects each file in the table above against what's already on the VM
+(sha256, over SSH) and only touches the service(s) actually affected —
+`hgweb.ini`/`hgweb_wsgi.py`/`hgweb.service` changes restart `hgweb`
+(`daemon-reload` first if the unit file itself changed), `nginx-hgweb.conf`
+changes run `nginx -t` before reloading. Verifies `hgweb` is active again
+after a restart; fails loudly if not.
