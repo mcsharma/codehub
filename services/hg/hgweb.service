@@ -1,0 +1,12 @@
+[Unit]
+Description=hgweb WSGI server
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/hgservice
+ExecStart=/opt/hgservice/venv/bin/gunicorn --bind 127.0.0.1:8000 hgweb_wsgi:application
+Restart=always
+User=hgservice
+
+[Install]
+WantedBy=multi-user.target
