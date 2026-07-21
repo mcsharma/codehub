@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<28cabc62e7d36768c0703c66a0f609d6>>
+ * @generated SignedSource<<6be0332b91759d55bc3e446ebe14a446>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -20,7 +20,6 @@ export type UserPage_user$data = {
       } | null | undefined;
     } | null | undefined> | null | undefined;
   } | null | undefined;
-  readonly data: string | null | undefined;
   readonly first_name: string | null | undefined;
   readonly id: string | null | undefined;
   readonly last_name: string | null | undefined;
@@ -89,13 +88,6 @@ return {
       "args": null,
       "kind": "ScalarField",
       "name": "last_name",
-      "storageKey": null
-    },
-    {
-      "alias": null,
-      "args": null,
-      "kind": "ScalarField",
-      "name": "data",
       "storageKey": null
     },
     {
@@ -181,6 +173,6 @@ return {
 };
 })();
 
-(node as any).hash = "3cea1c69903cb62367a2a17cd4488ca6";
+(node as any).hash = "41d88f0ea33c8b6bb4cf37a4aa50db21";
 
 export default node;

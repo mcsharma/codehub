@@ -98,6 +98,9 @@ const HomePage = ({ homeQueryRef }: HomePageProps) => {
             <Typography color="text.secondary">
               Hi, {data.current_user.first_name ?? data.current_user.username}
             </Typography>
+            <Button variant="contained" component={Link} to="/new">
+              New repository
+            </Button>
             <Button variant="outlined" disabled={isLoggingOut} onClick={handleLogout}>
               Logout
             </Button>
@@ -129,7 +132,7 @@ const RootLayout = () => {
         >
           <Toolbar>
             <MuiLink
-              component={Link as any}
+              component={Link}
               to="/"
               sx={{
                 fontSize: "1.5rem",

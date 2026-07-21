@@ -14,7 +14,6 @@ const UserPage = ({ user: userRef }: Props) => {
         username
         first_name
         last_name
-        data
         owned_repositories(first: 20) {
           edges {
             node {

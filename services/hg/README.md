@@ -12,6 +12,14 @@ edit here and re-deploy, don't hand-edit on the box.
 | `hgweb_wsgi.py`       | `/opt/hgservice/hgweb_wsgi.py`       |
 | `hgweb.service`       | `/etc/systemd/system/hgweb.service`  |
 | `nginx-hgweb.conf`    | `/etc/nginx/sites-enabled/hgweb`     |
+| `create-repo.sh`      | `/opt/hgservice/create-repo.sh`      |
+
+`create-repo.sh` is the forced-command target for a dedicated SSH key the BFF
+uses to provision new repos on demand (see
+`web/bff/src/repos/provision-on-vm.ts`) — installed in `hgservice`'s
+`authorized_keys` with `command="/opt/hgservice/create-repo.sh"`, so that key
+can never run anything else. Not the human deploy key used for the commands
+below.
 
 ## Stack
 

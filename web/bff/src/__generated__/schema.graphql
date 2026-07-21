@@ -8,6 +8,7 @@ type CreatePersonalAccessTokenResult {
 
 type Mutation {
   create_personal_access_token(label: String!): CreatePersonalAccessTokenResult
+  create_repository(name: String!, visibility: RepositoryVisibility!): Repository
   logout: Boolean
 
   """No-op mutation for schema compatibility (e.g. Relay)."""
@@ -110,12 +111,12 @@ type User {
   admin_of_organizations(after: ID, before: ID, first: Int, last: Int): UserAdmin_of_organizationsConnection
   admin_of_repositories(after: ID, before: ID, first: Int, last: Int): UserAdmin_of_repositoriesConnection
   created_time: Int
-  data: String
   first_name: String
   id: ID
   is_deleted: Boolean
   last_name: String
   owned_repositories(after: ID, before: ID, first: Int, last: Int): UserOwned_repositoriesConnection
+  primary_email: String
   updated_time: Int
   username: String
 }

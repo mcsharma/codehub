@@ -1,5 +1,6 @@
 import { builder } from '../builder.js'
 import { exposeID, exposeTime } from '../field-exposers.js'
+import { requireUser } from '../require-user.js'
 import { createPersonalAccessToken } from '../../auth/personal-access-token.js'
 
 // --- PersonalAccessToken object type ---
@@ -52,8 +53,8 @@ builder.mutationField('create_personal_access_token', (t) =>
     type: CreatePersonalAccessTokenResult,
     args: { label: t.arg.string({ required: true }) },
     resolve: async (_root, args, ctx) => {
-      if (!ctx.user) throw new Error('Not authenticated')
-      const { id, rawToken } = await createPersonalAccessToken(ctx.user.id, args.label)
+      const user = requireUser(ctx.user)
+      const { id, rawToken } = await createPersonalAccessToken(user.id, args.label)
       return { id: String(id), label: args.label, token: rawToken }
     },
   }),
@@ -63,9 +64,9 @@ builder.mutationField('revoke_personal_access_token', (t) =>
   t.boolean({
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
-      if (!ctx.user) throw new Error('Not authenticated')
+      const user = requireUser(ctx.user)
       const { count } = await ctx.prisma.personalAccessToken.deleteMany({
-        where: { id: BigInt(args.id), userId: ctx.user.id },
+        where: { id: BigInt(args.id), userId: user.id },
       })
       return count > 0
     },

@@ -1,8 +1,11 @@
 import { builder } from '../builder.js'
 import { exposeID, exposeTime } from '../field-exposers.js'
-import { RepositoryVisibility } from '@prisma/client'
+import { requireUser } from '../require-user.js'
+import { RepositoryVisibility, Prisma } from '@prisma/client'
+import { GraphQLError } from 'graphql'
 import { UserObject } from './user.js'
 import { OrganizationObject } from './organization.js'
+import { provisionRepoOnVm } from '../../repos/provision-on-vm.js'
 
 // --- Enums ---
 
@@ -109,6 +112,55 @@ builder.queryField('repository_by_owner_and_name', (t) =>
         })
       }
       return null
+    },
+  }),
+)
+
+// --- Repository mutations ---
+
+builder.mutationField('create_repository', (t) =>
+  t.prismaField({
+    type: 'Repository',
+    args: {
+      name: t.arg.string({ required: true }),
+      visibility: t.arg({ type: RepositoryVisibility, required: true }),
+    },
+    resolve: async (_query, _root, args, ctx) => {
+      const user = requireUser(ctx.user)
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$/.test(args.name)) {
+        throw new GraphQLError('Invalid repository name')
+      }
+
+      let repo
+      try {
+        repo = await ctx.prisma.repository.create({
+          data: {
+            name: args.name,
+            visibility: args.visibility,
+            ownerUserId: user.id,
+          },
+        })
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+          throw new GraphQLError('You already have a repository with this name')
+        }
+        throw err
+      }
+
+      try {
+        await provisionRepoOnVm(user.username, args.name)
+      } catch (err) {
+        // Compensating rollback — don't leave a Repository row with no
+        // matching on-disk repo.
+        await ctx.prisma.repository.delete({ where: { id: repo.id } })
+        // GraphQLError's `originalError` option would re-trigger yoga's
+        // masking (it re-evaluates based on the wrapped error) — log
+        // server-side instead, and throw a plain client-facing message.
+        console.error('VM repo provisioning failed:', err)
+        throw new GraphQLError('Failed to provision repository, please try again')
+      }
+
+      return repo
     },
   }),
 )

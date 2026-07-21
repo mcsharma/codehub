@@ -55,6 +55,14 @@ deploy_file hgweb.service /etc/systemd/system/hgweb.service && service_changed=t
 nginx_changed=false
 deploy_file nginx-hgweb.conf /etc/nginx/sites-enabled/hgweb && nginx_changed=true
 
+# No service restart needed — invoked fresh per-SSH-connection via the
+# forced-command authorized_keys entry, not loaded into a long-running process.
+create_repo_changed=false
+if deploy_file create-repo.sh /opt/hgservice/create-repo.sh; then
+  create_repo_changed=true
+  run ssh "$HOST" 'chmod +x /opt/hgservice/create-repo.sh'
+fi
+
 if $service_changed; then
   echo "-- hgweb.service changed: reloading systemd + restarting hgweb --"
   run ssh "$HOST" 'systemctl daemon-reload && rm -rf /opt/hgservice/__pycache__ && systemctl restart hgweb'
@@ -76,7 +84,7 @@ if $nginx_changed; then
   run ssh "$HOST" 'nginx -t && systemctl reload nginx'
 fi
 
-if ! $hg_changed && ! $service_changed && ! $nginx_changed; then
+if ! $hg_changed && ! $service_changed && ! $nginx_changed && ! $create_repo_changed; then
   echo "Nothing changed — VM already up to date."
 fi
 

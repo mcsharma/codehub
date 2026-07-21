@@ -12,25 +12,33 @@ export const UserObject = builder.prismaObject('ModelUser', {
     updated_time: exposeTime(t, 'updatedTime'),
     is_deleted: t.exposeBoolean('isDeleted'),
     username: t.exposeString('username'),
+    primary_email: t.exposeString('primaryEmail'),
     first_name: t.string({
       nullable: true,
       resolve: (parent) => {
-        const data = typeof parent.data === 'string' ? JSON.parse(parent.data) : parent.data
-        return (data as Record<string, unknown>).first_name as string | undefined ?? null
+        const data =
+          typeof parent.data === 'string'
+            ? JSON.parse(parent.data)
+            : parent.data
+        return (
+          ((data as Record<string, unknown>).first_name as
+            | string
+            | undefined) ?? null
+        )
       },
     }),
     last_name: t.string({
       nullable: true,
       resolve: (parent) => {
-        const data = typeof parent.data === 'string' ? JSON.parse(parent.data) : parent.data
-        return (data as Record<string, unknown>).last_name as string | undefined ?? null
+        const data =
+          typeof parent.data === 'string'
+            ? JSON.parse(parent.data)
+            : parent.data
+        return (
+          ((data as Record<string, unknown>).last_name as string | undefined) ??
+          null
+        )
       },
-    }),
-    data: t.string({
-      resolve: (parent) =>
-        typeof parent.data === 'string'
-          ? parent.data
-          : JSON.stringify(parent.data),
     }),
     admin_of_organizations: t.relatedConnection('adminOfOrganizations', {
       cursor: 'id',
@@ -90,7 +98,9 @@ builder.mutationField('logout', (t) =>
   t.boolean({
     resolve: async (_root, _args, ctx) => {
       if (ctx.session) {
-        await ctx.prisma.session.delete({ where: { id: ctx.session.id } }).catch(() => {})
+        await ctx.prisma.session
+          .delete({ where: { id: ctx.session.id } })
+          .catch(() => {})
       }
       clearSessionCookie(ctx.res)
       return true

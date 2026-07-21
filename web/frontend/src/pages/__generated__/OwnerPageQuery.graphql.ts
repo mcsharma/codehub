@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<86acbba81fb710f9e909d586f61821c0>>
+ * @generated SignedSource<<b2d6887379eae74c2a5331bb93236206>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -81,28 +81,21 @@ v6 = {
   "name": "last_name",
   "storageKey": null
 },
-v7 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "data",
-  "storageKey": null
-},
-v8 = [
+v7 = [
   {
     "kind": "Literal",
     "name": "first",
     "value": 20
   }
 ],
-v9 = {
+v8 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
   "name": "name",
   "storageKey": null
 },
-v10 = [
+v9 = [
   {
     "alias": null,
     "args": null,
@@ -112,7 +105,7 @@ v10 = [
     "plural": false,
     "selections": [
       (v3/*: any*/),
-      (v9/*: any*/),
+      (v8/*: any*/),
       {
         "alias": null,
         "args": null,
@@ -193,10 +186,9 @@ return {
               (v4/*: any*/),
               (v5/*: any*/),
               (v6/*: any*/),
-              (v7/*: any*/),
               {
                 "alias": null,
-                "args": (v8/*: any*/),
+                "args": (v7/*: any*/),
                 "concreteType": "UserOwned_repositoriesConnection",
                 "kind": "LinkedField",
                 "name": "owned_repositories",
@@ -209,7 +201,7 @@ return {
                     "kind": "LinkedField",
                     "name": "edges",
                     "plural": true,
-                    "selections": (v10/*: any*/),
+                    "selections": (v9/*: any*/),
                     "storageKey": null
                   }
                 ],
@@ -217,7 +209,7 @@ return {
               },
               {
                 "alias": null,
-                "args": (v8/*: any*/),
+                "args": (v7/*: any*/),
                 "concreteType": "UserAdmin_of_organizationsConnection",
                 "kind": "LinkedField",
                 "name": "admin_of_organizations",
@@ -240,7 +232,7 @@ return {
                         "plural": false,
                         "selections": [
                           (v3/*: any*/),
-                          (v9/*: any*/)
+                          (v8/*: any*/)
                         ],
                         "storageKey": null
                       }
@@ -258,11 +250,17 @@ return {
             "kind": "InlineFragment",
             "selections": [
               (v3/*: any*/),
-              (v9/*: any*/),
-              (v7/*: any*/),
+              (v8/*: any*/),
               {
                 "alias": null,
-                "args": (v8/*: any*/),
+                "args": null,
+                "kind": "ScalarField",
+                "name": "data",
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": (v7/*: any*/),
                 "concreteType": "OrganizationRepositoriesConnection",
                 "kind": "LinkedField",
                 "name": "repositories",
@@ -275,7 +273,7 @@ return {
                     "kind": "LinkedField",
                     "name": "edges",
                     "plural": true,
-                    "selections": (v10/*: any*/),
+                    "selections": (v9/*: any*/),
                     "storageKey": null
                   }
                 ],
@@ -283,7 +281,7 @@ return {
               },
               {
                 "alias": null,
-                "args": (v8/*: any*/),
+                "args": (v7/*: any*/),
                 "concreteType": "OrganizationAdminsConnection",
                 "kind": "LinkedField",
                 "name": "admins",
@@ -328,12 +326,12 @@ return {
     ]
   },
   "params": {
-    "cacheID": "aa2cc1a41a9bb8e1e8eded9101ffb643",
+    "cacheID": "6b179f428fc213253c48fe147b795cb2",
     "id": null,
     "metadata": {},
     "name": "OwnerPageQuery",
     "operationKind": "query",
-    "text": "query OwnerPageQuery(\n  $name: String!\n) {\n  owner_by_name(name: $name) {\n    __typename\n    ... on User {\n      ...UserPage_user\n      id\n    }\n    ... on Organization {\n      ...OrgPage_org\n      id\n    }\n  }\n}\n\nfragment OrgPage_org on Organization {\n  id\n  name\n  data\n  repositories(first: 20) {\n    edges {\n      node {\n        id\n        name\n        visibility\n      }\n    }\n  }\n  admins(first: 20) {\n    edges {\n      node {\n        id\n        username\n        first_name\n        last_name\n      }\n    }\n  }\n}\n\nfragment UserPage_user on User {\n  id\n  username\n  first_name\n  last_name\n  data\n  owned_repositories(first: 20) {\n    edges {\n      node {\n        id\n        name\n        visibility\n      }\n    }\n  }\n  admin_of_organizations(first: 20) {\n    edges {\n      node {\n        id\n        name\n      }\n    }\n  }\n}\n"
+    "text": "query OwnerPageQuery(\n  $name: String!\n) {\n  owner_by_name(name: $name) {\n    __typename\n    ... on User {\n      ...UserPage_user\n      id\n    }\n    ... on Organization {\n      ...OrgPage_org\n      id\n    }\n  }\n}\n\nfragment OrgPage_org on Organization {\n  id\n  name\n  data\n  repositories(first: 20) {\n    edges {\n      node {\n        id\n        name\n        visibility\n      }\n    }\n  }\n  admins(first: 20) {\n    edges {\n      node {\n        id\n        username\n        first_name\n        last_name\n      }\n    }\n  }\n}\n\nfragment UserPage_user on User {\n  id\n  username\n  first_name\n  last_name\n  owned_repositories(first: 20) {\n    edges {\n      node {\n        id\n        name\n        visibility\n      }\n    }\n  }\n  admin_of_organizations(first: 20) {\n    edges {\n      node {\n        id\n        name\n      }\n    }\n  }\n}\n"
   }
 };
 })();

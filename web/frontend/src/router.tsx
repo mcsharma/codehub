@@ -12,6 +12,7 @@ import type { PreloadedQuery } from "react-relay";
 import AppHomePageQueryNode from "./__generated__/AppHomePageQuery.graphql";
 import OwnerPageQueryNode from "./pages/__generated__/OwnerPageQuery.graphql";
 import RepoPageQueryNode from "./pages/__generated__/RepoPageQuery.graphql";
+import NewRepoPageQueryNode from "./pages/__generated__/NewRepoPageQuery.graphql";
 
 /**
  * Thin wrapper for the home route — reads the preloaded query ref from the
@@ -45,6 +46,17 @@ export const router = createBrowserRouter([
           homeQueryRef: loadQuery(RelayEnv, AppHomePageQueryNode, {}),
         }),
         Component: HomePageRoute,
+      },
+      {
+        // Static path — React Router ranks static segments above dynamic
+        // params, so this always wins over the ":name" route below on an
+        // exact match, regardless of declaration order. Makes "new" an
+        // unusable username going forward, same as GitHub reserving words.
+        path: "new",
+        Component: React.lazy(() => import("./pages/NewRepoPage")),
+        loader: () => ({
+          newRepoQueryRef: loadQuery(RelayEnv, NewRepoPageQueryNode, {}),
+        }),
       },
       {
         path: ":name",
