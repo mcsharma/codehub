@@ -12,7 +12,6 @@ import type { PreloadedQuery } from "react-relay";
 import AppHomePageQueryNode from "./__generated__/AppHomePageQuery.graphql";
 import OwnerPageQueryNode from "./pages/__generated__/OwnerPageQuery.graphql";
 import RepoPageQueryNode from "./pages/__generated__/RepoPageQuery.graphql";
-import GitHubRepoPageQueryNode from "./pages/__generated__/GitHubRepoPageQuery.graphql";
 
 /**
  * Thin wrapper for the home route — reads the preloaded query ref from the
@@ -63,16 +62,6 @@ export const router = createBrowserRouter([
           repoQueryRef: loadQuery(RelayEnv, RepoPageQueryNode, {
             owner_username: params.owner!,
             name: params.repo!,
-          }),
-        }),
-      },
-      {
-        path: "github/:owner/:repo",
-        Component: React.lazy(() => import("./pages/GitHubRepoPage")),
-        loader: ({ params }) => ({
-          githubRepoQueryRef: loadQuery(RelayEnv, GitHubRepoPageQueryNode, {
-            owner: params.owner!,
-            repo: params.repo!,
           }),
         }),
       },

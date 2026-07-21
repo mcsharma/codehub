@@ -46,11 +46,6 @@ export const UserObject = builder.prismaObject('ModelUser', {
       totalCount: true,
       query: () => ({ orderBy: [{ createdTime: 'desc' }, { id: 'desc' }] }),
     }),
-    commits_authored: t.relatedConnection('commitsAuthored', {
-      cursor: 'id',
-      totalCount: true,
-      query: () => ({ orderBy: [{ createdTime: 'desc' }, { id: 'desc' }] }),
-    }),
   }),
 })
 

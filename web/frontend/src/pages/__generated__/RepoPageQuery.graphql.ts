@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<74c5eb198c6faffa7494a2b6343f632e>>
+ * @generated SignedSource<<50ec44d267cb3d1c7a50fa819891643e>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -23,20 +23,6 @@ export type RepoPageQuery$data = {
           readonly id: string | null | undefined;
           readonly last_name: string | null | undefined;
           readonly username: string | null | undefined;
-        } | null | undefined;
-      } | null | undefined> | null | undefined;
-    } | null | undefined;
-    readonly commits: {
-      readonly edges: ReadonlyArray<{
-        readonly node: {
-          readonly author: {
-            readonly first_name: string | null | undefined;
-            readonly last_name: string | null | undefined;
-            readonly username: string | null | undefined;
-          } | null | undefined;
-          readonly id: string | null | undefined;
-          readonly message: string | null | undefined;
-          readonly sha: string | null | undefined;
         } | null | undefined;
       } | null | undefined> | null | undefined;
     } | null | undefined;
@@ -135,35 +121,15 @@ v9 = {
   "name": "last_name",
   "storageKey": null
 },
-v10 = [
-  (v7/*: any*/),
-  (v8/*: any*/),
-  (v9/*: any*/)
-],
-v11 = [
-  {
-    "kind": "Literal",
-    "name": "first",
-    "value": 20
-  }
-],
-v12 = {
+v10 = {
   "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "sha",
-  "storageKey": null
-},
-v13 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "message",
-  "storageKey": null
-},
-v14 = {
-  "alias": null,
-  "args": (v11/*: any*/),
+  "args": [
+    {
+      "kind": "Literal",
+      "name": "first",
+      "value": 20
+    }
+  ],
   "concreteType": "RepositoryAdminsConnection",
   "kind": "LinkedField",
   "name": "admins",
@@ -197,13 +163,7 @@ v14 = {
     }
   ],
   "storageKey": "admins(first:20)"
-},
-v15 = [
-  (v7/*: any*/),
-  (v8/*: any*/),
-  (v9/*: any*/),
-  (v3/*: any*/)
-];
+};
 return {
   "fragment": {
     "argumentDefinitions": [
@@ -236,7 +196,11 @@ return {
               (v6/*: any*/),
               {
                 "kind": "InlineFragment",
-                "selections": (v10/*: any*/),
+                "selections": [
+                  (v7/*: any*/),
+                  (v8/*: any*/),
+                  (v9/*: any*/)
+                ],
                 "type": "User",
                 "abstractKey": null
               },
@@ -251,53 +215,7 @@ return {
             ],
             "storageKey": null
           },
-          {
-            "alias": null,
-            "args": (v11/*: any*/),
-            "concreteType": "RepositoryCommitsConnection",
-            "kind": "LinkedField",
-            "name": "commits",
-            "plural": false,
-            "selections": [
-              {
-                "alias": null,
-                "args": null,
-                "concreteType": "RepositoryCommitsConnectionEdge",
-                "kind": "LinkedField",
-                "name": "edges",
-                "plural": true,
-                "selections": [
-                  {
-                    "alias": null,
-                    "args": null,
-                    "concreteType": "Commit",
-                    "kind": "LinkedField",
-                    "name": "node",
-                    "plural": false,
-                    "selections": [
-                      (v3/*: any*/),
-                      (v12/*: any*/),
-                      (v13/*: any*/),
-                      {
-                        "alias": null,
-                        "args": null,
-                        "concreteType": "User",
-                        "kind": "LinkedField",
-                        "name": "author",
-                        "plural": false,
-                        "selections": (v10/*: any*/),
-                        "storageKey": null
-                      }
-                    ],
-                    "storageKey": null
-                  }
-                ],
-                "storageKey": null
-              }
-            ],
-            "storageKey": "commits(first:20)"
-          },
-          (v14/*: any*/)
+          (v10/*: any*/)
         ],
         "storageKey": null
       }
@@ -336,7 +254,12 @@ return {
               (v6/*: any*/),
               {
                 "kind": "InlineFragment",
-                "selections": (v15/*: any*/),
+                "selections": [
+                  (v7/*: any*/),
+                  (v8/*: any*/),
+                  (v9/*: any*/),
+                  (v3/*: any*/)
+                ],
                 "type": "User",
                 "abstractKey": null
               },
@@ -352,69 +275,23 @@ return {
             ],
             "storageKey": null
           },
-          {
-            "alias": null,
-            "args": (v11/*: any*/),
-            "concreteType": "RepositoryCommitsConnection",
-            "kind": "LinkedField",
-            "name": "commits",
-            "plural": false,
-            "selections": [
-              {
-                "alias": null,
-                "args": null,
-                "concreteType": "RepositoryCommitsConnectionEdge",
-                "kind": "LinkedField",
-                "name": "edges",
-                "plural": true,
-                "selections": [
-                  {
-                    "alias": null,
-                    "args": null,
-                    "concreteType": "Commit",
-                    "kind": "LinkedField",
-                    "name": "node",
-                    "plural": false,
-                    "selections": [
-                      (v3/*: any*/),
-                      (v12/*: any*/),
-                      (v13/*: any*/),
-                      {
-                        "alias": null,
-                        "args": null,
-                        "concreteType": "User",
-                        "kind": "LinkedField",
-                        "name": "author",
-                        "plural": false,
-                        "selections": (v15/*: any*/),
-                        "storageKey": null
-                      }
-                    ],
-                    "storageKey": null
-                  }
-                ],
-                "storageKey": null
-              }
-            ],
-            "storageKey": "commits(first:20)"
-          },
-          (v14/*: any*/)
+          (v10/*: any*/)
         ],
         "storageKey": null
       }
     ]
   },
   "params": {
-    "cacheID": "80b4b007baa48c501eaaabe5e32b4206",
+    "cacheID": "95072e6b0c2deafeeab852e8b8933ca4",
     "id": null,
     "metadata": {},
     "name": "RepoPageQuery",
     "operationKind": "query",
-    "text": "query RepoPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    id\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        first_name\n        last_name\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    commits(first: 20) {\n      edges {\n        node {\n          id\n          sha\n          message\n          author {\n            username\n            first_name\n            last_name\n            id\n          }\n        }\n      }\n    }\n    admins(first: 20) {\n      edges {\n        node {\n          id\n          username\n          first_name\n          last_name\n        }\n      }\n    }\n  }\n}\n"
+    "text": "query RepoPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    id\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        first_name\n        last_name\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    admins(first: 20) {\n      edges {\n        node {\n          id\n          username\n          first_name\n          last_name\n        }\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "2e2c8164abd23f0b4fab09bd299b571e";
+(node as any).hash = "99f8fcb27aa0fc426eed4462ee8bdbe6";
 
 export default node;

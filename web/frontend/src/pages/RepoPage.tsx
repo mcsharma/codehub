@@ -29,20 +29,6 @@ const RepoPage = () => {
               name
             }
           }
-          commits(first: 20) {
-            edges {
-              node {
-                id
-                sha
-                message
-                author {
-                  username
-                  first_name
-                  last_name
-                }
-              }
-            }
-          }
           admins(first: 20) {
             edges {
               node {
@@ -70,7 +56,6 @@ const RepoPage = () => {
     );
   }
 
-  const commits = repository.commits?.edges ?? [];
   const admins = repository.admins?.edges ?? [];
   const ownerName =
     repository.owner?.__typename === "User"
@@ -107,32 +92,6 @@ const RepoPage = () => {
         <p>No admins.</p>
       )}
 
-      <h2>Commits</h2>
-      {commits.length > 0 ? (
-        <ul>
-          {commits.map((edge) => {
-            if (!edge?.node) {
-              return null;
-            }
-            return (
-              <li key={edge.node.id}>
-                <code>{edge.node.sha}</code> — {edge.node.message ?? "(no message)"}
-                {edge.node.author && (
-                  <>
-                    {" "}
-                    by{" "}
-                    <Link to={`/${edge.node.author.username}`}>
-                      {edge.node.author.first_name} {edge.node.author.last_name}
-                    </Link>
-                  </>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p>No commits.</p>
-      )}
     </div>
   );
 };

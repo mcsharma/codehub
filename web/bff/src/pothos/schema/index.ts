@@ -4,11 +4,16 @@ import { builder } from '../builder.js'
 import './user.js'
 import './organization.js'
 import './repository.js'
-import './commit.js'
-import './github.js'
 
 
-// --- Global mutations ---
+// --- Global queries/mutations ---
+
+builder.queryField('noop', (t) =>
+  t.boolean({
+    resolve: () => true,
+    description: 'No-op query for schema compatibility (e.g. Relay).',
+  }),
+)
 
 builder.mutationField('noop', (t) =>
   t.boolean({

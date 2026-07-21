@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "generate": "prisma generate && node scripts/postgenerate.mjs",
     "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
     "seed": "prisma db seed",
     "studio": "prisma studio",
     "build": "tsc",

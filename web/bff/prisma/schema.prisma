@@ -26,7 +26,6 @@ model ModelUser {
 
   ownedRepositories    Repository[] @relation("RepositoryOwner")
   adminOfRepositories  Repository[] @relation("RepositoryAdmins")
-  commitsAuthored   Commit[]     @relation("CommitAuthor")
   @@map("users")
 }
 
@@ -63,22 +62,9 @@ model Repository {
   ownerOrganization   ModelOrganization? @relation("OrganizationRepositories", fields: [ownerOrganizationId], references: [id])
 
   admins              ModelUser[]  @relation("RepositoryAdmins")
-  commits             Commit[]
 
   @@unique([ownerUserId, name])
   @@unique([ownerOrganizationId, name])
   @@map("repositories")
 }
 
-model Commit {
-  id           BigInt     @id @default(autoincrement())
-  createdTime  DateTime   @default(now()) @map("created_time")
-  repositoryId BigInt     @map("repository_id")
-  repository   Repository @relation(fields: [repositoryId], references: [id])
-  sha          String     @map("sha")
-  message      String?    @map("message")
-  authorId     BigInt?    @map("author_id")
-  author       ModelUser? @relation("CommitAuthor", fields: [authorId], references: [id])
-  @@unique([repositoryId, sha])
-  @@map("commits")
-}

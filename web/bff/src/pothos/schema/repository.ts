@@ -60,11 +60,6 @@ builder.prismaObject('Repository', {
       totalCount: true,
       query: () => ({ orderBy: [{ username: 'asc' }, { id: 'asc' }] }),
     }),
-    commits: t.relatedConnection('commits', {
-      cursor: 'id',
-      totalCount: true,
-      query: () => ({ orderBy: [{ createdTime: 'desc' }, { id: 'desc' }] }),
-    }),
   }),
 })
 

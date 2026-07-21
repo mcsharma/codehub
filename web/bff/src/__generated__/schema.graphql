@@ -1,42 +1,5 @@
 # @generated - This file is generated, DO NOT modify it directly!
 
-type Commit {
-  author: User
-  created_time: Int
-  id: ID
-  message: String
-  repository: Repository
-  sha: String
-}
-
-"""A commit returned from the GitHub API."""
-type GitHubCommit {
-  author_date: String
-  author_name: String
-  html_url: String
-  message: String
-  sha: String
-}
-
-"""A GitHub repository returned from the GitHub API."""
-type GitHubRepository {
-  default_branch: String
-  description: String
-  full_name: String
-  html_url: String
-  id: String
-  name: String
-  private: Boolean
-}
-
-"""A GitHub user profile returned from the GitHub API."""
-type GitHubUser {
-  avatar_url: String
-  html_url: String
-  login: String
-  name: String
-}
-
 type Mutation {
   """No-op mutation for schema compatibility (e.g. Relay)."""
   noop: Boolean
@@ -83,14 +46,8 @@ type PageInfo {
 }
 
 type Query {
-  """Returns commits for a GitHub repository."""
-  github_commits(branch: String, owner: String!, repo: String!): [GitHubCommit!]!
-
-  """Returns repositories the connected GitHub user has access to."""
-  github_repositories: [GitHubRepository!]!
-
-  """Returns the currently connected GitHub user, or null if not connected."""
-  github_viewer: GitHubUser
+  """No-op query for schema compatibility (e.g. Relay)."""
+  noop: Boolean
   organization(id: ID!): Organization
   organization_by_name(name: String!): Organization
   owner_by_name(name: String!): RepositoryOwner
@@ -102,7 +59,6 @@ type Query {
 
 type Repository {
   admins(after: ID, before: ID, first: Int, last: Int): RepositoryAdminsConnection
-  commits(after: ID, before: ID, first: Int, last: Int): RepositoryCommitsConnection
   created_time: Int
   id: ID
   is_deleted: Boolean
@@ -123,17 +79,6 @@ type RepositoryAdminsConnectionEdge {
   node: User
 }
 
-type RepositoryCommitsConnection {
-  edges: [RepositoryCommitsConnectionEdge]
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-type RepositoryCommitsConnectionEdge {
-  cursor: ID!
-  node: Commit
-}
-
 union RepositoryOwner = Organization | User
 
 enum RepositoryVisibility {
@@ -144,7 +89,6 @@ enum RepositoryVisibility {
 type User {
   admin_of_organizations(after: ID, before: ID, first: Int, last: Int): UserAdmin_of_organizationsConnection
   admin_of_repositories(after: ID, before: ID, first: Int, last: Int): UserAdmin_of_repositoriesConnection
-  commits_authored(after: ID, before: ID, first: Int, last: Int): UserCommits_authoredConnection
   created_time: Int
   data: String
   first_name: String
@@ -176,17 +120,6 @@ type UserAdmin_of_repositoriesConnection {
 type UserAdmin_of_repositoriesConnectionEdge {
   cursor: ID!
   node: Repository
-}
-
-type UserCommits_authoredConnection {
-  edges: [UserCommits_authoredConnectionEdge]
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-type UserCommits_authoredConnectionEdge {
-  cursor: ID!
-  node: Commit
 }
 
 type UserOwned_repositoriesConnection {

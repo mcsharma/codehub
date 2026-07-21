@@ -1,6 +1,3 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateEnum
 CREATE TYPE "RepositoryVisibility" AS ENUM ('PUBLIC', 'PRIVATE');
 
@@ -43,18 +40,6 @@ CREATE TABLE "repositories" (
 );
 
 -- CreateTable
-CREATE TABLE "commits" (
-    "id" BIGSERIAL NOT NULL,
-    "created_time" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "repository_id" BIGINT NOT NULL,
-    "sha" TEXT NOT NULL,
-    "message" TEXT,
-    "author_id" BIGINT,
-
-    CONSTRAINT "commits_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "_RepositoryAdmins" (
     "A" BIGINT NOT NULL,
     "B" BIGINT NOT NULL,
@@ -83,9 +68,6 @@ CREATE UNIQUE INDEX "repositories_owner_user_id_name_key" ON "repositories"("own
 CREATE UNIQUE INDEX "repositories_owner_organization_id_name_key" ON "repositories"("owner_organization_id", "name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "commits_repository_id_sha_key" ON "commits"("repository_id", "sha");
-
--- CreateIndex
 CREATE INDEX "_RepositoryAdmins_B_index" ON "_RepositoryAdmins"("B");
 
 -- CreateIndex
@@ -96,12 +78,6 @@ ALTER TABLE "repositories" ADD CONSTRAINT "repositories_owner_user_id_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "repositories" ADD CONSTRAINT "repositories_owner_organization_id_fkey" FOREIGN KEY ("owner_organization_id") REFERENCES "organizations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "commits" ADD CONSTRAINT "commits_repository_id_fkey" FOREIGN KEY ("repository_id") REFERENCES "repositories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "commits" ADD CONSTRAINT "commits_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_RepositoryAdmins" ADD CONSTRAINT "_RepositoryAdmins_A_fkey" FOREIGN KEY ("A") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
