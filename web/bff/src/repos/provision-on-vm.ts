@@ -32,6 +32,10 @@ export async function provisionRepoOnVm(ownerUsername: string, repoName: string)
                 reject(new Error(`VM repo provisioning failed (exit ${code}): ${stderr.trim()}`))
               }
             })
+            // The channel must be drained or ssh2 never emits 'close' on it —
+            // stdout isn't otherwise interesting (the script's only real
+            // output is "OK"), so this is a no-op sink.
+            .on('data', () => {})
             .stderr.on('data', (data: Buffer) => {
               stderr += data.toString()
             })
@@ -42,6 +46,7 @@ export async function provisionRepoOnVm(ownerUsername: string, repoName: string)
         host: HG_VM_HOST,
         username: 'hgservice',
         privateKey,
+        readyTimeout: 10_000,
       })
   })
 }
