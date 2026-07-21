@@ -78,9 +78,11 @@ app.listen(port, () => {
   `)
 })
 
-const GENERATED_HEADER =
-  '# @generated - This file is generated, DO NOT modify it directly!\n\n'
-const schemaAsString =
-  GENERATED_HEADER + printSchema(lexicographicSortSchema(builder.toSchema()))
-writeFileSync('./src/__generated__/schema.graphql', schemaAsString)
+if (process.env.NODE_ENV !== 'production') {
+  const GENERATED_HEADER =
+    '# @generated - This file is generated, DO NOT modify it directly!\n\n'
+  const schemaAsString =
+    GENERATED_HEADER + printSchema(lexicographicSortSchema(builder.toSchema()))
+  writeFileSync('./src/__generated__/schema.graphql', schemaAsString)
+}
 
