@@ -1,10 +1,18 @@
 # @generated - This file is generated, DO NOT modify it directly!
 
+type CreatePersonalAccessTokenResult {
+  id: ID
+  label: String
+  token: String
+}
+
 type Mutation {
+  create_personal_access_token(label: String!): CreatePersonalAccessTokenResult
   logout: Boolean
 
   """No-op mutation for schema compatibility (e.g. Relay)."""
   noop: Boolean
+  revoke_personal_access_token(id: ID!): Boolean
 }
 
 type Organization {
@@ -47,8 +55,16 @@ type PageInfo {
   startCursor: ID
 }
 
+type PersonalAccessToken {
+  created_time: Int
+  id: ID
+  label: String
+  last_used_time: Int
+}
+
 type Query {
   current_user: User
+  my_personal_access_tokens: [PersonalAccessToken!]
 
   """No-op query for schema compatibility (e.g. Relay)."""
   noop: Boolean

@@ -4,6 +4,7 @@ import { builder } from '../builder.js'
 import './user.js'
 import './organization.js'
 import './repository.js'
+import './personal_access_token.js'
 
 
 // --- Global queries/mutations ---

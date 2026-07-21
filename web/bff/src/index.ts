@@ -9,6 +9,8 @@ import './pothos/schema/index.js'
 import { prisma } from './prisma/db.js'
 import { googleAuthRouter } from './auth/google.js'
 import { SESSION_COOKIE, resolveSession } from './auth/session.js'
+import { resolvePersonalAccessToken } from './auth/personal-access-token.js'
+import { canAccessRepo } from './auth/repo-access.js'
 import { writeFileSync } from 'node:fs'
 import { printSchema, lexicographicSortSchema } from 'graphql'
 import path from 'node:path'
@@ -39,23 +41,61 @@ app.use(
 app.use(cookieParser())
 
 // 4. Internal auth-check — called by nginx `auth_request` in front of hgweb
-// (see services/hg/README.md). Always allows for now; real per-tenant
-// permission checks are a deliberate follow-up.
-app.get('/internal/auth-check', (_req, res) => {
-  res.sendStatus(200)
+// (see services/hg/README.md). nginx forwards the original request's path/method
+// via X-Original-URI/X-Original-Method (it can't infer them from its own
+// subrequest URI), and the original Authorization header comes through
+// automatically since auth_request subrequests carry the original headers.
+app.get('/internal/auth-check', async (req, res) => {
+  const originalUri = req.header('x-original-uri') ?? ''
+  // handle the request GET /alice/private-lib?cmd=capabilities HTTP/1.1
+  const [path, query] = originalUri.split('?')
+  const [, ownerName, repoName] = path.split('/')
+  if (!ownerName || !repoName) {
+    res.sendStatus(400)
+    return
+  }
+
+  let user = null
+  const authHeader = req.header('authorization')
+  if (authHeader?.startsWith('Basic ')) {
+    const decoded = Buffer.from(
+      authHeader.slice('Basic '.length),
+      'base64',
+    ).toString('utf8')
+    // Username is unchecked (same convention GitHub uses for PAT-over-Basic-Auth) —
+    // everything after the first colon is treated as the token.
+    const token = decoded.slice(decoded.indexOf(':') + 1)
+    user = await resolvePersonalAccessToken(token)
+  }
+
+  // Classify by the wire-protocol `cmd`, not HTTP method: `unbundle` (push) is
+  // always POST, but Mercurial's `httppostargs` feature also sends large *read*
+  // commands like `getbundle` as POST once their arguments would overflow HTTP
+  // header limits — so GET-vs-POST alone would wrongly deny big pulls/clones to
+  // read-only users. `cmd` stays in the query string even when the rest of the
+  // arguments move into the POST body.
+  const cmd = new URLSearchParams(query ?? '').get('cmd')
+  const action = cmd === 'unbundle' ? 'write' : 'read'
+  const allowed = await canAccessRepo(user, ownerName, repoName, action)
+  res.sendStatus(allowed ? 200 : 401)
 })
 
 // 4b. Login routes (Google OAuth today, more providers later).
 app.use('/auth', googleAuthRouter)
 
 // 5. GraphQL Yoga Setup
-type ExpressServerContext = { req: import('express').Request; res: import('express').Response }
+type ExpressServerContext = {
+  req: import('express').Request
+  res: import('express').Response
+}
 const yoga = createYoga<ExpressServerContext>({
   schema: builder.toSchema(),
   graphqlEndpoint: '/graphql',
   context: async (ctx) => {
     const rawToken = ctx.req.cookies?.[SESSION_COOKIE]
-    const { user, session } = rawToken ? await resolveSession(rawToken) : { user: null, session: null }
+    const { user, session } = rawToken
+      ? await resolveSession(rawToken)
+      : { user: null, session: null }
     return { prisma, req: ctx.req, res: ctx.res, user, session }
   },
 })
@@ -63,7 +103,10 @@ const yoga = createYoga<ExpressServerContext>({
 // 6. Bind Yoga to Express
 // We use app.all so it handles GET (for the IDE) and POST (for Relay/queries)
 // Cast needed because the generic TServerContext on yoga doesn't match Express's Application overload directly.
-app.use(yoga.graphqlEndpoint, yoga as unknown as import('express').RequestHandler)
+app.use(
+  yoga.graphqlEndpoint,
+  yoga as unknown as import('express').RequestHandler,
+)
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const frontendDistPath = path.resolve(__dirname, '../../frontend/dist')
@@ -75,7 +118,11 @@ app.use(express.static(frontendDistPath))
 app.get('*any', (req, res) => {
   res.sendFile(path.join(frontendDistPath, 'index.html'), (err) => {
     if (err) {
-      res.status(404).send('Frontend build not found. Run "pnpm run build" in frontend first.')
+      res
+        .status(404)
+        .send(
+          'Frontend build not found. Run "pnpm run build" in frontend first.',
+        )
     }
   })
 })
@@ -94,4 +141,3 @@ if (process.env.NODE_ENV !== 'production') {
     GENERATED_HEADER + printSchema(lexicographicSortSchema(builder.toSchema()))
   writeFileSync('./src/__generated__/schema.graphql', schemaAsString)
 }
-
