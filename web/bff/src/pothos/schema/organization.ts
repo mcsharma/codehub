@@ -1,5 +1,5 @@
-import { builder } from '@bff/pothos/builder.js'
-import { exposeID, exposeTime } from '@bff/pothos/field-exposers.js'
+import { builder } from '../builder.js'
+import { exposeID, exposeTime } from '../field-exposers.js'
 
 // --- Organization object type ---
 

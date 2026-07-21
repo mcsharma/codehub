@@ -1,4 +1,4 @@
-import { builder } from '@bff/pothos/builder.js'
+import { builder } from '../builder.js'
 
 // Import all schema modules — each registers its types and queries on the shared builder.
 import './user.js'

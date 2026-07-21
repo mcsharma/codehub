@@ -1,4 +1,4 @@
-import { builder } from '@bff/pothos/builder.js'
+import { builder } from '../builder.js'
 
 // --- Shared helper: make authenticated GitHub API calls ---
 

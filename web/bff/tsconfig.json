@@ -1,9 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@bff/*": ["./src/*"]
-    },
     "module": "NodeNext",
     "target": "ES2023",
     "moduleResolution": "NodeNext",

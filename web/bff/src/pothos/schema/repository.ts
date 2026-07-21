@@ -1,5 +1,5 @@
-import { builder } from '@bff/pothos/builder.js'
-import { exposeID, exposeTime } from '@bff/pothos/field-exposers.js'
+import { builder } from '../builder.js'
+import { exposeID, exposeTime } from '../field-exposers.js'
 import { RepositoryVisibility } from '@prisma/client'
 import { UserObject } from './user.js'
 import { OrganizationObject } from './organization.js'
