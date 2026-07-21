@@ -28,6 +28,27 @@ app.use(
   }),
 )
 
+// 1b. Relaxed CSP for the GraphiQL IDE page only (production).
+// Yoga's built-in GraphiQL HTML loads its JS/CSS bundle from unpkg.com and
+// runs it via inline <script> tags with no nonce support, which the default
+// CSP above blocks — that's why /graphql got stuck on "Loading __TITLE__...".
+// Scoped to this route only so the rest of the app keeps the strict default.
+if (process.env.NODE_ENV === 'production') {
+  app.use(
+    '/graphql',
+    helmet.contentSecurityPolicy({
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        'script-src': ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
+        'style-src': ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
+        'worker-src': ["'self'", 'blob:'],
+        'connect-src': ["'self'", 'https://unpkg.com'],
+        'img-src': ["'self'", 'data:', 'https://raw.githubusercontent.com'],
+      },
+    }),
+  )
+}
+
 // 2. CORS Configuration
 // This allows your Vite frontend (localhost:5173) to talk to this API.
 app.use(
