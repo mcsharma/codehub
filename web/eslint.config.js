@@ -37,30 +37,8 @@ export default defineConfig([
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       
-      // Enforce Absolute Imports for Frontend
-      'no-restricted-imports': ['error', {
-        'patterns': [{
-          'group': ['./*', '../*'],
-          'message': 'Please use absolute imports starting with "@ch/" instead of relative paths.'
-        }]
-      }],
-
       // Relay Logic
       ...relay.configs.recommended.rules,
     },
   },
-
-  // --- BFF Specific Rules ---
-  {
-    files: ['bff/src/**/*.ts'],
-    rules: {
-      // Enforce Absolute Imports for BFF
-      'no-restricted-imports': ['error', {
-        'patterns': [{
-          'group': ['./*', '../*'],
-          'message': 'Please use absolute imports starting with "@bff/" instead of relative paths.'
-        }]
-      }],
-    }
-  }
 ]);

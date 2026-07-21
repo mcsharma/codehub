@@ -1,9 +1,5 @@
   {
     "compilerOptions": {
-      "baseUrl": ".",
-      "paths": {
-        "@ch/*": ["src/*"]
-      },
       /* 1. Core Environment */
       "module": "ESNext",
       "target": "ES2023",

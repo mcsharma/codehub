@@ -2,8 +2,8 @@ import React from "react";
 import { createBrowserRouter } from "react-router";
 import { loadQuery } from "react-relay";
 import { useLoaderData } from "react-router";
-import { RelayEnv } from "@ch/RelayEnvironment";
-import { RootLayout, HomePage } from "@ch/App";
+import { RelayEnv } from "./RelayEnvironment";
+import { RootLayout, HomePage } from "./App";
 import type { AppHomePageQuery } from "./__generated__/AppHomePageQuery.graphql";
 import type { PreloadedQuery } from "react-relay";
 
