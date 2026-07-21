@@ -20,13 +20,45 @@ model ModelUser {
   updatedTime       DateTime     @updatedAt      @map("updated_time")
   isDeleted         Boolean      @default(false)  @map("is_deleted")
   username          String       @unique         @map("username")
+  primaryEmail      String?      @unique         @map("primary_email")
   data              Json         @map("data")
 
   adminOfOrganizations ModelOrganization[] @relation("OrganizationAdmins")
 
   ownedRepositories    Repository[] @relation("RepositoryOwner")
   adminOfRepositories  Repository[] @relation("RepositoryAdmins")
+
+  authIdentities       AuthIdentity[]
+  sessions             Session[]
   @@map("users")
+}
+
+enum AuthProvider {
+  GOOGLE
+}
+
+model AuthIdentity {
+  id                BigInt       @id @default(autoincrement())
+  createdTime       DateTime     @default(now()) @map("created_time")
+  userId            BigInt       @map("user_id")
+  user              ModelUser    @relation(fields: [userId], references: [id])
+  provider          AuthProvider
+  providerAccountId String       @map("provider_account_id")
+  email             String
+
+  @@unique([provider, providerAccountId])
+  @@map("auth_identities")
+}
+
+model Session {
+  id          BigInt    @id @default(autoincrement())
+  createdTime DateTime  @default(now()) @map("created_time")
+  expiresAt   DateTime  @map("expires_at")
+  tokenHash   String    @unique @map("token_hash")
+  userId      BigInt    @map("user_id")
+  user        ModelUser @relation(fields: [userId], references: [id])
+
+  @@map("sessions")
 }
 
 model ModelOrganization {

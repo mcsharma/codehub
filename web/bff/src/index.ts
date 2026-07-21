@@ -7,6 +7,8 @@ import cookieParser from 'cookie-parser'
 import { builder } from './pothos/builder.js'
 import './pothos/schema/index.js'
 import { prisma } from './prisma/db.js'
+import { googleAuthRouter } from './auth/google.js'
+import { SESSION_COOKIE, resolveSession } from './auth/session.js'
 import { writeFileSync } from 'node:fs'
 import { printSchema, lexicographicSortSchema } from 'graphql'
 import path from 'node:path'
@@ -43,12 +45,19 @@ app.get('/internal/auth-check', (_req, res) => {
   res.sendStatus(200)
 })
 
+// 4b. Login routes (Google OAuth today, more providers later).
+app.use('/auth', googleAuthRouter)
+
 // 5. GraphQL Yoga Setup
 type ExpressServerContext = { req: import('express').Request; res: import('express').Response }
 const yoga = createYoga<ExpressServerContext>({
   schema: builder.toSchema(),
   graphqlEndpoint: '/graphql',
-  context: (ctx) => ({ prisma, req: ctx.req }),
+  context: async (ctx) => {
+    const rawToken = ctx.req.cookies?.[SESSION_COOKIE]
+    const { user, session } = rawToken ? await resolveSession(rawToken) : { user: null, session: null }
+    return { prisma, req: ctx.req, res: ctx.res, user, session }
+  },
 })
 
 // 6. Bind Yoga to Express

@@ -1,21 +1,17 @@
 import { Suspense } from "react";
-import { graphql, usePreloadedQuery } from "react-relay";
+import { graphql, usePreloadedQuery, useMutation } from "react-relay";
 import { Link, Outlet } from "react-router";
 import type { PreloadedQuery } from "react-relay";
 import type { AppHomePageQuery } from "./__generated__/AppHomePageQuery.graphql";
+import type { AppLogoutMutation } from "./__generated__/AppLogoutMutation.graphql";
 
 import Container from "@mui/material/Container";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
-import Stack from "@mui/material/Stack";
 import MuiLink from "@mui/material/Link";
-import GroupIcon from "@mui/icons-material/Group";
-import BusinessIcon from "@mui/icons-material/Business";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 
@@ -58,131 +54,59 @@ const darkTheme = createTheme({
 });
 
 const HomePage = ({ homeQueryRef }: HomePageProps) => {
-  usePreloadedQuery<AppHomePageQuery>(
+  const data = usePreloadedQuery<AppHomePageQuery>(
     graphql`
       query AppHomePageQuery {
         noop
+        current_user {
+          id
+          username
+          first_name
+          last_name
+        }
       }
     `,
     homeQueryRef
   );
 
-  const seededUsers = [
-    { username: "alice", first: "Alice", last: "Chen", bio: "Full-stack engineer", color: "#f9826c" },
-    { username: "bob", first: "Bob", last: "Martinez", bio: "Backend specialist", color: "#6f42c1" },
-    { username: "carol", first: "Carol", last: "Nguyen", bio: "DevOps & infra", color: "#2ea043" },
-    { username: "dave", first: "Dave", last: "Kim", bio: "Frontend developer", color: "#005cc5" },
-  ];
+  const [commitLogout, isLoggingOut] = useMutation<AppLogoutMutation>(graphql`
+    mutation AppLogoutMutation {
+      logout
+    }
+  `);
 
-  const seededOrgs = [
-    { name: "coder-co", desc: "The developer company" },
-    { name: "open-source-collective", desc: "Community-driven open source projects" },
-  ];
+  const handleLogout = () => {
+    commitLogout({
+      variables: {},
+      onCompleted: () => window.location.reload(),
+    });
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: 4, display: "flex", flexDirection: "column", gap: 4 }}>
-      <Box>
-        <Typography variant="h4" sx={{ fontWeight: "bold", color: "#f0f6fc", mb: 1 }}>
-          Welcome to CodeHub
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Explore organizations, developers, and metadata repositories below.
-        </Typography>
-      </Box>
-
-      {/* Users Section */}
-      <Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2, borderBottom: "1px solid #30363d", pb: 1 }}>
-          <GroupIcon sx={{ color: "primary.main" }} />
-          <Typography variant="h5" sx={{ fontWeight: "bold", color: "#f0f6fc" }}>
-            Developers
+      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: "bold", color: "#f0f6fc", mb: 1 }}>
+            Welcome to CodeHub
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Explore organizations, developers, and metadata repositories below.
           </Typography>
         </Box>
-        <Stack spacing={2}>
-          {seededUsers.map((u) => (
-            <Card
-              key={u.username}
-              variant="outlined"
-              sx={{
-                transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                  borderColor: "#58a6ff",
-                  boxShadow: "0 4px 12px rgba(88, 166, 255, 0.15)",
-                },
-              }}
-            >
-              <CardContent sx={{ display: "flex", alignItems: "center", gap: 2, "&:last-child": { pb: 2 } }}>
-                <Avatar sx={{ bgcolor: u.color, color: "#ffffff", fontWeight: "bold" }}>
-                  {u.first[0]}
-                </Avatar>
-                <Box sx={{ flexGrow: 1 }}>
-                  <MuiLink
-                    component={Link as any}
-                    to={`/${u.username}`}
-                    sx={{
-                      fontWeight: "bold",
-                      fontSize: "1.1rem",
-                      color: "#58a6ff",
-                      textDecoration: "none",
-                      "&:hover": { textDecoration: "underline" },
-                    }}
-                  >
-                    {u.first} {u.last}
-                  </MuiLink>
-                  <Typography variant="body2" color="text.secondary">
-                    @{u.username} &bull; {u.bio}
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
-        </Stack>
-      </Box>
-
-      {/* Orgs Section */}
-      <Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2, borderBottom: "1px solid #30363d", pb: 1 }}>
-          <BusinessIcon sx={{ color: "primary.main" }} />
-          <Typography variant="h5" sx={{ fontWeight: "bold", color: "#f0f6fc" }}>
-            Organizations
-          </Typography>
-        </Box>
-        <Stack spacing={2}>
-          {seededOrgs.map((o) => (
-            <Card
-              key={o.name}
-              variant="outlined"
-              sx={{
-                transition: "transform 0.2s, border-color 0.2s, box-shadow 0.2s",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                  borderColor: "#58a6ff",
-                  boxShadow: "0 4px 12px rgba(88, 166, 255, 0.15)",
-                },
-              }}
-            >
-              <CardContent sx={{ "&:last-child": { pb: 2 } }}>
-                <MuiLink
-                  component={Link as any}
-                  to={`/${o.name}`}
-                  sx={{
-                    fontWeight: "bold",
-                    fontSize: "1.1rem",
-                    color: "#58a6ff",
-                    textDecoration: "none",
-                    "&:hover": { textDecoration: "underline" },
-                  }}
-                >
-                  {o.name}
-                </MuiLink>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  {o.desc}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
-        </Stack>
+        {data.current_user ? (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+            <Typography color="text.secondary">
+              Hi, {data.current_user.first_name ?? data.current_user.username}
+            </Typography>
+            <Button variant="outlined" disabled={isLoggingOut} onClick={handleLogout}>
+              Logout
+            </Button>
+          </Box>
+        ) : (
+          <Button variant="contained" component="a" href="/auth/google" sx={{ flexShrink: 0 }}>
+            Login with Google
+          </Button>
+        )}
       </Box>
     </Container>
   );

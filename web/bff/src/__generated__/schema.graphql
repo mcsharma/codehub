@@ -1,6 +1,8 @@
 # @generated - This file is generated, DO NOT modify it directly!
 
 type Mutation {
+  logout: Boolean
+
   """No-op mutation for schema compatibility (e.g. Relay)."""
   noop: Boolean
 }
@@ -46,6 +48,8 @@ type PageInfo {
 }
 
 type Query {
+  current_user: User
+
   """No-op query for schema compatibility (e.g. Relay)."""
   noop: Boolean
   organization(id: ID!): Organization

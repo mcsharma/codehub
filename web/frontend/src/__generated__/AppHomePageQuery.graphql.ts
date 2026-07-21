@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<4c99e4f99595362e0578ccf6dc81bc88>>
+ * @generated SignedSource<<cf1bff5a12fe3d6dc20e28c4042e97e3>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -11,6 +11,12 @@
 import { ConcreteRequest } from 'relay-runtime';
 export type AppHomePageQuery$variables = Record<PropertyKey, never>;
 export type AppHomePageQuery$data = {
+  readonly current_user: {
+    readonly first_name: string | null | undefined;
+    readonly id: string | null | undefined;
+    readonly last_name: string | null | undefined;
+    readonly username: string | null | undefined;
+  } | null | undefined;
   readonly noop: boolean | null | undefined;
 };
 export type AppHomePageQuery = {
@@ -25,6 +31,45 @@ var v0 = [
     "args": null,
     "kind": "ScalarField",
     "name": "noop",
+    "storageKey": null
+  },
+  {
+    "alias": null,
+    "args": null,
+    "concreteType": "User",
+    "kind": "LinkedField",
+    "name": "current_user",
+    "plural": false,
+    "selections": [
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "id",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "username",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "first_name",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "last_name",
+        "storageKey": null
+      }
+    ],
     "storageKey": null
   }
 ];
@@ -46,16 +91,16 @@ return {
     "selections": (v0/*: any*/)
   },
   "params": {
-    "cacheID": "0d7736cf7f99b6106b438293405150dd",
+    "cacheID": "a80422878bcab9d111b9d326160ca201",
     "id": null,
     "metadata": {},
     "name": "AppHomePageQuery",
     "operationKind": "query",
-    "text": "query AppHomePageQuery {\n  noop\n}\n"
+    "text": "query AppHomePageQuery {\n  noop\n  current_user {\n    id\n    username\n    first_name\n    last_name\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "a6bc4745321c44498fecfbff57f42100";
+(node as any).hash = "c3217ad5dafafefff2cd1a08516fff41";
 
 export default node;

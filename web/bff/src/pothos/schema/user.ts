@@ -1,5 +1,6 @@
 import { builder } from '../builder.js'
 import { exposeID, exposeTime } from '../field-exposers.js'
+import { clearSessionCookie } from '../../auth/session.js'
 
 // --- User object type ---
 
@@ -72,5 +73,27 @@ builder.queryField('user_by_username', (t) =>
       ctx.prisma.modelUser.findUnique({
         where: { username: args.username },
       }),
+  }),
+)
+
+builder.queryField('current_user', (t) =>
+  t.prismaField({
+    type: 'ModelUser',
+    nullable: true,
+    resolve: (_query, _root, _args, ctx) => ctx.user,
+  }),
+)
+
+// --- Auth mutations ---
+
+builder.mutationField('logout', (t) =>
+  t.boolean({
+    resolve: async (_root, _args, ctx) => {
+      if (ctx.session) {
+        await ctx.prisma.session.delete({ where: { id: ctx.session.id } }).catch(() => {})
+      }
+      clearSessionCookie(ctx.res)
+      return true
+    },
   }),
 )

@@ -4,11 +4,18 @@ import PrismaPlugin from '@pothos/plugin-prisma'
 import type PrismaTypes from '../__generated__/pothos-prisma-types.js'
 import { getDatamodel } from '../__generated__/pothos-prisma-types.js'
 import { prisma } from '../prisma/db.js'
-import type { Request } from 'express'
+import type { Request, Response } from 'express'
+import type { ModelUser, Session } from '@prisma/client'
 
 export const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes
-  Context: { prisma: typeof prisma; req: Request }
+  Context: {
+    prisma: typeof prisma
+    req: Request
+    res: Response
+    user: ModelUser | null
+    session: Session | null
+  }
 }>({
   plugins: [RelayPlugin, PrismaPlugin],
   relay: {
