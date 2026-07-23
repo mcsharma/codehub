@@ -26,7 +26,13 @@ export function parseUnifiedDiff(diffText: string): Map<string, string> {
     const path = match[1];
 
     if (/^@@ /m.test(chunk)) {
-      result.set(path, chunk);
+      // Trailing blank lines between this file's last hunk line and the
+      // next `diff -r` boundary (or end of text) get parsed by the library
+      // as a phantom empty context line — confirmed directly against
+      // @git-diff-view/core: a chunk ending in "\n\n" produces one extra
+      // rendered line with empty content that isn't really part of the
+      // file. Collapsing to a single trailing newline removes it.
+      result.set(path, chunk.replace(/\n+$/, "\n"));
     }
   }
 

@@ -71,7 +71,7 @@ const RepoPage = () => {
       <Container maxWidth="lg" sx={{ pt: 4 }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, gap: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
               <Typography component={Link} to={`/${ownerName}`} color="text.secondary" sx={{ fontWeight: 400 }}>
                 {ownerName}
               </Typography>{" "}

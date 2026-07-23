@@ -5,6 +5,7 @@ import type { PreloadedQuery } from "react-relay";
 import type { CommitPageQuery } from "./__generated__/CommitPageQuery.graphql";
 import { DiffView, DiffModeEnum } from "@git-diff-view/react";
 import "@git-diff-view/react/styles/diff-view.css";
+import "./CommitPage.css";
 
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
@@ -13,9 +14,11 @@ import Card from "@mui/material/Card";
 import Button from "@mui/material/Button";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Divider from "@mui/material/Divider";
 import ChevronLeftOutlinedIcon from "@mui/icons-material/ChevronLeftOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import UserAvatar from "../components/UserAvatar";
+import CommitFileTree from "../components/CommitFileTree";
 import { formatCommitAuthor } from "../utils/formatters";
 import { parseUnifiedDiff, countDiffStats } from "../utils/parseUnifiedDiff";
 
@@ -48,7 +51,13 @@ const CommitPage = () => {
     commitQueryRef
   );
 
-  const [mode, setMode] = useState<"unified" | "split">("unified");
+  const [mode, setMode] = useState<"unified" | "split">("split");
+  const [activePath, setActivePath] = useState<string | null>(null);
+
+  const handleSelectFile = (path: string) => {
+    setActivePath(path);
+    document.getElementById(path)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const { owner_username: ownerUsername, name: repoName } = commitQueryRef.variables;
   const repository = data.repository_by_owner_and_name;
@@ -74,7 +83,7 @@ const CommitPage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 5 }}>
+    <Box sx={{ py: 5, px: "20px" }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, fontSize: "0.875rem", fontWeight: 700 }}>
           <Typography component={Link} to={`/${ownerUsername}`} color="primary" sx={{ fontWeight: 700 }}>
@@ -172,90 +181,120 @@ const CommitPage = () => {
             )}
           </Box>
         </Box>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Typography variant="caption" sx={{ fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
+            Showing {files.length} changed file{files.length === 1 ? "" : "s"} with {totalAdditions} addition
+            {totalAdditions === 1 ? "" : "s"} and {totalDeletions} deletion{totalDeletions === 1 ? "" : "s"}
+          </Typography>
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={mode}
+            onChange={(_e, value) => value && setMode(value)}
+          >
+            <ToggleButton value="split">Split</ToggleButton>
+            <ToggleButton value="unified">Unified</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
       </Card>
 
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, px: 0.5 }}>
-        <Typography variant="caption" sx={{ fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}>
-          Showing {files.length} changed file{files.length === 1 ? "" : "s"} with {totalAdditions} addition
-          {totalAdditions === 1 ? "" : "s"} and {totalDeletions} deletion{totalDeletions === 1 ? "" : "s"}
-        </Typography>
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={mode}
-          onChange={(_e, value) => value && setMode(value)}
-        >
-          <ToggleButton value="split">Split</ToggleButton>
-          <ToggleButton value="unified">Unified</ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
+      <Divider sx={{ mb: 4 }} />
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        {files.map((file) => {
-          const chunk = diffChunksByPath.get(file.path ?? "");
-          const { additions, deletions } = countDiffStats(chunk ?? "");
-          return (
-            <Card key={file.path} sx={{ overflow: "hidden" }}>
-              <Box
-                sx={{
-                  bgcolor: "background.default",
-                  borderBottom: "1px solid",
-                  borderColor: "divider",
-                  px: 2.5,
-                  py: 1.5,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <InsertDriveFileOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
-                  <Typography sx={{ fontFamily: "monospace", fontWeight: 700, fontSize: "0.875rem" }}>
-                    {file.path}
-                  </Typography>
-                  {file.status && file.status !== "modified" && (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        color: file.status === "added" ? "success.main" : "error.main",
+      <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
+        <Card
+          sx={{
+            width: 280,
+            flexShrink: 0,
+            position: "sticky",
+            top: 16,
+            maxHeight: "calc(100vh - 32px)",
+            overflowY: "auto",
+          }}
+        >
+          <CommitFileTree
+            files={files
+              .filter((f): f is { path: string; status: string | null } => !!f.path)
+              .map((f) => ({ path: f.path, status: f.status ?? "modified" }))}
+            activePath={activePath}
+            onSelectFile={handleSelectFile}
+          />
+        </Card>
+
+        <Divider orientation="vertical" flexItem />
+
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {files.map((file) => {
+              const chunk = diffChunksByPath.get(file.path ?? "");
+              const { additions, deletions } = countDiffStats(chunk ?? "");
+              return (
+                <Card key={file.path} id={file.path ?? undefined} sx={{ overflow: "hidden", scrollMarginTop: 16 }}>
+                  <Box
+                    sx={{
+                      bgcolor: "background.default",
+                      borderBottom: "1px solid",
+                      borderColor: "divider",
+                      px: 2.5,
+                      py: 1.5,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                      <InsertDriveFileOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                      <Typography sx={{ fontFamily: "monospace", fontWeight: 700, fontSize: "0.875rem" }}>
+                        {file.path}
+                      </Typography>
+                      {file.status && file.status !== "modified" && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            color: file.status === "added" ? "success.main" : "error.main",
+                          }}
+                        >
+                          {file.status}
+                        </Typography>
+                      )}
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1.5 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 700, color: "success.main" }}>
+                        +{additions}
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontWeight: 700, color: "error.main" }}>
+                        -{deletions}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  {chunk ? (
+                    <DiffView
+                      data={{
+                        oldFile: { fileName: file.path },
+                        newFile: { fileName: file.path },
+                        hunks: [chunk],
                       }}
-                    >
-                      {file.status}
+                      diffViewMode={mode === "split" ? DiffModeEnum.Split : DiffModeEnum.Unified}
+                      diffViewHighlight
+                      diffViewWrap
+                      diffViewFontSize={13}
+                    />
+                  ) : (
+                    <Typography color="text.secondary" sx={{ p: 2.5 }}>
+                      Binary file not shown.
                     </Typography>
                   )}
-                </Box>
-                <Box sx={{ display: "flex", gap: 1.5 }}>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: "success.main" }}>
-                    +{additions}
-                  </Typography>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: "error.main" }}>
-                    -{deletions}
-                  </Typography>
-                </Box>
-              </Box>
-              {chunk ? (
-                <DiffView
-                  data={{
-                    oldFile: { fileName: file.path },
-                    newFile: { fileName: file.path },
-                    hunks: [chunk],
-                  }}
-                  diffViewMode={mode === "split" ? DiffModeEnum.Split : DiffModeEnum.Unified}
-                  diffViewHighlight
-                  diffViewFontSize={13}
-                />
-              ) : (
-                <Typography color="text.secondary" sx={{ p: 2.5 }}>
-                  Binary file not shown.
-                </Typography>
-              )}
-            </Card>
-          );
-        })}
+                </Card>
+              );
+            })}
+          </Box>
+        </Box>
       </Box>
-    </Container>
+    </Box>
   );
 };
 

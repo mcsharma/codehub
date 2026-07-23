@@ -149,7 +149,7 @@ const RepoCommitsList = ({ query: queryRef, ownerUsername, repoName }: Props) =>
                         <Typography variant="caption" sx={{ fontWeight: 700 }}>
                           {formatCommitAuthor(commit.author ?? "")}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase" }}>
+                        <Typography variant="caption" color="text.secondary">
                           {formatRelativeTime(commit.date ?? 0)}
                         </Typography>
                       </Box>

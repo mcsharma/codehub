@@ -1,0 +1,26 @@
+/* @git-diff-view/react renders the +/- marker as its own span
+   (.diff-line-content-operator) separate from the line content, purely for
+   the glyph — confirmed by reading the library's source. display:none (not
+   visibility:hidden) removes it from layout entirely, since it's an
+   inline-block with its own width — visibility:hidden kept that width
+   reserved, leaving a gap where the marker used to be. The container's
+   padding-left plus the operator span's negative margin is what aligns
+   wrapped continuation lines (see the diffViewWrap request) — removing the
+   span from flow doesn't affect that, since the padding lives on the
+   container, not the span. */
+.diff-line-content-operator {
+  display: none;
+}
+
+/* Slightly darker add/delete colors than the library's default light theme
+   (#dafbe1 / #ffebe9 are quite pale) — same selector/specificity as the
+   library's own light-theme rule in diff-view.css, just after it in source
+   order so these win. */
+.diff-tailwindcss-wrapper[data-theme="light"] .diff-style-root {
+  --diff-add-content--: #c3f5cf;
+  --diff-del-content--: #ffd6d3;
+  --diff-add-lineNumber--: #8fe0a3;
+  --diff-del-lineNumber--: #ffb0ac;
+  --diff-add-content-highlight--: #8fe0a3;
+  --diff-del-content-highlight--: #ffb0ac;
+}

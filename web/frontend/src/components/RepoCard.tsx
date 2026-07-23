@@ -69,7 +69,7 @@ const RepoCard = ({ ownerUsername, name, description, visibility, updatedTime }:
           justifyContent: "flex-end",
         }}
       >
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: "uppercase" }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
           Updated {formatRelativeTime(updatedTime)}
         </Typography>
       </Box>
