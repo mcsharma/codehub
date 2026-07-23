@@ -19,14 +19,21 @@ export interface HgBookmark {
   date: [number, number]
 }
 
-async function hgwebFetch<T>(owner: string, repo: string, pathAndQuery: string): Promise<T> {
+async function hgwebFetch<T>(
+  owner: string,
+  repo: string,
+  pathAndQuery: string,
+): Promise<T> {
   const token = process.env.HG_INTERNAL_TOKEN
   if (!token) {
     throw new Error('HG_INTERNAL_TOKEN is not configured')
   }
   const url = `${HG_WEB_BASE}/${owner}/${repo}/${pathAndQuery}`
   const res = await fetch(url, {
-    headers: { Authorization: 'Basic ' + Buffer.from(`internal:${token}`).toString('base64') },
+    headers: {
+      Authorization:
+        'Basic ' + Buffer.from(`internal:${token}`).toString('base64'),
+    },
   })
   if (!res.ok) {
     throw new Error(`hgweb request failed (${res.status}): ${pathAndQuery}`)
@@ -34,8 +41,15 @@ async function hgwebFetch<T>(owner: string, repo: string, pathAndQuery: string):
   return res.json() as Promise<T>
 }
 
-export async function fetchBookmarks(owner: string, repo: string): Promise<HgBookmark[]> {
-  const data = await hgwebFetch<{ bookmarks: HgBookmark[] }>(owner, repo, 'bookmarks?style=json')
+export async function fetchBookmarks(
+  owner: string,
+  repo: string,
+): Promise<HgBookmark[]> {
+  const data = await hgwebFetch<{ bookmarks: HgBookmark[] }>(
+    owner,
+    repo,
+    'bookmarks?style=json',
+  )
   return data.bookmarks
 }
 
