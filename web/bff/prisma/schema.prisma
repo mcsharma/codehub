@@ -98,6 +98,7 @@ model Repository {
   updatedTime         DateTime           @updatedAt      @map("updated_time")
   isDeleted           Boolean            @default(false)  @map("is_deleted")
   name                String             @map("name")
+  description         String?            @map("description")
   visibility          RepositoryVisibility @default(PUBLIC) @map("visibility")
 
   ownerUserId         BigInt?            @map("owner_user_id")

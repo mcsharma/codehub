@@ -12,7 +12,10 @@ type Commit {
   branch: String
   date: Int
   description: String
+  diff: String
+  files: [CommitFile!]
   node: String
+  parents: [String!]
   short_node: String
   tags: [String!]
 }
@@ -27,6 +30,11 @@ type CommitEdge {
   node: Commit
 }
 
+type CommitFile {
+  path: String
+  status: String
+}
+
 type CreatePersonalAccessTokenResult {
   id: ID
   label: String
@@ -35,7 +43,7 @@ type CreatePersonalAccessTokenResult {
 
 type Mutation {
   create_personal_access_token(label: String!): CreatePersonalAccessTokenResult
-  create_repository(name: String!, visibility: RepositoryVisibility!): Repository
+  create_repository(description: String, name: String!, visibility: RepositoryVisibility!): Repository
   logout: Boolean
 
   """No-op mutation for schema compatibility (e.g. Relay)."""
@@ -108,8 +116,10 @@ type Query {
 type Repository {
   admins(after: ID, before: ID, first: Int, last: Int): RepositoryAdminsConnection
   bookmarks: [Bookmark!]
+  commit(node: String!): Commit
   commits(after: ID, before: ID, first: Int, last: Int): CommitConnection
   created_time: Int
+  description: String
   id: ID
   is_deleted: Boolean
   name: String

@@ -3,6 +3,20 @@ import { Link, useLoaderData } from "react-router";
 import type { RepoPageQuery } from "./__generated__/RepoPageQuery.graphql";
 import type { PreloadedQuery } from "react-relay";
 
+import Container from "@mui/material/Container";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
+import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
+import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
+import AdjustOutlinedIcon from "@mui/icons-material/AdjustOutlined";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import StatusBadge from "../components/StatusBadge";
+import RepoCommitsList from "./RepoCommitsList";
+
 const RepoPage = () => {
   const { repoQueryRef } = useLoaderData() as {
     repoQueryRef: PreloadedQuery<RepoPageQuery>;
@@ -15,45 +29,19 @@ const RepoPage = () => {
           owner_username: $owner_username
           name: $name
         ) {
-          id
           name
           visibility
           owner {
             __typename
             ... on User {
               username
-              first_name
-              last_name
             }
             ... on Organization {
               name
             }
           }
-          admins(first: 20) {
-            edges {
-              node {
-                id
-                username
-                first_name
-                last_name
-              }
-            }
-          }
-          bookmarks {
-            name
-            short_node
-          }
-          commits(first: 20) {
-            edges {
-              node {
-                short_node
-                description
-                author
-                date
-              }
-            }
-          }
         }
+        ...RepoCommitsList_query @arguments(owner_username: $owner_username, name: $name)
       }
     `,
     repoQueryRef
@@ -64,86 +52,82 @@ const RepoPage = () => {
 
   if (!repository) {
     return (
-      <div>
-        Repository &quot;{owner_username}/{repoName}&quot; not found.
-      </div>
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Typography color="text.secondary">
+          Repository &quot;{owner_username}/{repoName}&quot; not found.
+        </Typography>
+      </Container>
     );
   }
 
-  const admins = repository.admins?.edges ?? [];
-  const bookmarks = repository.bookmarks ?? [];
-  const commits = repository.commits?.edges ?? [];
-  const ownerName =
-    repository.owner?.__typename === "User"
+  const ownerName: string =
+    (repository.owner?.__typename === "User"
       ? repository.owner.username
       : repository.owner?.__typename === "Organization"
         ? repository.owner.name
-        : owner_username;
+        : null) ?? owner_username;
 
   return (
-    <div>
-      <h1>
-        <Link to={`/${ownerName}`}>{ownerName}</Link> / {repository.name}
-      </h1>
-      <p>Visibility: {repository.visibility}</p>
+    <Box sx={{ bgcolor: "background.paper", borderBottom: "1px solid", borderColor: "divider" }}>
+      <Container maxWidth="lg" sx={{ pt: 4 }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, gap: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              <Typography component={Link} to={`/${ownerName}`} color="text.secondary" sx={{ fontWeight: 400 }}>
+                {ownerName}
+              </Typography>{" "}
+              /{" "}
+              {repository.name}
+            </Typography>
+            <StatusBadge
+              label={repository.visibility === "PUBLIC" ? "Public" : "Private"}
+              tone={repository.visibility === "PUBLIC" ? "neutral" : "primary"}
+            />
+          </Box>
+          {/* Inert for now — bookmarks-vs-branches semantics in Mercurial still
+              need discussing before this does anything. */}
+          <Button variant="contained" startIcon={<AccountTreeOutlinedIcon fontSize="small" />}>
+            Branches
+          </Button>
+        </Box>
 
-      <h2>Admins</h2>
-      {admins.length > 0 ? (
-        <ul>
-          {admins.map((edge) => {
-            if (!edge?.node) {
-              return null;
-            }
-            return (
-              <li key={edge.node.id}>
-                <Link to={`/${edge.node.username}`}>
-                  {edge.node.first_name} {edge.node.last_name} (@
-                  {edge.node.username})
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p>No admins.</p>
-      )}
+        <Tabs value="commits">
+          <Tab
+            value="code"
+            disabled
+            icon={<CodeOutlinedIcon fontSize="small" />}
+            iconPosition="start"
+            label="Code"
+          />
+          <Tab
+            value="commits"
+            icon={<HistoryOutlinedIcon fontSize="small" />}
+            iconPosition="start"
+            label="Commits"
+          />
+          <Tab
+            value="issues"
+            disabled
+            icon={<AdjustOutlinedIcon fontSize="small" />}
+            iconPosition="start"
+            label="Issues"
+          />
+          <Tab
+            value="settings"
+            disabled
+            icon={<SettingsOutlinedIcon fontSize="small" />}
+            iconPosition="start"
+            label="Settings"
+          />
+        </Tabs>
+      </Container>
 
-      <h2>Bookmarks</h2>
-      {bookmarks.length > 0 ? (
-        <ul>
-          {bookmarks.map((bookmark) => (
-            <li key={bookmark.name}>
-              {bookmark.name} ({bookmark.short_node})
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No bookmarks.</p>
-      )}
-
-      <h2>Commits</h2>
-      {commits.length > 0 ? (
-        <ul>
-          {commits.map((edge) => {
-            if (!edge?.node) {
-              return null;
-            }
-            const commit = edge.node;
-            return (
-              <li key={commit.short_node}>
-                <code>{commit.short_node}</code> {commit.description} —{" "}
-                {commit.author},{" "}
-                {commit.date
-                  ? new Date(commit.date * 1000).toLocaleString()
-                  : "unknown date"}
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p>No commits.</p>
-      )}
-    </div>
+      <Box sx={{ bgcolor: "background.default" }}>
+        <Container maxWidth="lg" sx={{ py: 5 }}>
+          <RepoCommitsList query={data} ownerUsername={ownerName} repoName={repository.name ?? repoName} />
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

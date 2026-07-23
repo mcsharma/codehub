@@ -10,6 +10,7 @@ export interface HgChangeset {
   user: string
   phase: string
   parents: string[]
+  files?: { file: string; status: string }[]
 }
 
 export interface HgBookmark {
@@ -70,4 +71,33 @@ export async function fetchShortlog(
     `shortlog/${after}?style=json&revcount=${count + 1}`,
   )
   return (data.changesets ?? []).slice(1, count + 1) // drop the duplicated cursor entry
+}
+
+// `/rev/<node>?style=json` is the single-changeset counterpart of
+// `/shortlog` — same per-changeset shape, plus `files`.
+export async function fetchChangeset(owner: string, repo: string, node: string): Promise<HgChangeset> {
+  return hgwebFetch<HgChangeset>(owner, repo, `rev/${node}?style=json`)
+}
+
+// `/raw-rev/<node>` returns the real Mercurial patch: an "# HG changeset
+// patch" header (metadata we already have from fetchChangeset) followed by
+// one or more standard unified-diff sections (one per changed file,
+// starting with `diff -r <parent> -r <node> <path>`). We only want the diff
+// portion — everything from the first such line onward — so callers get a
+// clean multi-file unified diff.
+export async function fetchRawDiff(owner: string, repo: string, node: string): Promise<string> {
+  const token = process.env.HG_INTERNAL_TOKEN
+  if (!token) {
+    throw new Error('HG_INTERNAL_TOKEN is not configured')
+  }
+  const url = `${HG_WEB_BASE}/${owner}/${repo}/raw-rev/${node}`
+  const res = await fetch(url, {
+    headers: { Authorization: 'Basic ' + Buffer.from(`internal:${token}`).toString('base64') },
+  })
+  if (!res.ok) {
+    throw new Error(`hgweb request failed (${res.status}): raw-rev/${node}`)
+  }
+  const patch = await res.text()
+  const diffStart = patch.search(/^diff -r /m)
+  return diffStart === -1 ? '' : patch.slice(diffStart)
 }

@@ -7,7 +7,13 @@ import { GraphQLError } from 'graphql'
 import { UserObject } from './user.js'
 import { OrganizationObject } from './organization.js'
 import { provisionRepoOnVm } from '../../repos/provision-on-vm.js'
-import { fetchBookmarks, fetchShortlog } from '../../repos/hgweb-client.js'
+import {
+  fetchBookmarks,
+  fetchChangeset,
+  fetchRawDiff,
+  fetchShortlog,
+  type HgChangeset,
+} from '../../repos/hgweb-client.js'
 import { canAccessRepo } from '../../auth/repo-access.js'
 import { resolveCursorConnection } from '@pothos/plugin-relay'
 import type { prisma } from '../../prisma/db.js'
@@ -69,6 +75,18 @@ const RepositoryOwner = builder.unionType('RepositoryOwner', {
 // --- Commit / Bookmark object types ---
 // Backed by hgweb's JSON style, not Prisma — see repos/hgweb-client.ts.
 
+interface CommitFileShape {
+  path: string
+  status: string
+}
+
+const CommitFileObject = builder.objectRef<CommitFileShape>('CommitFile').implement({
+  fields: (t) => ({
+    path: t.exposeString('path'),
+    status: t.exposeString('status'),
+  }),
+})
+
 interface CommitShape {
   node: string
   short_node: string
@@ -78,6 +96,30 @@ interface CommitShape {
   branch: string
   tags: string[]
   bookmarks: string[]
+  parents: string[]
+  files: CommitFileShape[]
+  // Not exposed via GraphQL — carried so the `diff` field's resolver (a
+  // second, separate hgweb fetch, only paid for when a query actually asks
+  // for it) doesn't need the repository row or a second permission check.
+  _owner: string
+  _repoName: string
+}
+
+function toCommitShape(owner: string, repoName: string, c: HgChangeset): CommitShape {
+  return {
+    node: c.node,
+    short_node: c.node.slice(0, 12),
+    author: c.user,
+    date: Math.floor(c.date[0]),
+    description: c.desc,
+    branch: c.branch,
+    tags: c.tags,
+    bookmarks: c.bookmarks,
+    parents: c.parents,
+    files: (c.files ?? []).map((f) => ({ path: f.file, status: f.status })),
+    _owner: owner,
+    _repoName: repoName,
+  }
 }
 
 const CommitObject = builder.objectRef<CommitShape>('Commit').implement({
@@ -90,6 +132,20 @@ const CommitObject = builder.objectRef<CommitShape>('Commit').implement({
     branch: t.exposeString('branch'),
     tags: t.exposeStringList('tags'),
     bookmarks: t.exposeStringList('bookmarks'),
+    parents: t.exposeStringList('parents'),
+    files: t.field({ type: [CommitFileObject], resolve: (c) => c.files }),
+    diff: t.field({
+      type: 'String',
+      nullable: true,
+      resolve: async (c) => {
+        try {
+          return await fetchRawDiff(c._owner, c._repoName, c.node)
+        } catch (err) {
+          console.error('Failed to fetch commit diff:', err)
+          return null
+        }
+      },
+    }),
   }),
 })
 
@@ -111,6 +167,7 @@ builder.prismaObject('Repository', {
     updated_time: exposeTime(t, 'updatedTime'),
     is_deleted: t.exposeBoolean('isDeleted'),
     name: t.exposeString('name'),
+    description: t.exposeString('description', { nullable: true }),
     visibility: t.expose('visibility', { type: RepositoryVisibility }),
     owner: t.field({
       type: RepositoryOwner,
@@ -161,16 +218,7 @@ builder.prismaObject('Repository', {
                 throw new GraphQLError('Paginating commits with `last`/`before` is not supported')
               }
               const changesets = await fetchShortlog(ownerName, repository.name, { after, count: limit })
-              return changesets.map((c) => ({
-                node: c.node,
-                short_node: c.node.slice(0, 12),
-                author: c.user,
-                date: Math.floor(c.date[0]),
-                description: c.desc,
-                branch: c.branch,
-                tags: c.tags,
-                bookmarks: c.bookmarks,
-              }))
+              return changesets.map((c) => toCommitShape(ownerName, repository.name, c))
             },
           )
         },
@@ -178,6 +226,16 @@ builder.prismaObject('Repository', {
       { name: 'CommitConnection' },
       { name: 'CommitEdge' },
     ),
+    commit: t.field({
+      type: CommitObject,
+      args: { node: t.arg.string({ required: true }) },
+      resolve: async (repository, args, ctx) => {
+        const ownerName = await resolveOwnerName(repository, ctx.prisma)
+        await requireRepoReadAccess(ctx.user, ownerName, repository.name)
+        const changeset = await fetchChangeset(ownerName, repository.name, args.node)
+        return toCommitShape(ownerName, repository.name, changeset)
+      },
+    }),
   }),
 })
 
@@ -238,6 +296,7 @@ builder.mutationField('create_repository', (t) =>
     type: 'Repository',
     args: {
       name: t.arg.string({ required: true }),
+      description: t.arg.string({ required: false }),
       visibility: t.arg({ type: RepositoryVisibility, required: true }),
     },
     resolve: async (_query, _root, args, ctx) => {
@@ -251,6 +310,7 @@ builder.mutationField('create_repository', (t) =>
         repo = await ctx.prisma.repository.create({
           data: {
             name: args.name,
+            description: args.description,
             visibility: args.visibility,
             ownerUserId: user.id,
           },

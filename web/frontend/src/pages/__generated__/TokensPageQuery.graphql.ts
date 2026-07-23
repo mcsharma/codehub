@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<cf1bff5a12fe3d6dc20e28c4042e97e3>>
+ * @generated SignedSource<<3230be8a1fb69e3619156eece52e31bb>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,19 +9,18 @@
 // @ts-nocheck
 
 import { ConcreteRequest } from 'relay-runtime';
-export type AppHomePageQuery$variables = Record<PropertyKey, never>;
-export type AppHomePageQuery$data = {
-  readonly current_user: {
-    readonly first_name: string | null | undefined;
+export type TokensPageQuery$variables = Record<PropertyKey, never>;
+export type TokensPageQuery$data = {
+  readonly my_personal_access_tokens: ReadonlyArray<{
+    readonly created_time: number | null | undefined;
     readonly id: string | null | undefined;
-    readonly last_name: string | null | undefined;
-    readonly username: string | null | undefined;
-  } | null | undefined;
-  readonly noop: boolean | null | undefined;
+    readonly label: string | null | undefined;
+    readonly last_used_time: number | null | undefined;
+  }> | null | undefined;
 };
-export type AppHomePageQuery = {
-  response: AppHomePageQuery$data;
-  variables: AppHomePageQuery$variables;
+export type TokensPageQuery = {
+  response: TokensPageQuery$data;
+  variables: TokensPageQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -29,17 +28,10 @@ var v0 = [
   {
     "alias": null,
     "args": null,
-    "kind": "ScalarField",
-    "name": "noop",
-    "storageKey": null
-  },
-  {
-    "alias": null,
-    "args": null,
-    "concreteType": "User",
+    "concreteType": "PersonalAccessToken",
     "kind": "LinkedField",
-    "name": "current_user",
-    "plural": false,
+    "name": "my_personal_access_tokens",
+    "plural": true,
     "selections": [
       {
         "alias": null,
@@ -52,21 +44,21 @@ var v0 = [
         "alias": null,
         "args": null,
         "kind": "ScalarField",
-        "name": "username",
+        "name": "label",
         "storageKey": null
       },
       {
         "alias": null,
         "args": null,
         "kind": "ScalarField",
-        "name": "first_name",
+        "name": "created_time",
         "storageKey": null
       },
       {
         "alias": null,
         "args": null,
         "kind": "ScalarField",
-        "name": "last_name",
+        "name": "last_used_time",
         "storageKey": null
       }
     ],
@@ -78,7 +70,7 @@ return {
     "argumentDefinitions": [],
     "kind": "Fragment",
     "metadata": null,
-    "name": "AppHomePageQuery",
+    "name": "TokensPageQuery",
     "selections": (v0/*: any*/),
     "type": "Query",
     "abstractKey": null
@@ -87,20 +79,20 @@ return {
   "operation": {
     "argumentDefinitions": [],
     "kind": "Operation",
-    "name": "AppHomePageQuery",
+    "name": "TokensPageQuery",
     "selections": (v0/*: any*/)
   },
   "params": {
-    "cacheID": "a80422878bcab9d111b9d326160ca201",
+    "cacheID": "c31d3bf9c57074ff4f04d567698d3e01",
     "id": null,
     "metadata": {},
-    "name": "AppHomePageQuery",
+    "name": "TokensPageQuery",
     "operationKind": "query",
-    "text": "query AppHomePageQuery {\n  noop\n  current_user {\n    id\n    username\n    first_name\n    last_name\n  }\n}\n"
+    "text": "query TokensPageQuery {\n  my_personal_access_tokens {\n    id\n    label\n    created_time\n    last_used_time\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "c3217ad5dafafefff2cd1a08516fff41";
+(node as any).hash = "92c85be5d1b194305fc7796fce6be4ae";
 
 export default node;

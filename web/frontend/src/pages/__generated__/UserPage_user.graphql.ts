@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<6be0332b91759d55bc3e446ebe14a446>>
+ * @generated SignedSource<<f0bd310903ab4c951aef235d74c1e62e>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -21,13 +21,13 @@ export type UserPage_user$data = {
     } | null | undefined> | null | undefined;
   } | null | undefined;
   readonly first_name: string | null | undefined;
-  readonly id: string | null | undefined;
-  readonly last_name: string | null | undefined;
   readonly owned_repositories: {
     readonly edges: ReadonlyArray<{
       readonly node: {
+        readonly description: string | null | undefined;
         readonly id: string | null | undefined;
         readonly name: string | null | undefined;
+        readonly updated_time: number | null | undefined;
         readonly visibility: RepositoryVisibility | null | undefined;
       } | null | undefined;
     } | null | undefined> | null | undefined;
@@ -48,14 +48,7 @@ var v0 = {
   "name": "id",
   "storageKey": null
 },
-v1 = [
-  {
-    "kind": "Literal",
-    "name": "first",
-    "value": 20
-  }
-],
-v2 = {
+v1 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
@@ -68,7 +61,6 @@ return {
   "metadata": null,
   "name": "UserPage_user",
   "selections": [
-    (v0/*: any*/),
     {
       "alias": null,
       "args": null,
@@ -85,14 +77,13 @@ return {
     },
     {
       "alias": null,
-      "args": null,
-      "kind": "ScalarField",
-      "name": "last_name",
-      "storageKey": null
-    },
-    {
-      "alias": null,
-      "args": (v1/*: any*/),
+      "args": [
+        {
+          "kind": "Literal",
+          "name": "first",
+          "value": 50
+        }
+      ],
       "concreteType": "UserOwned_repositoriesConnection",
       "kind": "LinkedField",
       "name": "owned_repositories",
@@ -115,12 +106,26 @@ return {
               "plural": false,
               "selections": [
                 (v0/*: any*/),
-                (v2/*: any*/),
+                (v1/*: any*/),
+                {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "description",
+                  "storageKey": null
+                },
                 {
                   "alias": null,
                   "args": null,
                   "kind": "ScalarField",
                   "name": "visibility",
+                  "storageKey": null
+                },
+                {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
+                  "name": "updated_time",
                   "storageKey": null
                 }
               ],
@@ -130,11 +135,17 @@ return {
           "storageKey": null
         }
       ],
-      "storageKey": "owned_repositories(first:20)"
+      "storageKey": "owned_repositories(first:50)"
     },
     {
       "alias": null,
-      "args": (v1/*: any*/),
+      "args": [
+        {
+          "kind": "Literal",
+          "name": "first",
+          "value": 20
+        }
+      ],
       "concreteType": "UserAdmin_of_organizationsConnection",
       "kind": "LinkedField",
       "name": "admin_of_organizations",
@@ -157,7 +168,7 @@ return {
               "plural": false,
               "selections": [
                 (v0/*: any*/),
-                (v2/*: any*/)
+                (v1/*: any*/)
               ],
               "storageKey": null
             }
@@ -173,6 +184,6 @@ return {
 };
 })();
 
-(node as any).hash = "41d88f0ea33c8b6bb4cf37a4aa50db21";
+(node as any).hash = "cc5048bdd52cf4862e6454c9569001e3";
 
 export default node;

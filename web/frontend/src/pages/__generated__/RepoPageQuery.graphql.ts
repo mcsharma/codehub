@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<2e3cd9c3246f3d75ea7d1e444da5f6b3>>
+ * @generated SignedSource<<75dea1cb96a2a17014569ee705b40ca2>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,6 +9,7 @@
 // @ts-nocheck
 
 import { ConcreteRequest } from 'relay-runtime';
+import { FragmentRefs } from "relay-runtime";
 export type RepositoryVisibility = "PRIVATE" | "PUBLIC" | "%future added value";
 export type RepoPageQuery$variables = {
   name: string;
@@ -16,39 +17,12 @@ export type RepoPageQuery$variables = {
 };
 export type RepoPageQuery$data = {
   readonly repository_by_owner_and_name: {
-    readonly admins: {
-      readonly edges: ReadonlyArray<{
-        readonly node: {
-          readonly first_name: string | null | undefined;
-          readonly id: string | null | undefined;
-          readonly last_name: string | null | undefined;
-          readonly username: string | null | undefined;
-        } | null | undefined;
-      } | null | undefined> | null | undefined;
-    } | null | undefined;
-    readonly bookmarks: ReadonlyArray<{
-      readonly name: string | null | undefined;
-      readonly short_node: string | null | undefined;
-    }> | null | undefined;
-    readonly commits: {
-      readonly edges: ReadonlyArray<{
-        readonly node: {
-          readonly author: string | null | undefined;
-          readonly date: number | null | undefined;
-          readonly description: string | null | undefined;
-          readonly short_node: string | null | undefined;
-        } | null | undefined;
-      } | null | undefined> | null | undefined;
-    } | null | undefined;
-    readonly id: string | null | undefined;
     readonly name: string | null | undefined;
     readonly owner: {
       readonly __typename: "Organization";
       readonly name: string | null | undefined;
     } | {
       readonly __typename: "User";
-      readonly first_name: string | null | undefined;
-      readonly last_name: string | null | undefined;
       readonly username: string | null | undefined;
     } | {
       // This will never be '%other', but we need some
@@ -57,6 +31,7 @@ export type RepoPageQuery$data = {
     } | null | undefined;
     readonly visibility: RepositoryVisibility | null | undefined;
   } | null | undefined;
+  readonly " $fragmentSpreads": FragmentRefs<"RepoCommitsList_query">;
 };
 export type RepoPageQuery = {
   response: RepoPageQuery$data;
@@ -90,170 +65,44 @@ v3 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "id",
+  "name": "name",
   "storageKey": null
 },
 v4 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "name",
+  "name": "visibility",
   "storageKey": null
 },
 v5 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "visibility",
+  "name": "__typename",
   "storageKey": null
 },
 v6 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "__typename",
+  "name": "username",
   "storageKey": null
 },
 v7 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "username",
+  "name": "id",
   "storageKey": null
 },
-v8 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "first_name",
-  "storageKey": null
-},
-v9 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "last_name",
-  "storageKey": null
-},
-v10 = [
+v8 = [
   {
     "kind": "Literal",
     "name": "first",
-    "value": 20
+    "value": 15
   }
-],
-v11 = {
-  "alias": null,
-  "args": (v10/*: any*/),
-  "concreteType": "RepositoryAdminsConnection",
-  "kind": "LinkedField",
-  "name": "admins",
-  "plural": false,
-  "selections": [
-    {
-      "alias": null,
-      "args": null,
-      "concreteType": "RepositoryAdminsConnectionEdge",
-      "kind": "LinkedField",
-      "name": "edges",
-      "plural": true,
-      "selections": [
-        {
-          "alias": null,
-          "args": null,
-          "concreteType": "User",
-          "kind": "LinkedField",
-          "name": "node",
-          "plural": false,
-          "selections": [
-            (v3/*: any*/),
-            (v7/*: any*/),
-            (v8/*: any*/),
-            (v9/*: any*/)
-          ],
-          "storageKey": null
-        }
-      ],
-      "storageKey": null
-    }
-  ],
-  "storageKey": "admins(first:20)"
-},
-v12 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "short_node",
-  "storageKey": null
-},
-v13 = {
-  "alias": null,
-  "args": null,
-  "concreteType": "Bookmark",
-  "kind": "LinkedField",
-  "name": "bookmarks",
-  "plural": true,
-  "selections": [
-    (v4/*: any*/),
-    (v12/*: any*/)
-  ],
-  "storageKey": null
-},
-v14 = {
-  "alias": null,
-  "args": (v10/*: any*/),
-  "concreteType": "CommitConnection",
-  "kind": "LinkedField",
-  "name": "commits",
-  "plural": false,
-  "selections": [
-    {
-      "alias": null,
-      "args": null,
-      "concreteType": "CommitEdge",
-      "kind": "LinkedField",
-      "name": "edges",
-      "plural": true,
-      "selections": [
-        {
-          "alias": null,
-          "args": null,
-          "concreteType": "Commit",
-          "kind": "LinkedField",
-          "name": "node",
-          "plural": false,
-          "selections": [
-            (v12/*: any*/),
-            {
-              "alias": null,
-              "args": null,
-              "kind": "ScalarField",
-              "name": "description",
-              "storageKey": null
-            },
-            {
-              "alias": null,
-              "args": null,
-              "kind": "ScalarField",
-              "name": "author",
-              "storageKey": null
-            },
-            {
-              "alias": null,
-              "args": null,
-              "kind": "ScalarField",
-              "name": "date",
-              "storageKey": null
-            }
-          ],
-          "storageKey": null
-        }
-      ],
-      "storageKey": null
-    }
-  ],
-  "storageKey": "commits(first:20)"
-};
+];
 return {
   "fragment": {
     "argumentDefinitions": [
@@ -274,7 +123,6 @@ return {
         "selections": [
           (v3/*: any*/),
           (v4/*: any*/),
-          (v5/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -283,13 +131,11 @@ return {
             "name": "owner",
             "plural": false,
             "selections": [
-              (v6/*: any*/),
+              (v5/*: any*/),
               {
                 "kind": "InlineFragment",
                 "selections": [
-                  (v7/*: any*/),
-                  (v8/*: any*/),
-                  (v9/*: any*/)
+                  (v6/*: any*/)
                 ],
                 "type": "User",
                 "abstractKey": null
@@ -297,19 +143,21 @@ return {
               {
                 "kind": "InlineFragment",
                 "selections": [
-                  (v4/*: any*/)
+                  (v3/*: any*/)
                 ],
                 "type": "Organization",
                 "abstractKey": null
               }
             ],
             "storageKey": null
-          },
-          (v11/*: any*/),
-          (v13/*: any*/),
-          (v14/*: any*/)
+          }
         ],
         "storageKey": null
+      },
+      {
+        "args": (v2/*: any*/),
+        "kind": "FragmentSpread",
+        "name": "RepoCommitsList_query"
       }
     ],
     "type": "Query",
@@ -334,7 +182,6 @@ return {
         "selections": [
           (v3/*: any*/),
           (v4/*: any*/),
-          (v5/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -343,14 +190,12 @@ return {
             "name": "owner",
             "plural": false,
             "selections": [
-              (v6/*: any*/),
+              (v5/*: any*/),
               {
                 "kind": "InlineFragment",
                 "selections": [
-                  (v7/*: any*/),
-                  (v8/*: any*/),
-                  (v9/*: any*/),
-                  (v3/*: any*/)
+                  (v6/*: any*/),
+                  (v7/*: any*/)
                 ],
                 "type": "User",
                 "abstractKey": null
@@ -358,8 +203,8 @@ return {
               {
                 "kind": "InlineFragment",
                 "selections": [
-                  (v4/*: any*/),
-                  (v3/*: any*/)
+                  (v3/*: any*/),
+                  (v7/*: any*/)
                 ],
                 "type": "Organization",
                 "abstractKey": null
@@ -367,25 +212,133 @@ return {
             ],
             "storageKey": null
           },
-          (v11/*: any*/),
-          (v13/*: any*/),
-          (v14/*: any*/)
+          (v7/*: any*/),
+          {
+            "alias": null,
+            "args": (v8/*: any*/),
+            "concreteType": "CommitConnection",
+            "kind": "LinkedField",
+            "name": "commits",
+            "plural": false,
+            "selections": [
+              {
+                "alias": null,
+                "args": null,
+                "concreteType": "CommitEdge",
+                "kind": "LinkedField",
+                "name": "edges",
+                "plural": true,
+                "selections": [
+                  {
+                    "alias": null,
+                    "args": null,
+                    "concreteType": "Commit",
+                    "kind": "LinkedField",
+                    "name": "node",
+                    "plural": false,
+                    "selections": [
+                      {
+                        "alias": null,
+                        "args": null,
+                        "kind": "ScalarField",
+                        "name": "node",
+                        "storageKey": null
+                      },
+                      {
+                        "alias": null,
+                        "args": null,
+                        "kind": "ScalarField",
+                        "name": "short_node",
+                        "storageKey": null
+                      },
+                      {
+                        "alias": null,
+                        "args": null,
+                        "kind": "ScalarField",
+                        "name": "description",
+                        "storageKey": null
+                      },
+                      {
+                        "alias": null,
+                        "args": null,
+                        "kind": "ScalarField",
+                        "name": "author",
+                        "storageKey": null
+                      },
+                      {
+                        "alias": null,
+                        "args": null,
+                        "kind": "ScalarField",
+                        "name": "date",
+                        "storageKey": null
+                      },
+                      (v5/*: any*/)
+                    ],
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
+                    "name": "cursor",
+                    "storageKey": null
+                  }
+                ],
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "concreteType": "PageInfo",
+                "kind": "LinkedField",
+                "name": "pageInfo",
+                "plural": false,
+                "selections": [
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
+                    "name": "endCursor",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "kind": "ScalarField",
+                    "name": "hasNextPage",
+                    "storageKey": null
+                  }
+                ],
+                "storageKey": null
+              }
+            ],
+            "storageKey": "commits(first:15)"
+          },
+          {
+            "alias": null,
+            "args": (v8/*: any*/),
+            "filters": null,
+            "handle": "connection",
+            "key": "RepoCommitsList_repository_commits",
+            "kind": "LinkedHandle",
+            "name": "commits"
+          }
         ],
         "storageKey": null
       }
     ]
   },
   "params": {
-    "cacheID": "8d56275537b6ce746ab90080f04585b1",
+    "cacheID": "ea752c0c513cf0370b8efcbaf5915014",
     "id": null,
     "metadata": {},
     "name": "RepoPageQuery",
     "operationKind": "query",
-    "text": "query RepoPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    id\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        first_name\n        last_name\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    admins(first: 20) {\n      edges {\n        node {\n          id\n          username\n          first_name\n          last_name\n        }\n      }\n    }\n    bookmarks {\n      name\n      short_node\n    }\n    commits(first: 20) {\n      edges {\n        node {\n          short_node\n          description\n          author\n          date\n        }\n      }\n    }\n  }\n}\n"
+    "text": "query RepoPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    id\n  }\n  ...RepoCommitsList_query_1SpurQ\n}\n\nfragment RepoCommitsList_query_1SpurQ on Query {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    commits(first: 15) {\n      edges {\n        node {\n          node\n          short_node\n          description\n          author\n          date\n          __typename\n        }\n        cursor\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "f8171360400ea1b1fff5cdb032c945de";
+(node as any).hash = "3f4241aafae9523eff0562e673b43e0a";
 
 export default node;

@@ -18,6 +18,9 @@ const OwnerPage = () => {
   const data = usePreloadedQuery<OwnerPageQuery>(
     graphql`
       query OwnerPageQuery($name: String!) {
+        current_user {
+          username
+        }
         owner_by_name(name: $name) {
           __typename
           ... on User {
@@ -39,7 +42,12 @@ const OwnerPage = () => {
   }
 
   if (owner.__typename === "User") {
-    return <UserPage user={owner} />;
+    return (
+      <UserPage
+        user={owner}
+        isOwnProfile={data.current_user?.username === ownerQueryRef.variables.name}
+      />
+    );
   }
 
   if (owner.__typename === "Organization") {
