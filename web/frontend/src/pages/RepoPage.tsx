@@ -6,15 +6,14 @@ import type { PreloadedQuery } from "react-relay";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import AdjustOutlinedIcon from "@mui/icons-material/AdjustOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import StatusBadge from "../components/StatusBadge";
+import CloneButton from "../components/CloneButton";
 import RepoCommitsList from "./RepoCommitsList";
 
 const RepoPage = () => {
@@ -84,11 +83,7 @@ const RepoPage = () => {
               tone={repository.visibility === "PUBLIC" ? "neutral" : "primary"}
             />
           </Box>
-          {/* Inert for now — bookmarks-vs-branches semantics in Mercurial still
-              need discussing before this does anything. */}
-          <Button variant="contained" startIcon={<AccountTreeOutlinedIcon fontSize="small" />}>
-            Branches
-          </Button>
+          <CloneButton ownerUsername={ownerName} repoName={repository.name ?? repoName} />
         </Box>
 
         <Tabs value="commits">
