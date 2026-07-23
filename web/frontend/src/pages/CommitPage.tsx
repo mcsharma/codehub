@@ -123,7 +123,7 @@ const CommitPage = () => {
       <Card sx={{ p: 4, mb: 4 }}>
         <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, justifyContent: "space-between", gap: 3 }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+            <Typography variant="body1" sx={{ fontWeight: 400, mb: 2 }}>
               {commit.description}
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>

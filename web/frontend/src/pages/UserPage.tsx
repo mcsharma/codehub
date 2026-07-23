@@ -7,9 +7,6 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
-import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import RepoCard from "../components/RepoCard";
 
@@ -79,28 +76,12 @@ const UserPage = ({ user: userRef, isOwnProfile }: Props) => {
             component={Link}
             to="/new"
             startIcon={<AddOutlinedIcon />}
-            size="large"
+            size="medium"
           >
             Create Repository
           </Button>
         )}
       </Box>
-
-      <TextField
-        placeholder="Search all repositories..."
-        fullWidth
-        disabled
-        sx={{ mb: 5, maxWidth: 480 }}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchOutlinedIcon fontSize="small" color="disabled" />
-              </InputAdornment>
-            ),
-          },
-        }}
-      />
 
       {repos.length > 0 ? (
         <Grid container spacing={3}>
