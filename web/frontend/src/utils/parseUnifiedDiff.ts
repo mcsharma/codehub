@@ -1,12 +1,18 @@
 // hgweb's raw diff (after fetchRawDiff strips the patch header) is a
 // standard multi-file unified diff: one `diff -r <rev> -r <rev> <path>`
 // section per file, each with `---`/`+++` file headers followed by one or
-// more `@@ ... @@` hunks. @git-diff-view/react's `data.hunks` prop wants
-// just the hunk blocks (the `@@` line plus its content lines) per file, not
-// the surrounding file headers — so this splits the raw text into
-// path -> hunks[].
-export function parseUnifiedDiff(diffText: string): Map<string, string[]> {
-  const result = new Map<string, string[]>();
+// more `@@ ... @@` hunks.
+//
+// @git-diff-view/react's `data.hunks` entries are each parsed independently
+// by the library (via DiffFile -> DiffParser.parse), and that parser scans
+// for a `---`/`+++` header pair *before* it starts collecting `@@` hunks —
+// confirmed directly against @git-diff-view/core: a bare `@@ ...` string
+// with no header produces zero rendered lines (silently — no error, no
+// visible diff), while the same content with its `---`/`+++` header intact
+// parses correctly. So each map entry here is the *whole* per-file section
+// (header + all its hunks), not hunks split out on their own.
+export function parseUnifiedDiff(diffText: string): Map<string, string> {
+  const result = new Map<string, string>();
   if (!diffText) return result;
 
   const fileChunks = diffText.split(/^(?=diff -r )/m).filter(Boolean);
@@ -19,23 +25,21 @@ export function parseUnifiedDiff(diffText: string): Map<string, string[]> {
     if (!match) continue;
     const path = match[1];
 
-    const hunks = chunk.split(/^(?=@@ )/m).filter((line) => line.startsWith("@@ "));
-    if (hunks.length > 0) {
-      result.set(path, hunks);
+    if (/^@@ /m.test(chunk)) {
+      result.set(path, chunk);
     }
   }
 
   return result;
 }
 
-export function countDiffStats(hunks: string[]): { additions: number; deletions: number } {
+export function countDiffStats(chunk: string): { additions: number; deletions: number } {
   let additions = 0;
   let deletions = 0;
-  for (const hunk of hunks) {
-    for (const line of hunk.split("\n")) {
-      if (line.startsWith("+")) additions++;
-      else if (line.startsWith("-")) deletions++;
-    }
+  for (const line of chunk.split("\n")) {
+    if (line.startsWith("+++") || line.startsWith("---")) continue;
+    if (line.startsWith("+")) additions++;
+    else if (line.startsWith("-")) deletions++;
   }
   return { additions, deletions };
 }

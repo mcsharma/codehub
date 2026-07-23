@@ -54,7 +54,7 @@ const CommitPage = () => {
   const repository = data.repository_by_owner_and_name;
   const commit = repository?.commit;
 
-  const hunksByPath = useMemo(() => parseUnifiedDiff(commit?.diff ?? ""), [commit?.diff]);
+  const diffChunksByPath = useMemo(() => parseUnifiedDiff(commit?.diff ?? ""), [commit?.diff]);
 
   if (!repository || !commit) {
     return (
@@ -68,7 +68,7 @@ const CommitPage = () => {
   let totalAdditions = 0;
   let totalDeletions = 0;
   for (const file of files) {
-    const { additions, deletions } = countDiffStats(hunksByPath.get(file.path ?? "") ?? []);
+    const { additions, deletions } = countDiffStats(diffChunksByPath.get(file.path ?? "") ?? "");
     totalAdditions += additions;
     totalDeletions += deletions;
   }
@@ -192,8 +192,8 @@ const CommitPage = () => {
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {files.map((file) => {
-          const hunks = hunksByPath.get(file.path ?? "") ?? [];
-          const { additions, deletions } = countDiffStats(hunks);
+          const chunk = diffChunksByPath.get(file.path ?? "");
+          const { additions, deletions } = countDiffStats(chunk ?? "");
           return (
             <Card key={file.path} sx={{ overflow: "hidden" }}>
               <Box
@@ -235,12 +235,12 @@ const CommitPage = () => {
                   </Typography>
                 </Box>
               </Box>
-              {hunks.length > 0 ? (
+              {chunk ? (
                 <DiffView
                   data={{
                     oldFile: { fileName: file.path },
                     newFile: { fileName: file.path },
-                    hunks,
+                    hunks: [chunk],
                   }}
                   diffViewMode={mode === "split" ? DiffModeEnum.Split : DiffModeEnum.Unified}
                   diffViewHighlight
