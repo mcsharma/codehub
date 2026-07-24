@@ -18,6 +18,9 @@ import RepoPageQueryNode from "./pages/__generated__/RepoPageQuery.graphql";
 import NewRepoPageQueryNode from "./pages/__generated__/NewRepoPageQuery.graphql";
 import CommitPageQueryNode from "./pages/__generated__/CommitPageQuery.graphql";
 import TokensPageQueryNode from "./pages/__generated__/TokensPageQuery.graphql";
+import RepoSettingsPageQueryNode from "./pages/__generated__/RepoSettingsPageQuery.graphql";
+import RepoTreePageQueryNode from "./pages/__generated__/RepoTreePageQuery.graphql";
+import RepoBlobPageQueryNode from "./pages/__generated__/RepoBlobPageQuery.graphql";
 
 /**
  * `/` itself — no nav chrome (see LoginPage.tsx). If already logged in,
@@ -129,6 +132,40 @@ export const router = createBrowserRouter([
             owner_username: params.owner!,
             name: params.repo!,
             node: params.node!,
+          }),
+        }),
+      },
+      {
+        path: ":owner/:repo/settings",
+        Component: React.lazy(() => import("./pages/RepoSettingsPage")),
+        loader: ({ params }) => ({
+          repoSettingsQueryRef: loadQuery(RelayEnv, RepoSettingsPageQueryNode, {
+            owner_username: params.owner!,
+            name: params.repo!,
+          }),
+        }),
+      },
+      {
+        path: ":owner/:repo/tree/:rev/*",
+        Component: React.lazy(() => import("./pages/RepoTreePage")),
+        loader: ({ params }) => ({
+          repoTreeQueryRef: loadQuery(RelayEnv, RepoTreePageQueryNode, {
+            owner_username: params.owner!,
+            name: params.repo!,
+            rev: params.rev!,
+            path: params["*"] ?? "",
+          }),
+        }),
+      },
+      {
+        path: ":owner/:repo/blob/:rev/*",
+        Component: React.lazy(() => import("./pages/RepoBlobPage")),
+        loader: ({ params }) => ({
+          repoBlobQueryRef: loadQuery(RelayEnv, RepoBlobPageQueryNode, {
+            owner_username: params.owner!,
+            name: params.repo!,
+            rev: params.rev!,
+            path: params["*"] ?? "",
           }),
         }),
       },

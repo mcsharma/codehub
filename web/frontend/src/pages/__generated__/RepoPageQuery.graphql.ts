@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<b4a76bbbf06c92179c2acacf20640b7b>>
+ * @generated SignedSource<<923665d8921a1926ec7f1f49ee7603c7>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -20,7 +20,6 @@ export type RepoPageQuery$data = {
     readonly username: string | null | undefined;
   } | null | undefined;
   readonly repository_by_owner_and_name: {
-    readonly id: string | null | undefined;
     readonly name: string | null | undefined;
     readonly owner: {
       readonly __typename: "Organization";
@@ -79,33 +78,33 @@ v5 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "id",
+  "name": "name",
   "storageKey": null
 },
 v6 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "name",
+  "name": "visibility",
   "storageKey": null
 },
 v7 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "visibility",
+  "name": "__typename",
   "storageKey": null
 },
 v8 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "__typename",
+  "name": "id",
   "storageKey": null
 },
 v9 = [
   (v2/*: any*/),
-  (v5/*: any*/)
+  (v8/*: any*/)
 ],
 v10 = [
   {
@@ -144,7 +143,6 @@ return {
         "selections": [
           (v5/*: any*/),
           (v6/*: any*/),
-          (v7/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -153,7 +151,7 @@ return {
             "name": "owner",
             "plural": false,
             "selections": [
-              (v8/*: any*/),
+              (v7/*: any*/),
               {
                 "kind": "InlineFragment",
                 "selections": (v3/*: any*/),
@@ -163,7 +161,7 @@ return {
               {
                 "kind": "InlineFragment",
                 "selections": [
-                  (v6/*: any*/)
+                  (v5/*: any*/)
                 ],
                 "type": "Organization",
                 "abstractKey": null
@@ -212,7 +210,6 @@ return {
         "selections": [
           (v5/*: any*/),
           (v6/*: any*/),
-          (v7/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -221,7 +218,7 @@ return {
             "name": "owner",
             "plural": false,
             "selections": [
-              (v8/*: any*/),
+              (v7/*: any*/),
               {
                 "kind": "InlineFragment",
                 "selections": (v9/*: any*/),
@@ -231,8 +228,8 @@ return {
               {
                 "kind": "InlineFragment",
                 "selections": [
-                  (v6/*: any*/),
-                  (v5/*: any*/)
+                  (v5/*: any*/),
+                  (v8/*: any*/)
                 ],
                 "type": "Organization",
                 "abstractKey": null
@@ -240,6 +237,7 @@ return {
             ],
             "storageKey": null
           },
+          (v8/*: any*/),
           {
             "alias": null,
             "args": (v10/*: any*/),
@@ -299,7 +297,7 @@ return {
                         "name": "date",
                         "storageKey": null
                       },
-                      (v8/*: any*/)
+                      (v7/*: any*/)
                     ],
                     "storageKey": null
                   },
@@ -356,16 +354,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "2442620d3f3e1c7982c20d98ea3247b0",
+    "cacheID": "67e013036adea85ede27b64eb4866b66",
     "id": null,
     "metadata": {},
     "name": "RepoPageQuery",
     "operationKind": "query",
-    "text": "query RepoPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    id\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n  }\n  ...RepoCommitsList_query_1SpurQ\n}\n\nfragment RepoCommitsList_query_1SpurQ on Query {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    commits(first: 15) {\n      edges {\n        node {\n          node\n          short_node\n          description\n          author\n          date\n          __typename\n        }\n        cursor\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n    id\n  }\n}\n"
+    "text": "query RepoPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    id\n  }\n  ...RepoCommitsList_query_1SpurQ\n}\n\nfragment RepoCommitsList_query_1SpurQ on Query {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    commits(first: 15) {\n      edges {\n        node {\n          node\n          short_node\n          description\n          author\n          date\n          __typename\n        }\n        cursor\n      }\n      pageInfo {\n        endCursor\n        hasNextPage\n      }\n    }\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "86ee949128d5c6c9ea8d4c0aa8687bdd";
+(node as any).hash = "80b382066357177f652a4a1586ed18af";
 
 export default node;

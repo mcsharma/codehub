@@ -21,6 +21,7 @@
     "@git-diff-view/react": "^0.1.7",
     "@mui/icons-material": "^9.2.0",
     "@mui/material": "^9.2.0",
+    "highlight.js": "^11.11.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-relay": "^20.1.1",

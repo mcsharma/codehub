@@ -115,6 +115,31 @@ type Query {
   user_by_username(username: String!): User
 }
 
+type RepoDirectory {
+  directories: [RepoDirectoryEntry!]
+  files: [RepoFileEntry!]
+  path: String
+}
+
+type RepoDirectoryEntry {
+  name: String
+  path: String
+}
+
+type RepoFile {
+  content: String
+  isBinary: Boolean
+  isTooLarge: Boolean
+  path: String
+  size: Int
+}
+
+type RepoFileEntry {
+  name: String
+  path: String
+  size: Int
+}
+
 type Repository {
   admins(after: ID, before: ID, first: Int, last: Int): RepositoryAdminsConnection
   bookmarks: [Bookmark!]
@@ -122,6 +147,8 @@ type Repository {
   commits(after: ID, before: ID, first: Int, last: Int): CommitConnection
   created_time: Int
   description: String
+  directory(path: String = "", rev: String = "tip"): RepoDirectory
+  file(path: String!, rev: String = "tip"): RepoFile
   id: ID
   is_deleted: Boolean
   name: String

@@ -19,19 +19,33 @@ export interface HgBookmark {
   date: [number, number]
 }
 
-async function hgwebFetch<T>(owner: string, repo: string, pathAndQuery: string): Promise<T> {
+function hgwebAuthHeaders(): HeadersInit {
   const token = process.env.HG_INTERNAL_TOKEN
   if (!token) {
     throw new Error('HG_INTERNAL_TOKEN is not configured')
   }
+  return { Authorization: 'Basic ' + Buffer.from(`internal:${token}`).toString('base64') }
+}
+
+async function hgwebFetch<T>(owner: string, repo: string, pathAndQuery: string): Promise<T> {
   const url = `${HG_WEB_BASE}/${owner}/${repo}/${pathAndQuery}`
-  const res = await fetch(url, {
-    headers: { Authorization: 'Basic ' + Buffer.from(`internal:${token}`).toString('base64') },
-  })
+  const res = await fetch(url, { headers: hgwebAuthHeaders() })
   if (!res.ok) {
     throw new Error(`hgweb request failed (${res.status}): ${pathAndQuery}`)
   }
   return res.json() as Promise<T>
+}
+
+// Raw (non-JSON) counterpart of hgwebFetch — used where the response isn't
+// JSON, or where the caller needs the actual bytes (e.g. to sniff for
+// binary content) rather than a decoded string.
+async function hgwebFetchRaw(owner: string, repo: string, pathAndQuery: string): Promise<Buffer> {
+  const url = `${HG_WEB_BASE}/${owner}/${repo}/${pathAndQuery}`
+  const res = await fetch(url, { headers: hgwebAuthHeaders() })
+  if (!res.ok) {
+    throw new Error(`hgweb request failed (${res.status}): ${pathAndQuery}`)
+  }
+  return Buffer.from(await res.arrayBuffer())
 }
 
 export async function fetchBookmarks(owner: string, repo: string): Promise<HgBookmark[]> {
@@ -86,18 +100,33 @@ export async function fetchChangeset(owner: string, repo: string, node: string):
 // portion — everything from the first such line onward — so callers get a
 // clean multi-file unified diff.
 export async function fetchRawDiff(owner: string, repo: string, node: string): Promise<string> {
-  const token = process.env.HG_INTERNAL_TOKEN
-  if (!token) {
-    throw new Error('HG_INTERNAL_TOKEN is not configured')
-  }
-  const url = `${HG_WEB_BASE}/${owner}/${repo}/raw-rev/${node}`
-  const res = await fetch(url, {
-    headers: { Authorization: 'Basic ' + Buffer.from(`internal:${token}`).toString('base64') },
-  })
-  if (!res.ok) {
-    throw new Error(`hgweb request failed (${res.status}): raw-rev/${node}`)
-  }
-  const patch = await res.text()
+  const patch = (await hgwebFetchRaw(owner, repo, `raw-rev/${node}`)).toString('utf-8')
   const diffStart = patch.search(/^diff -r /m)
   return diffStart === -1 ? '' : patch.slice(diffStart)
+}
+
+export interface HgDirectoryListing {
+  directories: { abspath: string; basename: string }[]
+  files: { abspath: string; basename: string; size: number; date: [number, number] }[]
+}
+
+// `/file/<rev>[/<path>]?style=json` lists a directory's immediate children
+// at a revision — no path segment means the repo root. There's no "whole
+// tree" endpoint, so browsing is inherently one directory at a time.
+export async function fetchDirectory(
+  owner: string,
+  repo: string,
+  rev: string,
+  path: string,
+): Promise<HgDirectoryListing> {
+  const suffix = path ? `${rev}/${path}` : rev
+  return hgwebFetch<HgDirectoryListing>(owner, repo, `file/${suffix}?style=json`)
+}
+
+// `/raw-file/<rev>/<path>` returns the file's raw bytes. hgweb always
+// responds with `Content-Type: application/binary` regardless of the
+// file's real type, so there's no server-side signal to tell text from
+// binary — callers have to sniff the bytes themselves.
+export async function fetchRawFile(owner: string, repo: string, rev: string, path: string): Promise<Buffer> {
+  return hgwebFetchRaw(owner, repo, `raw-file/${rev}/${path}`)
 }

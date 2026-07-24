@@ -1,22 +1,13 @@
-import { useState } from "react";
 import { graphql, usePreloadedQuery } from "react-relay";
-import { Link, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import type { RepoPageQuery } from "./__generated__/RepoPageQuery.graphql";
 import type { PreloadedQuery } from "react-relay";
 
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import CodeOutlinedIcon from "@mui/icons-material/CodeOutlined";
-import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
-import AdjustOutlinedIcon from "@mui/icons-material/AdjustOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import StatusBadge from "../components/StatusBadge";
-import CloneButton from "../components/CloneButton";
+import RepoHeader from "../components/RepoHeader";
 import RepoCommitsList from "./RepoCommitsList";
-import RepoSettingsPanel from "./RepoSettingsPanel";
 
 const RepoPage = () => {
   const { repoQueryRef } = useLoaderData() as {
@@ -33,7 +24,6 @@ const RepoPage = () => {
           owner_username: $owner_username
           name: $name
         ) {
-          id
           name
           visibility
           owner {
@@ -51,8 +41,6 @@ const RepoPage = () => {
     `,
     repoQueryRef
   );
-
-  const [activeTab, setActiveTab] = useState<"commits" | "settings">("commits");
 
   const repository = data.repository_by_owner_and_name;
   const { owner_username, name: repoName } = repoQueryRef.variables;
@@ -77,68 +65,16 @@ const RepoPage = () => {
   const isOwner = data.current_user?.username === ownerName;
 
   return (
-    <Box sx={{ bgcolor: "background.paper", borderBottom: "1px solid", borderColor: "divider" }}>
-      <Container maxWidth="lg" sx={{ pt: 4 }}>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2, gap: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              <Typography component={Link} to={`/${ownerName}`} color="text.secondary" sx={{ fontWeight: 400 }}>
-                {ownerName}
-              </Typography>{" "}
-              /{" "}
-              {repository.name}
-            </Typography>
-            <StatusBadge
-              label={repository.visibility === "PUBLIC" ? "Public" : "Private"}
-              tone={repository.visibility === "PUBLIC" ? "neutral" : "primary"}
-            />
-          </Box>
-          <CloneButton ownerUsername={ownerName} repoName={repository.name ?? repoName} />
-        </Box>
-
-        <Tabs value={activeTab} onChange={(_e, value) => setActiveTab(value)}>
-          <Tab
-            value="code"
-            disabled
-            icon={<CodeOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Code"
-          />
-          <Tab
-            value="commits"
-            icon={<HistoryOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Commits"
-          />
-          <Tab
-            value="issues"
-            disabled
-            icon={<AdjustOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Issues"
-          />
-          <Tab
-            value="settings"
-            disabled={!isOwner}
-            icon={<SettingsOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Settings"
-          />
-        </Tabs>
-      </Container>
-
+    <Box>
+      <RepoHeader
+        ownerUsername={ownerName}
+        repoName={repository.name ?? repoName}
+        visibility={repository.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
+        isOwner={isOwner}
+      />
       <Box sx={{ bgcolor: "background.default" }}>
         <Container maxWidth="lg" sx={{ py: 5 }}>
-          {activeTab === "settings" && isOwner ? (
-            <RepoSettingsPanel
-              repositoryId={repository.id ?? ""}
-              ownerUsername={ownerName}
-              repoName={repository.name ?? repoName}
-              visibility={repository.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
-            />
-          ) : (
-            <RepoCommitsList query={data} ownerUsername={ownerName} repoName={repository.name ?? repoName} />
-          )}
+          <RepoCommitsList query={data} ownerUsername={ownerName} repoName={repository.name ?? repoName} />
         </Container>
       </Box>
     </Box>

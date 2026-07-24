@@ -12,7 +12,9 @@ import { provisionRepoLocally, deleteRepoLocally } from '../../repos/provision-l
 import {
   fetchBookmarks,
   fetchChangeset,
+  fetchDirectory,
   fetchRawDiff,
+  fetchRawFile,
   fetchShortlog,
   type HgChangeset,
 } from '../../repos/hgweb-client.js'
@@ -175,6 +177,79 @@ const BookmarkObject = builder.objectRef<{ name: string; node: string; short_nod
   }),
 })
 
+// --- Directory / file browsing object types ---
+// Backed by hgweb's file/raw-file JSON+raw endpoints, not Prisma — see
+// repos/hgweb-client.ts. There's no "whole tree" endpoint, so this is
+// deliberately one directory level (or one file) per resolve, not a
+// recursive structure.
+
+interface RepoDirectoryEntryShape {
+  name: string
+  path: string
+}
+
+interface RepoFileEntryShape {
+  name: string
+  path: string
+  size: number
+}
+
+const RepoDirectoryEntryObject = builder.objectRef<RepoDirectoryEntryShape>('RepoDirectoryEntry').implement({
+  fields: (t) => ({
+    name: t.exposeString('name'),
+    path: t.exposeString('path'),
+  }),
+})
+
+const RepoFileEntryObject = builder.objectRef<RepoFileEntryShape>('RepoFileEntry').implement({
+  fields: (t) => ({
+    name: t.exposeString('name'),
+    path: t.exposeString('path'),
+    size: t.exposeInt('size'),
+  }),
+})
+
+interface RepoDirectoryShape {
+  path: string
+  directories: RepoDirectoryEntryShape[]
+  files: RepoFileEntryShape[]
+}
+
+const RepoDirectoryObject = builder.objectRef<RepoDirectoryShape>('RepoDirectory').implement({
+  fields: (t) => ({
+    path: t.exposeString('path'),
+    directories: t.field({ type: [RepoDirectoryEntryObject], resolve: (d) => d.directories }),
+    files: t.field({ type: [RepoFileEntryObject], resolve: (d) => d.files }),
+  }),
+})
+
+interface RepoFileShape {
+  path: string
+  size: number
+  isBinary: boolean
+  isTooLarge: boolean
+  content: string | null
+}
+
+const RepoFileObject = builder.objectRef<RepoFileShape>('RepoFile').implement({
+  fields: (t) => ({
+    path: t.exposeString('path'),
+    size: t.exposeInt('size'),
+    isBinary: t.exposeBoolean('isBinary'),
+    isTooLarge: t.exposeBoolean('isTooLarge'),
+    content: t.exposeString('content', { nullable: true }),
+  }),
+})
+
+// hgweb's JSON directory listing is inconsistent about leading slashes
+// (directories come back as e.g. "/web/bff", files as "web/.prettierignore"
+// — confirmed against real hgweb output) — strip a leading slash from
+// either so callers always get a clean root-relative path.
+const stripLeadingSlash = (p: string) => p.replace(/^\//, '')
+
+const MAX_FILE_SIZE_BYTES = 1_000_000
+const BINARY_SNIFF_BYTES = 8_000
+
 // --- Repository object type ---
 
 builder.prismaObject('Repository', {
@@ -252,6 +327,66 @@ builder.prismaObject('Repository', {
         await requireRepoReadAccess(ctx.user, ownerName, repository.name)
         const changeset = await fetchChangeset(ownerName, repository.name, args.node)
         return toCommitShape(ownerName, repository.name, changeset)
+      },
+    }),
+    directory: t.field({
+      type: RepoDirectoryObject,
+      nullable: true,
+      args: {
+        rev: t.arg.string({ required: false, defaultValue: 'tip' }),
+        path: t.arg.string({ required: false, defaultValue: '' }),
+      },
+      resolve: async (repository, args, ctx) => {
+        const ownerName = await resolveOwnerName(repository, ctx.prisma)
+        await requireRepoReadAccess(ctx.user, ownerName, repository.name)
+        const rev = args.rev ?? 'tip'
+        const path = args.path ?? ''
+        try {
+          const listing = await fetchDirectory(ownerName, repository.name, rev, path)
+          return {
+            path,
+            directories: listing.directories.map((d) => ({
+              name: d.basename,
+              path: stripLeadingSlash(d.abspath),
+            })),
+            files: listing.files.map((f) => ({
+              name: f.basename,
+              path: stripLeadingSlash(f.abspath),
+              size: f.size,
+            })),
+          }
+        } catch {
+          // Most commonly a nonexistent path (stale link, bad URL) — same
+          // "just not found" shape as everywhere else, not worth a 500.
+          return null
+        }
+      },
+    }),
+    file: t.field({
+      type: RepoFileObject,
+      nullable: true,
+      args: {
+        rev: t.arg.string({ required: false, defaultValue: 'tip' }),
+        path: t.arg.string({ required: true }),
+      },
+      resolve: async (repository, args, ctx) => {
+        const ownerName = await resolveOwnerName(repository, ctx.prisma)
+        await requireRepoReadAccess(ctx.user, ownerName, repository.name)
+        const rev = args.rev ?? 'tip'
+        try {
+          const buffer = await fetchRawFile(ownerName, repository.name, rev, args.path)
+          const isBinary = buffer.subarray(0, BINARY_SNIFF_BYTES).includes(0)
+          const isTooLarge = buffer.byteLength > MAX_FILE_SIZE_BYTES
+          return {
+            path: args.path,
+            size: buffer.byteLength,
+            isBinary,
+            isTooLarge,
+            content: !isBinary && !isTooLarge ? buffer.toString('utf-8') : null,
+          }
+        } catch {
+          return null
+        }
       },
     }),
   }),
