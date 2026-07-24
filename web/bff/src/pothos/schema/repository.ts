@@ -7,6 +7,8 @@ import { GraphQLError } from 'graphql'
 import { UserObject } from './user.js'
 import { OrganizationObject } from './organization.js'
 import { provisionRepoOnVm } from '../../repos/provision-on-vm.js'
+import { deleteRepoOnVm } from '../../repos/delete-on-vm.js'
+import { provisionRepoLocally, deleteRepoLocally } from '../../repos/provision-local.js'
 import {
   fetchBookmarks,
   fetchChangeset,
@@ -52,6 +54,22 @@ async function requireRepoReadAccess(user: ModelUser | null, ownerName: string, 
   if (!allowed) {
     throw new GraphQLError('Repository not found', { extensions: { code: 'NOT_FOUND' } })
   }
+}
+
+// Shared by update_repository_visibility and delete_repository: loads a
+// repo by id and requires the caller be its direct owner. Not
+// canAccessRepo's broader "isAdmin" (owner OR repo-admin OR org-admin) —
+// that check exists for hg push access; repo admins and org-owned repos
+// aren't reachable through any UI yet, so there's nothing to authorize
+// beyond plain ownership today. Same NOT_FOUND-shaped masking as
+// requireRepoReadAccess, for the same reason (don't leak existence to
+// callers who don't own the repo).
+async function requireOwnedRepo(user: ModelUser | null, db: typeof prisma, repoId: bigint) {
+  const repo = await db.repository.findUnique({ where: { id: repoId } })
+  if (!repo || !user || repo.ownerUserId !== user.id) {
+    throw new GraphQLError('Repository not found', { extensions: { code: 'NOT_FOUND' } })
+  }
+  return repo
 }
 
 // --- Enums ---
@@ -266,25 +284,36 @@ builder.queryField('repository_by_owner_and_name', (t) =>
         where: { username: args.owner_username },
         select: { id: true },
       })
+      let repo
       if (user) {
-        return ctx.prisma.repository.findUnique({
+        repo = await ctx.prisma.repository.findUnique({
           where: {
             ownerUserId_name: { ownerUserId: user.id, name: args.name },
           },
         })
-      }
-      const org = await ctx.prisma.modelOrganization.findUnique({
-        where: { name: args.owner_username },
-        select: { id: true },
-      })
-      if (org) {
-        return ctx.prisma.repository.findUnique({
-          where: {
-            ownerOrganizationId_name: { ownerOrganizationId: org.id, name: args.name },
-          },
+      } else {
+        const org = await ctx.prisma.modelOrganization.findUnique({
+          where: { name: args.owner_username },
+          select: { id: true },
         })
+        repo = org
+          ? await ctx.prisma.repository.findUnique({
+              where: {
+                ownerOrganizationId_name: { ownerOrganizationId: org.id, name: args.name },
+              },
+            })
+          : null
       }
-      return null
+      if (!repo) {
+        return null
+      }
+      // Same NOT_FOUND-vs-unauthorized masking as requireRepoReadAccess, but
+      // returning null instead of throwing — this field is nullable and
+      // every caller already treats null as "not found", so a private repo
+      // a caller can't read should look exactly like one that doesn't
+      // exist, not surface a GraphQL error.
+      const allowed = await canAccessRepo(ctx.user, args.owner_username, args.name, 'read')
+      return allowed ? repo : null
     },
   }),
 )
@@ -323,7 +352,14 @@ builder.mutationField('create_repository', (t) =>
       }
 
       try {
-        await provisionRepoOnVm(user.username, args.name)
+        // HG_LOCAL_REPOS_DIR is only ever set in local dev (see
+        // services/hg/README.md "Local dev" section) — Railway never sets
+        // it, so prod always takes the provisionRepoOnVm branch.
+        if (process.env.HG_LOCAL_REPOS_DIR) {
+          await provisionRepoLocally(user.username, args.name)
+        } else {
+          await provisionRepoOnVm(user.username, args.name)
+        }
       } catch (err) {
         // Compensating rollback — don't leave a Repository row with no
         // matching on-disk repo.
@@ -336,6 +372,48 @@ builder.mutationField('create_repository', (t) =>
       }
 
       return repo
+    },
+  }),
+)
+
+builder.mutationField('update_repository_visibility', (t) =>
+  t.prismaField({
+    type: 'Repository',
+    args: {
+      id: t.arg.id({ required: true }),
+      visibility: t.arg({ type: RepositoryVisibility, required: true }),
+    },
+    resolve: async (_query, _root, args, ctx) => {
+      const user = requireUser(ctx.user)
+      const repo = await requireOwnedRepo(user, ctx.prisma, BigInt(args.id))
+      return ctx.prisma.repository.update({
+        where: { id: repo.id },
+        data: { visibility: args.visibility },
+      })
+    },
+  }),
+)
+
+builder.mutationField('delete_repository', (t) =>
+  t.boolean({
+    args: { id: t.arg.id({ required: true }) },
+    resolve: async (_root, args, ctx) => {
+      const user = requireUser(ctx.user)
+      const repo = await requireOwnedRepo(user, ctx.prisma, BigInt(args.id))
+      const ownerName = await resolveOwnerName(repo, ctx.prisma)
+
+      // On-disk before Postgres, deliberately: if this throws, the
+      // Postgres row is left untouched, so a failure leaves a repo that's
+      // still visible and retryable rather than a row silently vanishing
+      // while its data survives, unreachable, on disk.
+      if (process.env.HG_LOCAL_REPOS_DIR) {
+        await deleteRepoLocally(ownerName, repo.name)
+      } else {
+        await deleteRepoOnVm(ownerName, repo.name)
+      }
+
+      await ctx.prisma.repository.delete({ where: { id: repo.id } })
+      return true
     },
   }),
 )

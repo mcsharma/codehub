@@ -11,9 +11,12 @@ import TerminalOutlinedIcon from "@mui/icons-material/TerminalOutlined";
 import ExpandMoreOutlinedIcon from "@mui/icons-material/ExpandMoreOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 
-// The public hg host every repo is served from — see services/hg/ and
-// web/bff/src/repos/hgweb-client.ts on the backend side.
-const HG_HOST = "hg.greensnippet.com";
+// The hg host every repo is served from — see services/hg/ and
+// web/bff/src/repos/hgweb-client.ts on the backend side. Overridden in
+// local dev (VITE_HG_HOST=localhost:8000, see .env.local) to point at the
+// local hgweb-proxy instead of prod's VM.
+const HG_HOST = import.meta.env.VITE_HG_HOST ?? "hg.greensnippet.com";
+const HG_PROTOCOL = HG_HOST.startsWith("localhost") ? "http" : "https";
 
 interface CloneButtonProps {
   ownerUsername: string;
@@ -25,7 +28,7 @@ const CloneButton = ({ ownerUsername, repoName }: CloneButtonProps) => {
   const [copied, setCopied] = useState(false);
   const open = Boolean(anchorEl);
 
-  const cloneUrl = `https://${HG_HOST}/${ownerUsername}/${repoName}`;
+  const cloneUrl = `${HG_PROTOCOL}://${HG_HOST}/${ownerUsername}/${repoName}`;
   const cloneCommand = `hg clone ${cloneUrl}`;
 
   const handleOpen = (event: MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);

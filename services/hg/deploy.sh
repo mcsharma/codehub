@@ -63,6 +63,12 @@ if deploy_file create-repo.sh /opt/hgservice/create-repo.sh; then
   run ssh "$HOST" 'chmod +x /opt/hgservice/create-repo.sh'
 fi
 
+delete_repo_changed=false
+if deploy_file delete-repo.sh /opt/hgservice/delete-repo.sh; then
+  delete_repo_changed=true
+  run ssh "$HOST" 'chmod +x /opt/hgservice/delete-repo.sh'
+fi
+
 if $service_changed; then
   echo "-- hgweb.service changed: reloading systemd + restarting hgweb --"
   run ssh "$HOST" 'systemctl daemon-reload && rm -rf /opt/hgservice/__pycache__ && systemctl restart hgweb'
@@ -84,7 +90,7 @@ if $nginx_changed; then
   run ssh "$HOST" 'nginx -t && systemctl reload nginx'
 fi
 
-if ! $hg_changed && ! $service_changed && ! $nginx_changed && ! $create_repo_changed; then
+if ! $hg_changed && ! $service_changed && ! $nginx_changed && ! $create_repo_changed && ! $delete_repo_changed; then
   echo "Nothing changed — VM already up to date."
 fi
 

@@ -10,5 +10,32 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  # Local stand-in for the DigitalOcean VM's hgweb (see
+  # services/hg/README.md "Local dev" section). Not published to the host —
+  # only hgweb-proxy talks to it, same as gunicorn only being reachable from
+  # nginx on the real VM.
+  hgweb-app:
+    build:
+      context: ../services/hg
+      dockerfile: Dockerfile.local
+    volumes:
+      - ../services/hg/hgweb_wsgi.py:/opt/hgservice/hgweb_wsgi.py:ro
+      - ../services/hg/hgweb.ini:/etc/hgweb.ini:ro
+      - ../services/hg/local-data/repos:/data/repos
+
+  # Local stand-in for the VM's nginx layer — same auth_request check
+  # against the local BFF, so permissions behave like prod. See
+  # services/hg/nginx-hgweb.local.conf.
+  hgweb-proxy:
+    image: nginx:alpine
+    depends_on:
+      - hgweb-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../services/hg/nginx-hgweb.local.conf:/etc/nginx/conf.d/default.conf:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 volumes:
   pgdata:

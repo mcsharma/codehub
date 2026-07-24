@@ -44,11 +44,13 @@ type CreatePersonalAccessTokenResult {
 type Mutation {
   create_personal_access_token(label: String!): CreatePersonalAccessTokenResult
   create_repository(description: String, name: String!, visibility: RepositoryVisibility!): Repository
+  delete_repository(id: ID!): Boolean
   logout: Boolean
 
   """No-op mutation for schema compatibility (e.g. Relay)."""
   noop: Boolean
   revoke_personal_access_token(id: ID!): Boolean
+  update_repository_visibility(id: ID!, visibility: RepositoryVisibility!): Repository
 }
 
 type Organization {

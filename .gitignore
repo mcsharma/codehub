@@ -31,6 +31,10 @@ coverage/
 # ─── Vite ────────────────────────────────────────────────────────
 .vite/
 
+# ─── Local hg repo storage (see services/hg/README.md) ───────────
+services/hg/local-data/repos/*
+!services/hg/local-data/repos/.gitkeep
+
 # ─── OS & Editor artifacts ───────────────────────────────────────
 .DS_Store
 Thumbs.db

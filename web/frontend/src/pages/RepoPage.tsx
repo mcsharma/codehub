@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { graphql, usePreloadedQuery } from "react-relay";
 import { Link, useLoaderData } from "react-router";
 import type { RepoPageQuery } from "./__generated__/RepoPageQuery.graphql";
@@ -15,6 +16,7 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import StatusBadge from "../components/StatusBadge";
 import CloneButton from "../components/CloneButton";
 import RepoCommitsList from "./RepoCommitsList";
+import RepoSettingsPanel from "./RepoSettingsPanel";
 
 const RepoPage = () => {
   const { repoQueryRef } = useLoaderData() as {
@@ -24,10 +26,14 @@ const RepoPage = () => {
   const data = usePreloadedQuery<RepoPageQuery>(
     graphql`
       query RepoPageQuery($owner_username: String!, $name: String!) {
+        current_user {
+          username
+        }
         repository_by_owner_and_name(
           owner_username: $owner_username
           name: $name
         ) {
+          id
           name
           visibility
           owner {
@@ -45,6 +51,8 @@ const RepoPage = () => {
     `,
     repoQueryRef
   );
+
+  const [activeTab, setActiveTab] = useState<"commits" | "settings">("commits");
 
   const repository = data.repository_by_owner_and_name;
   const { owner_username, name: repoName } = repoQueryRef.variables;
@@ -66,6 +74,8 @@ const RepoPage = () => {
         ? repository.owner.name
         : null) ?? owner_username;
 
+  const isOwner = data.current_user?.username === ownerName;
+
   return (
     <Box sx={{ bgcolor: "background.paper", borderBottom: "1px solid", borderColor: "divider" }}>
       <Container maxWidth="lg" sx={{ pt: 4 }}>
@@ -86,7 +96,7 @@ const RepoPage = () => {
           <CloneButton ownerUsername={ownerName} repoName={repository.name ?? repoName} />
         </Box>
 
-        <Tabs value="commits">
+        <Tabs value={activeTab} onChange={(_e, value) => setActiveTab(value)}>
           <Tab
             value="code"
             disabled
@@ -109,7 +119,7 @@ const RepoPage = () => {
           />
           <Tab
             value="settings"
-            disabled
+            disabled={!isOwner}
             icon={<SettingsOutlinedIcon fontSize="small" />}
             iconPosition="start"
             label="Settings"
@@ -119,7 +129,16 @@ const RepoPage = () => {
 
       <Box sx={{ bgcolor: "background.default" }}>
         <Container maxWidth="lg" sx={{ py: 5 }}>
-          <RepoCommitsList query={data} ownerUsername={ownerName} repoName={repository.name ?? repoName} />
+          {activeTab === "settings" && isOwner ? (
+            <RepoSettingsPanel
+              repositoryId={repository.id ?? ""}
+              ownerUsername={ownerName}
+              repoName={repository.name ?? repoName}
+              visibility={repository.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
+            />
+          ) : (
+            <RepoCommitsList query={data} ownerUsername={ownerName} repoName={repository.name ?? repoName} />
+          )}
         </Container>
       </Box>
     </Box>
