@@ -135,6 +135,8 @@ type RepoFile {
 }
 
 type RepoFileEntry {
+  last_commit_date: Int
+  last_commit_message: String
   name: String
   path: String
   size: Int

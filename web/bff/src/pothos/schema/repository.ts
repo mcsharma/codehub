@@ -13,6 +13,7 @@ import {
   fetchBookmarks,
   fetchChangeset,
   fetchDirectory,
+  fetchFileLog,
   fetchRawDiff,
   fetchRawFile,
   fetchShortlog,
@@ -192,6 +193,8 @@ interface RepoFileEntryShape {
   name: string
   path: string
   size: number
+  lastCommitMessage: string | null
+  lastCommitDate: number | null
 }
 
 const RepoDirectoryEntryObject = builder.objectRef<RepoDirectoryEntryShape>('RepoDirectoryEntry').implement({
@@ -206,6 +209,8 @@ const RepoFileEntryObject = builder.objectRef<RepoFileEntryShape>('RepoFileEntry
     name: t.exposeString('name'),
     path: t.exposeString('path'),
     size: t.exposeInt('size'),
+    last_commit_message: t.exposeString('lastCommitMessage', { nullable: true }),
+    last_commit_date: t.exposeInt('lastCommitDate', { nullable: true }),
   }),
 })
 
@@ -343,16 +348,22 @@ builder.prismaObject('Repository', {
         const path = args.path ?? ''
         try {
           const listing = await fetchDirectory(ownerName, repository.name, rev, path)
+          const filePaths = listing.files.map((f) => stripLeadingSlash(f.abspath))
+          const lastCommits = await Promise.all(
+            filePaths.map((filePath) => fetchFileLog(ownerName, repository.name, rev, filePath)),
+          )
           return {
             path,
             directories: listing.directories.map((d) => ({
               name: d.basename,
               path: stripLeadingSlash(d.abspath),
             })),
-            files: listing.files.map((f) => ({
+            files: listing.files.map((f, i) => ({
               name: f.basename,
-              path: stripLeadingSlash(f.abspath),
+              path: filePaths[i]!,
               size: f.size,
+              lastCommitMessage: lastCommits[i]?.desc ?? null,
+              lastCommitDate: lastCommits[i] ? Math.floor(lastCommits[i]!.date[0]) : null,
             })),
           }
         } catch {

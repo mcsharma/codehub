@@ -130,3 +130,25 @@ export async function fetchDirectory(
 export async function fetchRawFile(owner: string, repo: string, rev: string, path: string): Promise<Buffer> {
   return hgwebFetchRaw(owner, repo, `raw-file/${rev}/${path}`)
 }
+
+export interface HgLogEntry {
+  node: string
+  date: [number, number]
+  desc: string
+}
+
+// `/log/<rev>/<path>?style=json` returns the changesets that touched
+// that exact file path, tip-first — the first entry is the file's last
+// commit. This only works for files: hgweb's `/log` webcommand does a
+// manifest lookup, and directories aren't manifest entries, so this
+// 404s (real HTTP status, not a 200 with an `{error}` body) for both
+// directory paths and nonexistent files — either way we just have no
+// last-commit info to show.
+export async function fetchFileLog(owner: string, repo: string, rev: string, path: string): Promise<HgLogEntry | null> {
+  try {
+    const data = await hgwebFetch<{ entries: HgLogEntry[] }>(owner, repo, `log/${rev}/${path}?style=json`)
+    return data.entries[0] ?? null
+  } catch {
+    return null
+  }
+}

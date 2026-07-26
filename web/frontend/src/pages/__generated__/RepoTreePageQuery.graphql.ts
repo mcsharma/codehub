@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<af0d613ac41d625c9ae83fbad26c6054>>
+ * @generated SignedSource<<5379a2a9a843c24c478a33368e0a08fd>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -27,9 +27,10 @@ export type RepoTreePageQuery$data = {
         readonly path: string | null | undefined;
       }> | null | undefined;
       readonly files: ReadonlyArray<{
+        readonly last_commit_date: number | null | undefined;
+        readonly last_commit_message: string | null | undefined;
         readonly name: string | null | undefined;
         readonly path: string | null | undefined;
-        readonly size: number | null | undefined;
       }> | null | undefined;
       readonly path: string | null | undefined;
     } | null | undefined;
@@ -171,7 +172,14 @@ v11 = {
           "alias": null,
           "args": null,
           "kind": "ScalarField",
-          "name": "size",
+          "name": "last_commit_message",
+          "storageKey": null
+        },
+        {
+          "alias": null,
+          "args": null,
+          "kind": "ScalarField",
+          "name": "last_commit_date",
           "storageKey": null
         }
       ],
@@ -323,16 +331,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "0734d8c18753e991ec5916988d6bd8bb",
+    "cacheID": "0321a0d168094ab4abcc0236a0dbeb75",
     "id": null,
     "metadata": {},
     "name": "RepoTreePageQuery",
     "operationKind": "query",
-    "text": "query RepoTreePageQuery(\n  $owner_username: String!\n  $name: String!\n  $rev: String!\n  $path: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    directory(rev: $rev, path: $path) {\n      path\n      directories {\n        name\n        path\n      }\n      files {\n        name\n        path\n        size\n      }\n    }\n    id\n  }\n}\n"
+    "text": "query RepoTreePageQuery(\n  $owner_username: String!\n  $name: String!\n  $rev: String!\n  $path: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    directory(rev: $rev, path: $path) {\n      path\n      directories {\n        name\n        path\n      }\n      files {\n        name\n        path\n        last_commit_message\n        last_commit_date\n      }\n    }\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "695f32f85caa5ce36d998dbb13c4a021";
+(node as any).hash = "10cdb3313712d1586eedb072b8a6aaa8";
 
 export default node;

@@ -12,6 +12,17 @@
   display: none;
 }
 
+/* display:none above removes the +/- glyph itself, but its parent
+   (.diff-line-content-item) still reserves a fixed 2em padding-left for
+   that marker column regardless of whether the glyph renders — confirmed
+   by reading the library's source (DiffContent.tsx): the operator span's
+   `w-[1.5em] ml-[-1.5em]` only cancels out within that reserved 2em, it
+   doesn't shrink it. Zeroing the padding here removes the leftover gap
+   entirely instead of just hiding what sat inside it. */
+.diff-line-content-item {
+  padding-left: 0;
+}
+
 /* Slightly darker add/delete colors than the library's default light theme
    (#dafbe1 / #ffebe9 are quite pale) — same selector/specificity as the
    library's own light-theme rule in diff-view.css, just after it in source

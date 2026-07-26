@@ -9,9 +9,11 @@ import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
+import Divider from "@mui/material/Divider";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import RepoHeader from "../components/RepoHeader";
 import RepoPathBreadcrumb from "../components/RepoPathBreadcrumb";
+import RepoDirectoryTree from "../components/RepoDirectoryTree";
 import { formatFileSize } from "../utils/formatters";
 import { languageFromPath } from "../utils/languageFromPath";
 import { monoFontFamily } from "../theme";
@@ -110,61 +112,88 @@ const RepoBlobPage = () => {
             path={file?.path ?? ""}
           />
 
-          {!file ? (
-            <Typography color="text.secondary">This file doesn&apos;t exist.</Typography>
-          ) : file.isBinary || file.isTooLarge ? (
-            <Card sx={{ p: 4, display: "flex", alignItems: "center", gap: 2 }}>
-              <InsertDriveFileOutlinedIcon sx={{ color: "text.secondary" }} />
-              <Box>
-                <Typography sx={{ fontWeight: 700 }}>
-                  {file.isBinary ? "Binary file not shown" : "File too large to display"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {formatFileSize(file.size ?? 0)}
-                </Typography>
-              </Box>
+          <Divider sx={{ mb: 4 }} />
+
+          <Box sx={{ display: "flex", alignItems: "flex-start", bgcolor: "background.paper" }}>
+            <Card
+              sx={{
+                width: 280,
+                flexShrink: 0,
+                borderRadius: "8px",
+                position: "sticky",
+                top: 16,
+                maxHeight: "calc(100vh - 32px)",
+                overflowY: "auto",
+              }}
+            >
+              <RepoDirectoryTree
+                ownerUsername={ownerName}
+                repoName={repository.name ?? repoName}
+                rev={rev}
+                activePath={file?.path ?? ""}
+              />
             </Card>
-          ) : (
-            <Card sx={{ overflow: "hidden" }}>
-              <Box
-                component="pre"
-                sx={{
-                  m: 0,
-                  p: 0,
-                  overflowX: "auto",
-                  fontFamily: monoFontFamily,
-                  fontSize: "0.8125rem",
-                  lineHeight: 1.6,
-                }}
-              >
-                <Box component="code" sx={{ display: "table", width: "100%" }}>
-                  {highlightedLines!.map((line, index) => (
-                    <Box key={index} sx={{ display: "table-row" }}>
-                      <Box
-                        component="span"
-                        sx={{
-                          display: "table-cell",
-                          textAlign: "right",
-                          px: 2,
-                          userSelect: "none",
-                          color: "text.disabled",
-                          borderRight: "1px solid",
-                          borderColor: "divider",
-                        }}
-                      >
-                        {index + 1}
-                      </Box>
-                      <Box
-                        component="span"
-                        sx={{ display: "table-cell", pl: 2, pr: 3, whiteSpace: "pre" }}
-                        dangerouslySetInnerHTML={{ __html: line || "&nbsp;" }}
-                      />
+
+            <Divider orientation="vertical" flexItem sx={{ mr: 3 }} />
+
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              {!file ? (
+                <Typography color="text.secondary">This file doesn&apos;t exist.</Typography>
+              ) : file.isBinary || file.isTooLarge ? (
+                <Card sx={{ borderRadius: "8px", p: 4, display: "flex", alignItems: "center", gap: 2 }}>
+                  <InsertDriveFileOutlinedIcon sx={{ color: "text.secondary" }} />
+                  <Box>
+                    <Typography sx={{ fontWeight: 700 }}>
+                      {file.isBinary ? "Binary file not shown" : "File too large to display"}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {formatFileSize(file.size ?? 0)}
+                    </Typography>
+                  </Box>
+                </Card>
+              ) : (
+                <Card sx={{ borderRadius: "8px", overflow: "hidden" }}>
+                  <Box
+                    component="pre"
+                    sx={{
+                      m: 0,
+                      p: 0,
+                      overflowX: "auto",
+                      fontFamily: monoFontFamily,
+                      fontSize: "0.8125rem",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    <Box component="code" sx={{ display: "table", width: "100%" }}>
+                      {highlightedLines!.map((line, index) => (
+                        <Box key={index} sx={{ display: "table-row" }}>
+                          <Box
+                            component="span"
+                            sx={{
+                              display: "table-cell",
+                              textAlign: "right",
+                              px: 2,
+                              userSelect: "none",
+                              color: "text.disabled",
+                              borderRight: "1px solid",
+                              borderColor: "divider",
+                            }}
+                          >
+                            {index + 1}
+                          </Box>
+                          <Box
+                            component="span"
+                            sx={{ display: "table-cell", pl: 2, pr: 3, whiteSpace: "pre" }}
+                            dangerouslySetInnerHTML={{ __html: line || "&nbsp;" }}
+                          />
+                        </Box>
+                      ))}
                     </Box>
-                  ))}
-                </Box>
-              </Box>
-            </Card>
-          )}
+                  </Box>
+                </Card>
+              )}
+            </Box>
+          </Box>
         </Container>
       </Box>
     </Box>
