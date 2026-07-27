@@ -5,20 +5,19 @@ import type { PreloadedQuery } from 'react-relay'
 import type { NewRepoPageQuery } from './__generated__/NewRepoPageQuery.graphql'
 import type { NewRepoPageCreateMutation } from './__generated__/NewRepoPageCreateMutation.graphql'
 
-import Container from '@mui/material/Container'
-import Typography from '@mui/material/Typography'
-import TextField from '@mui/material/TextField'
-import InputAdornment from '@mui/material/InputAdornment'
-import Button from '@mui/material/Button'
-import RadioGroup from '@mui/material/RadioGroup'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Radio from '@mui/material/Radio'
-import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import Alert from '@mui/material/Alert'
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined'
+import { Lightbulb } from 'lucide-react'
+import { Button } from '../components/ui/button'
+import { Textarea } from '../components/ui/textarea'
+import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group'
+import { Alert, AlertDescription } from '../components/ui/alert'
+import { cn } from '@/lib/utils'
 
 export type { NewRepoPageQuery }
+
+const VISIBILITY_OPTIONS = [
+  { value: 'PUBLIC', label: 'Public', helper: 'Anyone on the internet can see this repository.' },
+  { value: 'PRIVATE', label: 'Private', helper: 'Only you and people you choose can see this.' },
+] as const
 
 const NewRepoPage = () => {
   const navigate = useNavigate()
@@ -62,11 +61,11 @@ const NewRepoPage = () => {
 
   if (!data.current_user) {
     return (
-      <Container maxWidth="sm" sx={{ py: 4 }}>
-        <Alert severity="warning">
-          You need to be logged in to create a repository.
+      <div className="mx-auto max-w-[600px] px-4 py-8">
+        <Alert variant="warning">
+          <AlertDescription>You need to be logged in to create a repository.</AlertDescription>
         </Alert>
-      </Container>
+      </div>
     )
   }
   const username = data.current_user.username
@@ -86,197 +85,101 @@ const NewRepoPage = () => {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Box sx={{ textAlign: 'center', mb: 5 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          Create a new repository
-        </Typography>
-        <Typography color="text.secondary" sx={{ mt: 1 }}>
+    <div className="mx-auto max-w-[600px] px-4 py-16">
+      <div className="mb-10 text-center">
+        <h1 className="text-[2.125rem] font-bold">Create a new repository</h1>
+        <p className="mt-2 text-muted-foreground">
           A repository contains all your project files and revision history.
-        </Typography>
-      </Box>
+        </p>
+      </div>
 
-      <Card sx={{ p: 4 }}>
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}
-        >
-          {error && <Alert severity="error">{error}</Alert>}
+      <div className="rounded-[4px] border border-border bg-card p-8 shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+          {error && (
+            <Alert variant="danger">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-          <Box>
-            <Typography sx={{ fontWeight: 700, mb: 1 }}>
-              Repository Name *
-            </Typography>
-            <TextField
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              fullWidth
-              autoFocus
-              placeholder="my-awesome-project"
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Typography
-                        color="text.secondary"
-                        sx={{ fontWeight: 500 }}
-                      >
-                        {username} /
-                      </Typography>
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{
-                display: 'block',
-                mt: 1,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-              }}
-            >
+          <div>
+            <p className="mb-2 font-bold">Repository Name *</p>
+            <div className="flex h-9 w-full items-center rounded-md border border-input bg-[#f9fafb] px-3 shadow-xs transition-[color,box-shadow,border-color] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
+              <span className="shrink-0 text-sm font-medium text-muted-foreground">{username} /</span>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                autoFocus
+                placeholder="my-awesome-project"
+                className="ml-1 h-full min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
+              />
+            </div>
+            <p className="mt-2 text-xs font-bold text-muted-foreground uppercase">
               Great repository names are short and memorable.
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
-          <Box>
-            <Typography sx={{ fontWeight: 700, mb: 1 }}>
-              Description{' '}
-              <Typography
-                component="span"
-                color="text.secondary"
-                sx={{ fontWeight: 400 }}
-              >
-                (optional)
-              </Typography>
-            </Typography>
-            <TextField
+          <div>
+            <p className="mb-2 font-bold">
+              Description <span className="font-normal text-muted-foreground">(optional)</span>
+            </p>
+            <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              fullWidth
-              multiline
               rows={3}
               placeholder="A brief description of your project..."
             />
-          </Box>
+          </div>
 
-          <Box sx={{ pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
-            <Typography sx={{ fontWeight: 700, mb: 2 }}>Visibility</Typography>
+          <div className="border-t border-border pt-6">
+            <p className="mb-4 font-bold">Visibility</p>
             <RadioGroup
               value={visibility}
-              onChange={(e) =>
-                setVisibility(e.target.value as 'PUBLIC' | 'PRIVATE')
-              }
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                gap: 2,
-              }}
+              onValueChange={(value) => setVisibility(value as 'PUBLIC' | 'PRIVATE')}
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2"
             >
-              {(
-                [
-                  {
-                    value: 'PUBLIC',
-                    label: 'Public',
-                    helper: 'Anyone on the internet can see this repository.',
-                  },
-                  {
-                    value: 'PRIVATE',
-                    label: 'Private',
-                    helper: 'Only you and people you choose can see this.',
-                  },
-                ] as const
-              ).map((option) => (
-                <Card
+              {VISIBILITY_OPTIONS.map((option) => (
+                <label
                   key={option.value}
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    cursor: 'pointer',
-                    borderColor:
-                      visibility === option.value ? 'primary.main' : 'divider',
-                    borderWidth: 2,
-                    bgcolor:
-                      visibility === option.value ? '#eff6ff' : 'transparent',
-                  }}
-                  onClick={() => setVisibility(option.value)}
+                  className={cn(
+                    'flex cursor-pointer items-start gap-2 rounded-[4px] border-2 p-4',
+                    visibility === option.value ? 'border-primary bg-[#eff6ff]' : 'border-border bg-transparent',
+                  )}
                 >
-                  <FormControlLabel
-                    value={option.value}
-                    control={<Radio />}
-                    sx={{ alignItems: 'flex-start', m: 0 }}
-                    label={
-                      <Box sx={{ ml: 1 }}>
-                        <Typography sx={{ fontWeight: 700 }}>
-                          {option.label}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {option.helper}
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                </Card>
+                  <RadioGroupItem value={option.value} className="mt-0.5" />
+                  <div>
+                    <p className="font-bold">{option.label}</p>
+                    <p className="text-xs text-muted-foreground">{option.helper}</p>
+                  </div>
+                </label>
               ))}
             </RadioGroup>
-          </Box>
+          </div>
 
-          <Box
-            sx={{
-              pt: 3,
-              borderTop: '1px solid',
-              borderColor: 'divider',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 2,
-            }}
-          >
-            <Button onClick={() => navigate(-1)} color="inherit">
+          <div className="flex justify-end gap-4 border-t border-border pt-6">
+            <Button type="button" variant="ghost" onClick={() => navigate(-1)}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={isCreating || !name}
-              size="large"
-            >
+            <Button type="submit" size="lg" disabled={isCreating || !name}>
               {isCreating ? 'Creating…' : 'Create Repository'}
             </Button>
-          </Box>
-        </Box>
-      </Card>
+          </div>
+        </form>
+      </div>
 
-      <Card sx={{ mt: 4, p: 3, display: 'flex', gap: 2, bgcolor: 'grey.50' }}>
-        <Box
-          sx={{
-            width: 40,
-            height: 40,
-            borderRadius: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'primary.main',
-            border: '1px solid',
-            borderColor: 'divider',
-            flexShrink: 0,
-          }}
-        >
-          <LightbulbOutlinedIcon fontSize="small" />
-        </Box>
-        <Box>
-          <Typography sx={{ fontWeight: 700 }}>Pro Tip</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            You can initialize this repository with a README or an .hgignore
-            file later using our CLI once it&apos;s created.
-          </Typography>
-        </Box>
-      </Card>
-    </Container>
+      <div className="mt-8 flex gap-4 rounded-[4px] border border-border bg-[#fafafa] p-6 shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border text-primary">
+          <Lightbulb size={16} />
+        </div>
+        <div>
+          <p className="font-bold">Pro Tip</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            You can initialize this repository with a README or an .hgignore file later using our CLI once
+            it&apos;s created.
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
 

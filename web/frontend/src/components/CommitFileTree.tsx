@@ -1,115 +1,77 @@
-import { useState } from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Collapse from "@mui/material/Collapse";
-import FolderIcon from "@mui/icons-material/Folder";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import ExpandMoreOutlinedIcon from "@mui/icons-material/ExpandMoreOutlined";
-import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
-import { buildFileTree } from "../utils/buildFileTree";
-import type { FileTreeNode } from "../utils/buildFileTree";
+import { useState } from 'react'
+import { ChevronDown, ChevronRight, FileText, Folder } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { buildFileTree } from '../utils/buildFileTree'
+import type { FileTreeNode } from '../utils/buildFileTree'
 
 // Apple's HIG "System Blue" — matches RepoDirectoryTree's folder color so
 // the two sidebar trees (Code tab vs. commit diff view) read as the same
 // component visually.
-const FOLDER_BLUE = "#0A84FF";
+const FOLDER_BLUE = '#0A84FF'
 
-const statusColor = (status: string): string | undefined => {
-  if (status === "added") return "success.main";
-  if (status === "removed") return "error.main";
-  return "warning.main"; // modified
-};
+const statusDotClassName = (status: string): string => {
+  if (status === 'added') return 'bg-success-foreground'
+  if (status === 'removed') return 'bg-destructive'
+  return 'bg-warning-foreground' // modified
+}
 
 interface NodeProps {
-  node: FileTreeNode;
-  depth: number;
-  activePath: string | null;
-  onSelectFile: (path: string) => void;
+  node: FileTreeNode
+  depth: number
+  activePath: string | null
+  onSelectFile: (path: string) => void
 }
 
 const FileTreeNodeRow = ({ node, depth, activePath, onSelectFile }: NodeProps) => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(true)
+  const indent = { paddingLeft: `${8 + depth * 12}px` }
 
-  if (node.type === "file") {
-    const isActive = node.path === activePath;
+  if (node.type === 'file') {
+    const isActive = node.path === activePath
     return (
-      <Box
-        component="button"
+      <button
+        type="button"
         onClick={() => onSelectFile(node.path)}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          width: "100%",
-          border: "none",
-          background: isActive ? "#eff6ff" : "transparent",
-          py: 0.5,
-          pl: 1 + depth * 1.5,
-          pr: 1,
-          cursor: "pointer",
-          textAlign: "left",
-          "&:hover": { background: isActive ? "#eff6ff" : "action.hover" },
-        }}
+        style={indent}
+        className={cn(
+          'flex w-full items-center gap-1.5 border-none py-1 pr-2 text-left',
+          isActive ? 'bg-[#eff6ff]' : 'bg-transparent hover:bg-accent',
+        )}
       >
-        <Box sx={{ width: 20, flexShrink: 0, display: "flex", justifyContent: "center" }}>
-          <Box
-            sx={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              bgcolor: statusColor(node.status ?? ""),
-            }}
-          />
-        </Box>
-        <InsertDriveFileOutlinedIcon fontSize="small" sx={{ color: "text.secondary", flexShrink: 0 }} />
-        <Typography
-          variant="body2"
-          sx={{
-            color: isActive ? "primary.main" : "text.primary",
-            fontWeight: isActive ? 700 : 400,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
+        <span className="flex w-5 shrink-0 justify-center">
+          <span className={cn('size-1.5 rounded-full', statusDotClassName(node.status ?? ''))} />
+        </span>
+        <FileText size={16} className="shrink-0 text-muted-foreground" />
+        <span
+          className={cn(
+            'overflow-hidden text-ellipsis whitespace-nowrap text-sm',
+            isActive ? 'font-bold text-primary' : 'font-normal text-foreground',
+          )}
         >
           {node.name}
-        </Typography>
-      </Box>
-    );
+        </span>
+      </button>
+    )
   }
 
   return (
-    <Box>
-      <Box
-        component="button"
+    <div>
+      <button
+        type="button"
         onClick={() => setExpanded((e) => !e)}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          width: "100%",
-          border: "none",
-          background: "transparent",
-          py: 0.5,
-          pl: 1 + depth * 1.5,
-          pr: 1,
-          cursor: "pointer",
-          textAlign: "left",
-          "&:hover": { background: "action.hover" },
-        }}
+        style={indent}
+        className="flex w-full items-center gap-1.5 border-none bg-transparent py-1 pr-2 text-left hover:bg-accent"
       >
         {expanded ? (
-          <ExpandMoreOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
+          <ChevronDown size={16} className="shrink-0 text-muted-foreground" />
         ) : (
-          <ChevronRightOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
+          <ChevronRight size={16} className="shrink-0 text-muted-foreground" />
         )}
-        <FolderIcon fontSize="small" sx={{ color: FOLDER_BLUE, flexShrink: 0 }} />
-        <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
-          {node.name}
-        </Typography>
-      </Box>
-      <Collapse in={expanded}>
-        {node.children?.map((child) => (
+        <Folder size={16} fill={FOLDER_BLUE} strokeWidth={1} className="shrink-0" style={{ color: FOLDER_BLUE }} />
+        <span className="whitespace-nowrap text-sm">{node.name}</span>
+      </button>
+      {expanded &&
+        node.children?.map((child) => (
           <FileTreeNodeRow
             key={child.path}
             node={child}
@@ -118,15 +80,14 @@ const FileTreeNodeRow = ({ node, depth, activePath, onSelectFile }: NodeProps) =
             onSelectFile={onSelectFile}
           />
         ))}
-      </Collapse>
-    </Box>
-  );
-};
+    </div>
+  )
+}
 
 interface CommitFileTreeProps {
-  files: { path: string; status: string }[];
-  activePath: string | null;
-  onSelectFile: (path: string) => void;
+  files: { path: string; status: string }[]
+  activePath: string | null
+  onSelectFile: (path: string) => void
 }
 
 // Styling mirrors RepoDirectoryTree (the Code tab's sidebar) exactly —
@@ -134,15 +95,15 @@ interface CommitFileTreeProps {
 // built differently (this one has the full file list up front and builds
 // a client-side trie, RepoDirectoryTree fetches level-by-level).
 const CommitFileTree = ({ files, activePath, onSelectFile }: CommitFileTreeProps) => {
-  const tree = buildFileTree(files);
+  const tree = buildFileTree(files)
 
   return (
-    <Box>
+    <div>
       {tree.map((node) => (
         <FileTreeNodeRow key={node.path} node={node} depth={0} activePath={activePath} onSelectFile={onSelectFile} />
       ))}
-    </Box>
-  );
-};
+    </div>
+  )
+}
 
-export default CommitFileTree;
+export default CommitFileTree

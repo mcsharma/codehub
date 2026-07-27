@@ -1,21 +1,16 @@
-import { useState } from "react";
-import type { MouseEvent } from "react";
 import { Link } from "react-router";
 import { graphql, useFragment } from "react-relay";
+import { FolderOpen, Key, LogOut } from "lucide-react";
 import type { AppNavBar_user$key } from "./__generated__/AppNavBar_user.graphql";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Divider from "@mui/material/Divider";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
-import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
-import ButtonBase from "@mui/material/ButtonBase";
+import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import UserAvatar from "./UserAvatar";
 
 interface AppNavBarProps {
@@ -27,20 +22,9 @@ interface AppNavBarProps {
 // mocks, but not wired up (no Dashboard/Explore/Documentation surface
 // exists yet).
 const InertNavLink = ({ label }: { label: string }) => (
-  <Typography
-    component="span"
-    sx={{
-      px: 1.5,
-      py: 0.5,
-      borderRadius: 2,
-      fontSize: "0.875rem",
-      fontWeight: 500,
-      color: "text.secondary",
-      cursor: "default",
-    }}
-  >
+  <span className="cursor-default rounded-[24px] px-3 py-1 text-sm font-medium text-muted-foreground">
     {label}
-  </Typography>
+  </span>
 );
 
 const AppNavBar = ({ currentUser: currentUserRef, onLogout }: AppNavBarProps) => {
@@ -54,42 +38,14 @@ const AppNavBar = ({ currentUser: currentUserRef, onLogout }: AppNavBarProps) =>
     currentUserRef
   );
 
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const menuOpen = Boolean(anchorEl);
-
-  const handleAvatarClick = (event: MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleMenuClose = () => setAnchorEl(null);
-
   return (
-    <AppBar position="sticky">
-      <Toolbar sx={{ gap: 4, minHeight: 48, "@media (min-width: 600px)": { minHeight: 48 } }}>
-        <Box
-          component={Link}
+    <header className="sticky top-0 z-[1100] border-b border-border bg-background text-foreground">
+      <div className="flex min-h-12 items-center gap-8 px-4 sm:px-6">
+        <Link
           to="/"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1.25,
-            textDecoration: "none",
-            color: "text.primary",
-            fontWeight: 700,
-            fontSize: "1.125rem",
-          }}
+          className="flex items-center gap-2.5 text-[1.125rem] font-bold text-foreground no-underline"
         >
-          <Box
-            sx={{
-              width: 28,
-              height: 28,
-              borderRadius: 2,
-              bgcolor: "primary.main",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <div className="flex h-7 w-7 items-center justify-center rounded-[24px] bg-primary text-white">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path
                 d="M12 4V12M12 12L7 7M12 12L17 7M12 12V20"
@@ -99,88 +55,57 @@ const AppNavBar = ({ currentUser: currentUserRef, onLogout }: AppNavBarProps) =>
                 strokeLinejoin="round"
               />
             </svg>
-          </Box>
+          </div>
           CodeHub
-        </Box>
+        </Link>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flex: 1 }}>
+        <nav className="flex flex-1 items-center gap-1">
           <InertNavLink label="Dashboard" />
           {currentUser && (
-            <Button
-              component={Link}
+            <Link
               to={`/${currentUser.username}`}
-              sx={{
-                px: 1.5,
-                py: 0.5,
-                borderRadius: 2,
-                fontSize: "0.875rem",
-                fontWeight: 700,
-                color: "text.primary",
-                bgcolor: "grey.100",
-                "&:hover": { bgcolor: "grey.200" },
-              }}
+              className="rounded-[24px] bg-secondary px-3 py-1 text-sm font-bold text-foreground no-underline hover:bg-[#eeeeee]"
             >
               Repositories
-            </Button>
+            </Link>
           )}
           <InertNavLink label="Explore" />
           <InertNavLink label="Documentation" />
-        </Box>
+        </nav>
 
         {currentUser ? (
-          <>
-            <ButtonBase
-              onClick={handleAvatarClick}
-              sx={{ borderRadius: "50%" }}
+          <DropdownMenu>
+            <DropdownMenuTrigger
               aria-label="Account menu"
+              className="rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               <UserAvatar />
-            </ButtonBase>
-            <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
-              <Typography
-                variant="caption"
-                sx={{ display: "block", px: 2, py: 1, color: "text.secondary" }}
-              >
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel className="font-normal text-muted-foreground">
                 Signed in as {currentUser.first_name ?? currentUser.username}
-              </Typography>
-              <Divider />
-              <MenuItem
-                component={Link}
-                to={`/${currentUser.username}`}
-                onClick={handleMenuClose}
-              >
-                <ListItemIcon>
-                  <FolderOutlinedIcon fontSize="small" />
-                </ListItemIcon>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem render={<Link to={`/${currentUser.username}`} />}>
+                <FolderOpen className="size-4" />
                 My Repositories
-              </MenuItem>
-              <MenuItem component={Link} to="/settings/tokens" onClick={handleMenuClose}>
-                <ListItemIcon>
-                  <KeyOutlinedIcon fontSize="small" />
-                </ListItemIcon>
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link to="/settings/tokens" />}>
+                <Key className="size-4" />
                 Personal Access Tokens
-              </MenuItem>
-              <Divider />
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose();
-                  onLogout();
-                }}
-              >
-                <ListItemIcon>
-                  <LogoutOutlinedIcon fontSize="small" />
-                </ListItemIcon>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onLogout}>
+                <LogOut className="size-4" />
                 Logout
-              </MenuItem>
-            </Menu>
-          </>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : (
-          <Button variant="contained" component="a" href="/auth/google">
-            Login with Google
-          </Button>
+          <Button render={<a href="/auth/google" />}>Login with Google</Button>
         )}
-      </Toolbar>
-    </AppBar>
+      </div>
+    </header>
   );
 };
 

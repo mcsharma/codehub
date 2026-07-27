@@ -1,17 +1,14 @@
-import Container from '@mui/material/Container'
-import Typography from '@mui/material/Typography'
-
 interface RepoNotFoundProps {
   ownerUsername: string
   repoName: string
 }
 
 const RepoNotFound = ({ ownerUsername, repoName }: RepoNotFoundProps) => (
-  <Container maxWidth="lg" sx={{ py: 6 }}>
-    <Typography color="text.secondary">
+  <div className="mx-auto max-w-[1024px] px-4 py-12 sm:px-6">
+    <p className="text-muted-foreground">
       Repository &quot;{ownerUsername}/{repoName}&quot; not found.
-    </Typography>
-  </Container>
+    </p>
+  </div>
 )
 
 export default RepoNotFound

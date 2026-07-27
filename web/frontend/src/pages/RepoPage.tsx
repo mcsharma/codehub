@@ -3,8 +3,6 @@ import { useLoaderData } from "react-router";
 import type { RepoPageQuery } from "./__generated__/RepoPageQuery.graphql";
 import type { PreloadedQuery } from "react-relay";
 
-import Container from "@mui/material/Container";
-import Box from "@mui/material/Box";
 import RepoHeader from "../components/RepoHeader";
 import RepoNotFound from "../components/RepoNotFound";
 import RepoCommitsList from "./RepoCommitsList";
@@ -54,19 +52,19 @@ const RepoPage = () => {
   const isOwner = data.current_user?.username === ownerName;
 
   return (
-    <Box>
+    <div>
       <RepoHeader
         ownerUsername={ownerName}
         repoName={repository.name ?? repoName}
         visibility={repository.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
         isOwner={isOwner}
       />
-      <Box sx={{ bgcolor: "background.default" }}>
-        <Container maxWidth="lg" sx={{ py: 5 }}>
+      <div className="bg-background">
+        <div className="mx-auto max-w-[1200px] px-4 py-10">
           <RepoCommitsList query={data} ownerUsername={ownerName} repoName={repository.name ?? repoName} />
-        </Container>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -1,30 +1,23 @@
-import Avatar from '@mui/material/Avatar'
-import AccountCircleIcon from '@mui/icons-material/AccountCircle'
-import type { SxProps, Theme } from '@mui/material/styles'
+import { CircleUserRound } from "lucide-react";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
-  size?: number
-  sx?: SxProps<Theme>
+  size?: number;
+  className?: string;
 }
 
 // No photo storage exists yet (Google profile pictures aren't persisted),
 // so every avatar is this generic icon rather than a broken/missing image.
-const UserAvatar = ({ size = 32, sx }: UserAvatarProps) => {
-  return (
-    <Avatar
-      sx={{
-        width: size,
-        height: size,
-        bgcolor: 'background.paper',
-        border: '1px solid',
-        borderColor: 'divider',
-        color: 'text.secondary',
-        ...sx,
-      }}
-    >
-      <AccountCircleIcon sx={{ width: '80%', height: '80%' }} />
-    </Avatar>
-  )
-}
+const UserAvatar = ({ size = 32, className }: UserAvatarProps) => (
+  <Avatar
+    style={{ width: size, height: size }}
+    className={cn("border border-border bg-background text-muted-foreground", className)}
+  >
+    <AvatarFallback className="bg-transparent">
+      <CircleUserRound size={Math.round(size * 0.8)} />
+    </AvatarFallback>
+  </Avatar>
+);
 
-export default UserAvatar
+export default UserAvatar;

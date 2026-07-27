@@ -4,7 +4,6 @@ import { Outlet, useLoaderData, useParams } from 'react-router'
 import type { RepoCodeShellQuery } from './__generated__/RepoCodeShellQuery.graphql'
 import type { PreloadedQuery } from 'react-relay'
 
-import Box from '@mui/material/Box'
 import RepoHeader from '../components/RepoHeader'
 import RepoPathBreadcrumb from '../components/RepoPathBreadcrumb'
 import RepoDirectoryTree from '../components/RepoDirectoryTree'
@@ -75,7 +74,7 @@ const RepoCodeShell = () => {
   const repoName = repository.name ?? repoNameParam
 
   return (
-    <Box>
+    <div>
       <RepoHeader
         ownerUsername={ownerName}
         repoName={repoName}
@@ -108,7 +107,7 @@ const RepoCodeShell = () => {
           <Outlet />
         </Suspense>
       </CollapsibleSidebarPane>
-    </Box>
+    </div>
   )
 }
 

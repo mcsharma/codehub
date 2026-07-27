@@ -6,23 +6,19 @@ import type { TokensPageQuery } from './__generated__/TokensPageQuery.graphql'
 import type { TokensPageCreateMutation } from './__generated__/TokensPageCreateMutation.graphql'
 import type { TokensPageRevokeMutation } from './__generated__/TokensPageRevokeMutation.graphql'
 
-import Container from '@mui/material/Container'
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import Card from '@mui/material/Card'
-import Button from '@mui/material/Button'
-import IconButton from '@mui/material/IconButton'
-import Divider from '@mui/material/Divider'
-import Alert from '@mui/material/Alert'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogContent from '@mui/material/DialogContent'
-import DialogActions from '@mui/material/DialogActions'
-import TextField from '@mui/material/TextField'
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
-import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined'
+import { Info, Pencil, Trash2, Key } from 'lucide-react'
+import { Button } from '../components/ui/button'
+import { Separator } from '../components/ui/separator'
+import { Alert, AlertDescription } from '../components/ui/alert'
+import { Input } from '../components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../components/ui/dialog'
+import { cn } from '@/lib/utils'
 import StatusBadge from '../components/StatusBadge'
 
 const SIDEBAR_ITEMS = [
@@ -110,240 +106,158 @@ const TokensPage = () => {
   const tokens = data.my_personal_access_tokens ?? []
 
   return (
-    <Container maxWidth="lg" sx={{ py: 5 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', lg: 'row' },
-          gap: 6,
-        }}
-      >
-        <Box component="aside" sx={{ width: { lg: 260 }, flexShrink: 0 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              display: 'block',
-              px: 1.5,
-              mb: 1.5,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              color: 'text.secondary',
-            }}
-          >
+    <div className="mx-auto max-w-[1200px] px-4 py-10">
+      <div className="flex flex-col gap-12 lg:flex-row">
+        <aside className="w-full shrink-0 lg:w-[260px]">
+          <span className="mb-3 block px-3 text-xs font-bold text-muted-foreground uppercase">
             Account Settings
-          </Typography>
+          </span>
           {SIDEBAR_ITEMS.map((item) => {
             const active = item === 'Access Tokens'
             return (
-              <Box
+              <div
                 key={item}
-                sx={{
-                  px: 1.5,
-                  py: 1,
-                  borderRadius: 2,
-                  fontSize: '0.875rem',
-                  fontWeight: active ? 700 : 500,
-                  color: active ? 'primary.main' : 'text.secondary',
-                  bgcolor: active ? 'background.default' : 'transparent',
-                  border: active ? '1px solid' : 'none',
-                  borderColor: 'divider',
-                  cursor: active ? 'default' : 'default',
-                }}
+                className={cn(
+                  'cursor-default rounded-full px-3 py-2 text-sm',
+                  active
+                    ? 'border border-border bg-background font-bold text-primary'
+                    : 'border border-transparent font-medium text-muted-foreground',
+                )}
               >
                 {item}
-              </Box>
+              </div>
             )
           })}
-        </Box>
+        </aside>
 
-        <Box sx={{ flex: 1, maxWidth: 720 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 2,
-              mb: 4,
-            }}
-          >
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                Personal Access Tokens
-              </Typography>
-              <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+        <div className="max-w-[720px] flex-1">
+          <div className="mb-8 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold">Personal Access Tokens</h1>
+              <p className="mt-1 text-muted-foreground">
                 Tokens you can use to authenticate with the CodeHub CLI or API.
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              onClick={() => setCreateDialogOpen(true)}
-              sx={{ flexShrink: 0 }}
-            >
+              </p>
+            </div>
+            <Button onClick={() => setCreateDialogOpen(true)} className="shrink-0">
               Generate Token
             </Button>
-          </Box>
+          </div>
 
-          <Card
-            sx={{
-              p: 2.5,
-              mb: 4,
-              display: 'flex',
-              gap: 2,
-              bgcolor: '#eff6ff',
-              border: 'none',
-            }}
-          >
-            <InfoOutlinedIcon sx={{ color: 'primary.main' }} />
-            <Box>
-              <Typography sx={{ fontWeight: 700, color: 'primary.main' }}>
-                Security Note
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ mt: 0.5, color: 'primary.main' }}
-              >
-                Treat these tokens like passwords. CodeHub will only show you
-                the full token string once, immediately after generation.
-              </Typography>
-            </Box>
-          </Card>
+          <div className="mb-8 flex gap-4 rounded-[4px] bg-[#eff6ff] p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]">
+            <Info className="size-6 shrink-0 text-primary" />
+            <div>
+              <p className="font-bold text-primary">Security Note</p>
+              <p className="mt-1 text-sm text-primary">
+                Treat these tokens like passwords. CodeHub will only show you the full token string once,
+                immediately after generation.
+              </p>
+            </div>
+          </div>
 
-          <Card>
+          <div className="rounded-[4px] border border-border bg-card shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]">
             {tokens.length === 0 ? (
-              <Typography color="text.secondary" sx={{ p: 3 }}>
-                No tokens yet.
-              </Typography>
+              <p className="p-6 text-muted-foreground">No tokens yet.</p>
             ) : (
               tokens.map((token, index) => (
-                <Box key={token.id}>
-                  {index > 0 && <Divider />}
-                  <Box
-                    sx={{
-                      p: 3,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 2,
-                    }}
-                  >
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          mb: 0.5,
-                        }}
-                      >
-                        <Typography sx={{ fontWeight: 700 }}>
-                          {token.label}
-                        </Typography>
+                <div key={token.id}>
+                  {index > 0 && <Separator />}
+                  <div className="flex items-center justify-between gap-4 p-6">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center gap-2">
+                        <p className="font-bold">{token.label}</p>
                         <StatusBadge
                           label={token.last_used_time ? 'Active' : 'Never used'}
                           tone={token.last_used_time ? 'success' : 'neutral'}
                         />
-                      </Box>
-                      <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Created{' '}
-                          {new Date(
-                            (token.created_time ?? 0) * 1000,
-                          ).toLocaleDateString()}
-                        </Typography>
+                      </div>
+                      <div className="flex gap-4">
+                        <span className="text-xs text-muted-foreground">
+                          Created {new Date((token.created_time ?? 0) * 1000).toLocaleDateString()}
+                        </span>
                         {token.last_used_time && (
-                          <Typography variant="caption" color="text.secondary">
-                            Last used{' '}
-                            {new Date(
-                              token.last_used_time * 1000,
-                            ).toLocaleDateString()}
-                          </Typography>
+                          <span className="text-xs text-muted-foreground">
+                            Last used {new Date(token.last_used_time * 1000).toLocaleDateString()}
+                          </span>
                         )}
-                      </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <IconButton size="small" disabled>
-                        <EditOutlinedIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon-sm" disabled>
+                        <Pencil />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => handleRevoke(token.id ?? '')}
-                        color="error"
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                       >
-                        <DeleteOutlineOutlinedIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                </Box>
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               ))
             )}
-          </Card>
-        </Box>
-      </Box>
+          </div>
+        </div>
+      </div>
 
-      <Dialog
-        open={createDialogOpen}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        {createdToken ? (
-          <>
-            <DialogTitle>Your new token</DialogTitle>
-            <DialogContent>
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                Copy this token now — you won&apos;t be able to see it again.
+      <Dialog open={createDialogOpen} onOpenChange={(open) => !open && handleCloseDialog()}>
+        <DialogContent>
+          {createdToken ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Your new token</DialogTitle>
+              </DialogHeader>
+              <Alert variant="warning">
+                <AlertDescription>
+                  Copy this token now — you won&apos;t be able to see it again.
+                </AlertDescription>
               </Alert>
-              <TextField
+              <Input
                 value={createdToken}
-                fullWidth
-                slotProps={{
-                  input: { readOnly: true, sx: { fontFamily: 'monospace' } },
-                }}
+                readOnly
+                className="font-mono"
                 onFocus={(e) => e.target.select()}
               />
-            </DialogContent>
-            <DialogActions>
-              <Button variant="contained" onClick={handleCloseDialog}>
-                Done
-              </Button>
-            </DialogActions>
-          </>
-        ) : (
-          <>
-            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <KeyOutlinedIcon fontSize="small" /> Generate a new token
-            </DialogTitle>
-            <DialogContent>
+              <DialogFooter>
+                <Button onClick={handleCloseDialog}>Done</Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Key className="size-4" /> Generate a new token
+                </DialogTitle>
+              </DialogHeader>
               {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
+                <Alert variant="danger">
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              <TextField
-                autoFocus
-                label="Label"
-                placeholder="e.g. MacBook Pro CLI"
-                fullWidth
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseDialog} color="inherit">
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                disabled={!label || isCreating}
-                onClick={handleCreate}
-              >
-                {isCreating ? 'Generating…' : 'Generate Token'}
-              </Button>
-            </DialogActions>
-          </>
-        )}
+              <div>
+                <p className="mb-2 text-sm font-bold">Label</p>
+                <Input
+                  autoFocus
+                  placeholder="e.g. MacBook Pro CLI"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={handleCloseDialog}>
+                  Cancel
+                </Button>
+                <Button disabled={!label || isCreating} onClick={handleCreate}>
+                  {isCreating ? 'Generating…' : 'Generate Token'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
       </Dialog>
-    </Container>
+    </div>
   )
 }
 

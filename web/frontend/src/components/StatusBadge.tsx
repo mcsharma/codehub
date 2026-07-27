@@ -1,4 +1,5 @@
-import Chip from "@mui/material/Chip";
+import { Badge } from "./ui/badge";
+import { cn } from "@/lib/utils";
 
 export type StatusBadgeTone = "neutral" | "primary" | "success";
 
@@ -7,31 +8,24 @@ interface StatusBadgeProps {
   tone?: StatusBadgeTone;
 }
 
-// Fixed light tints matching the mocks (Tailwind blue-50/green-50 etc.) —
-// MUI's default palette only has main/light/dark, not these pastel shades.
-const toneStyles: Record<StatusBadgeTone, { bgcolor: string; color: string }> = {
-  neutral: { bgcolor: "grey.100", color: "text.secondary" },
-  primary: { bgcolor: "#eff6ff", color: "primary.main" },
-  success: { bgcolor: "#f0fdf4", color: "#166534" },
+// Prod's real per-tone values (`StatusBadge.tsx`'s original MUI Chip
+// styling): "neutral" is grey.100 + a border, "primary"/"success" use
+// literal tints with no border. 9ui's `info`/`success` badge variants
+// don't quite match those literals, so this composes the base variant
+// with an explicit color override instead.
+const toneClassName: Record<StatusBadgeTone, string> = {
+  neutral: "bg-secondary text-muted-foreground border-border",
+  primary: "bg-[#eff6ff] text-primary border-transparent",
+  success: "bg-[#f0fdf4] text-[#166534] border-transparent",
 };
 
-// Small recurring pill pattern across the mocks (Public/Private, token
-// Active/Never used) — one place to keep the uppercase/weight/color styling
-// consistent instead of repeating it per page.
-const StatusBadge = ({ label, tone = "neutral" }: StatusBadgeProps) => {
-  const style = toneStyles[tone];
-  return (
-    <Chip
-      label={label}
-      size="small"
-      sx={{
-        bgcolor: style.bgcolor,
-        color: style.color,
-        border: tone === "neutral" ? "1px solid" : "none",
-        borderColor: "divider",
-      }}
-    />
-  );
-};
+// Small recurring pill pattern across the app (Public/Private, token
+// Active/Never used) — one place to keep the uppercase/weight/color
+// styling consistent instead of repeating it per page.
+const StatusBadge = ({ label, tone = "neutral" }: StatusBadgeProps) => (
+  <Badge className={cn("rounded-full font-bold uppercase tracking-wider", toneClassName[tone])}>
+    {label}
+  </Badge>
+);
 
 export default StatusBadge;

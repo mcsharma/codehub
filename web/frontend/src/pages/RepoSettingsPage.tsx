@@ -3,9 +3,6 @@ import { useLoaderData } from "react-router";
 import type { RepoSettingsPageQuery } from "./__generated__/RepoSettingsPageQuery.graphql";
 import type { PreloadedQuery } from "react-relay";
 
-import Container from "@mui/material/Container";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import RepoHeader from "../components/RepoHeader";
 import RepoSettingsPanel from "./RepoSettingsPanel";
 
@@ -47,11 +44,11 @@ const RepoSettingsPage = () => {
 
   if (!repository) {
     return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Typography color="text.secondary">
+      <div className="mx-auto max-w-[1200px] px-4 py-12">
+        <p className="text-muted-foreground">
           Repository &quot;{owner_username}/{repoName}&quot; not found.
-        </Typography>
-      </Container>
+        </p>
+      </div>
     );
   }
 
@@ -66,39 +63,39 @@ const RepoSettingsPage = () => {
 
   if (!isOwner) {
     return (
-      <Box>
+      <div>
         <RepoHeader
           ownerUsername={ownerName}
           repoName={repository.name ?? repoName}
           visibility={repository.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
           isOwner={false}
         />
-        <Container maxWidth="lg" sx={{ py: 6 }}>
-          <Typography color="text.secondary">You don&apos;t have access to this page.</Typography>
-        </Container>
-      </Box>
+        <div className="mx-auto max-w-[1200px] px-4 py-12">
+          <p className="text-muted-foreground">You don&apos;t have access to this page.</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box>
+    <div>
       <RepoHeader
         ownerUsername={ownerName}
         repoName={repository.name ?? repoName}
         visibility={repository.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
         isOwner={isOwner}
       />
-      <Box sx={{ bgcolor: "background.default" }}>
-        <Container maxWidth="lg" sx={{ py: 5 }}>
+      <div className="bg-background">
+        <div className="mx-auto max-w-[1200px] px-4 py-10">
           <RepoSettingsPanel
             repositoryId={repository.id ?? ""}
             ownerUsername={ownerName}
             repoName={repository.name ?? repoName}
             visibility={repository.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
           />
-        </Container>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 

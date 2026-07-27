@@ -1,6 +1,4 @@
 import { Link } from 'react-router'
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
 
 interface RepoPathBreadcrumbProps {
   ownerUsername: string
@@ -22,48 +20,27 @@ const RepoPathBreadcrumb = ({
   const treeBase = `/${ownerUsername}/${repoName}/tree/${rev}`
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 1,
-        fontSize: '0.9375rem',
-      }}
-    >
-      <Typography
-        component={Link}
-        to={treeBase}
-        color="primary"
-        sx={{ fontWeight: 700, textDecoration: 'none' }}
-      >
+    <div className="flex flex-wrap items-center gap-2 text-[0.9375rem]">
+      <Link to={treeBase} className="font-bold text-primary no-underline">
         {repoName}
-      </Typography>
+      </Link>
       {segments.map((segment, index) => {
         const isLast = index === segments.length - 1
         const segmentPath = segments.slice(0, index + 1).join('/')
         return (
-          <Box
-            key={segmentPath}
-            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-          >
-            <Typography color="text.secondary">/</Typography>
+          <div key={segmentPath} className="flex items-center gap-1">
+            <span className="text-muted-foreground">/</span>
             {isLast ? (
-              <Typography>{segment}</Typography>
+              <span>{segment}</span>
             ) : (
-              <Typography
-                component={Link}
-                to={`${treeBase}/${segmentPath}`}
-                color="primary"
-                sx={{ textDecoration: 'none' }}
-              >
+              <Link to={`${treeBase}/${segmentPath}`} className="text-primary no-underline">
                 {segment}
-              </Typography>
+              </Link>
             )}
-          </Box>
+          </div>
         )
       })}
-    </Box>
+    </div>
   )
 }
 

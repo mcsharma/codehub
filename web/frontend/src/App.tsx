@@ -5,9 +5,6 @@ import type { PreloadedQuery } from "react-relay";
 import type { AppRootLayoutQuery } from "./__generated__/AppRootLayoutQuery.graphql";
 import type { AppLogoutMutation } from "./__generated__/AppLogoutMutation.graphql";
 
-import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
 import AppNavBar from "./components/AppNavBar";
 
 export type { AppRootLayoutQuery };
@@ -45,18 +42,18 @@ const RootLayout = ({ rootLayoutQueryRef }: RootLayoutProps) => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div className="flex min-h-screen flex-col">
       <AppNavBar currentUser={data.current_user ?? null} onLogout={handleLogout} />
       <Suspense
         fallback={
-          <Container sx={{ mt: 4 }}>
-            <Typography color="text.secondary">Loading...</Typography>
-          </Container>
+          <div className="mx-auto mt-8 max-w-[1200px] px-4">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
         }
       >
         <Outlet />
       </Suspense>
-    </Box>
+    </div>
   );
 };
 

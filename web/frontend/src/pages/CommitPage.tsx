@@ -7,16 +7,11 @@ import { DiffView, DiffModeEnum } from '@git-diff-view/react'
 import '@git-diff-view/react/styles/diff-view.css'
 import './CommitPage.css'
 
-import Container from '@mui/material/Container'
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import Card from '@mui/material/Card'
-import Button from '@mui/material/Button'
-import ToggleButton from '@mui/material/ToggleButton'
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
-import Divider from '@mui/material/Divider'
-import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined'
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
+import { ChevronLeft, FileText } from 'lucide-react'
+import { Button } from '../components/ui/button'
+import { Separator } from '../components/ui/separator'
+import { ToggleGroup } from '../components/ui/toggle-group'
+import { Toggle } from '../components/ui/toggle'
 import UserAvatar from '../components/UserAvatar'
 import CommitFileTree from '../components/CommitFileTree'
 import CollapsibleSidebarPane from '../components/CollapsibleSidebarPane'
@@ -81,9 +76,9 @@ const CommitPage = () => {
 
   if (!repository || !commit) {
     return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Typography color="text.secondary">Commit not found.</Typography>
-      </Container>
+      <div className="mx-auto max-w-[1200px] px-4 py-12">
+        <p className="text-muted-foreground">Commit not found.</p>
+      </div>
     )
   }
 
@@ -99,91 +94,35 @@ const CommitPage = () => {
   }
 
   return (
-    <Box sx={{ py: 3, px: '20px' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 3,
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            fontSize: '0.875rem',
-            fontWeight: 700,
-          }}
-        >
-          <Typography
-            component={Link}
-            to={`/${ownerUsername}`}
-            color="primary"
-            sx={{ fontWeight: 700 }}
-          >
+    <div className="px-5 py-6">
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm font-bold">
+          <Link to={`/${ownerUsername}`} className="text-primary no-underline hover:underline">
             {ownerUsername}
-          </Typography>
-          <Typography color="text.secondary">/</Typography>
-          <Typography
-            component={Link}
-            to={`/${ownerUsername}/${repoName}`}
-            color="primary"
-            sx={{ fontWeight: 700 }}
-          >
+          </Link>
+          <span className="text-muted-foreground">/</span>
+          <Link to={`/${ownerUsername}/${repoName}`} className="text-primary no-underline hover:underline">
             {repoName}
-          </Typography>
-          <Typography color="text.secondary">/ commit /</Typography>
-          <Typography
-            sx={{
-              fontFamily: 'monospace',
-              bgcolor: 'background.default',
-              border: '1px solid',
-              borderColor: 'divider',
-              px: 1,
-              py: 0.25,
-              borderRadius: 1,
-              color: 'primary.main',
-            }}
-          >
+          </Link>
+          <span className="text-muted-foreground">/ commit /</span>
+          <span className="rounded-full border border-border bg-background px-2 py-0.5 font-mono text-primary">
             {commit.short_node}
-          </Typography>
-        </Box>
-        <Button
-          component={Link}
-          to={`/${ownerUsername}/${repoName}`}
-          startIcon={<ChevronLeftOutlinedIcon fontSize="small" />}
-          color="inherit"
-          size="small"
-        >
+          </span>
+        </div>
+        <Button variant="ghost" size="sm" render={<Link to={`/${ownerUsername}/${repoName}`} />}>
+          <ChevronLeft className="size-4" />
           Back to commits
         </Button>
-      </Box>
+      </div>
 
-      <Card sx={{ p: 4, mb: 4 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
-            justifyContent: 'space-between',
-            gap: 3,
-          }}
-        >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="body1" sx={{ fontWeight: 400, mb: 2 }}>
-              {commit.description}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <div className="mb-8 rounded-[4px] border border-border bg-card p-8 shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]">
+        <div className="flex flex-col justify-between gap-6 md:flex-row">
+          <div className="min-w-0 flex-1">
+            <p className="mb-4 text-base font-normal">{commit.description}</p>
+            <div className="flex items-center gap-3">
               <UserAvatar />
-              <Typography sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
-                {formatCommitAuthor(commit.author ?? '')}
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ fontWeight: 700, textTransform: 'uppercase' }}
-              >
+              <span className="text-sm font-bold">{formatCommitAuthor(commit.author ?? '')}</span>
+              <span className="text-xs font-bold text-muted-foreground uppercase">
                 Committed on{' '}
                 {commit.date
                   ? new Date(commit.date * 1000).toLocaleDateString(undefined, {
@@ -192,101 +131,54 @@ const CommitPage = () => {
                       year: 'numeric',
                     })
                   : 'unknown date'}
-              </Typography>
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: { md: 'flex-end' },
-              gap: 1,
-              flexShrink: 0,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ fontWeight: 700 }}
-              >
-                Commit
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: 'monospace',
-                  fontWeight: 700,
-                  bgcolor: 'background.default',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 1.5,
-                }}
-              >
+              </span>
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-muted-foreground">Commit</span>
+              <span className="rounded-full border border-border bg-background px-3 py-1 font-mono text-base font-bold">
                 {commit.node}
-              </Typography>
-            </Box>
+              </span>
+            </div>
             {commit.parents && commit.parents.length > 0 && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ fontWeight: 700 }}
-                >
-                  Parent
-                </Typography>
-                <Typography
-                  component={Link}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-muted-foreground">Parent</span>
+                <Link
                   to={`/${ownerUsername}/${repoName}/commit/${commit.parents[0]}`}
-                  sx={{
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    color: 'primary.main',
-                  }}
+                  className="font-mono font-bold text-primary no-underline hover:underline"
                 >
                   {commit.parents[0]!.slice(0, 12)}
-                </Typography>
-              </Box>
+                </Link>
+              </div>
             )}
-          </Box>
-        </Box>
+          </div>
+        </div>
 
-        <Divider sx={{ my: 3 }} />
+        <Separator className="my-6" />
 
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Typography
-            variant="caption"
-            sx={{
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              color: 'text.secondary',
-            }}
-          >
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-muted-foreground uppercase">
             Showing {files.length} changed file{files.length === 1 ? '' : 's'}{' '}
             with {totalAdditions} addition
             {totalAdditions === 1 ? '' : 's'} and {totalDeletions} deletion
             {totalDeletions === 1 ? '' : 's'}
-          </Typography>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={mode}
-            onChange={(_e, value) => value && setMode(value)}
+          </span>
+          <ToggleGroup
+            value={[mode]}
+            onValueChange={(value) => value[0] && setMode(value[0] as 'unified' | 'split')}
           >
-            <ToggleButton value="split">Split</ToggleButton>
-            <ToggleButton value="unified">Unified</ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-      </Card>
+            <Toggle value="split" variant="outline" size="sm">
+              Split
+            </Toggle>
+            <Toggle value="unified" variant="outline" size="sm">
+              Unified
+            </Toggle>
+          </ToggleGroup>
+        </div>
+      </div>
 
-      <Divider />
+      <Separator />
 
       <CollapsibleSidebarPane
         label={`Files (${files.length})`}
@@ -302,76 +194,35 @@ const CommitPage = () => {
           />
         }
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div className="flex flex-col gap-6">
           {files.map((file) => {
             const chunk = diffChunksByPath.get(file.path ?? '')
             const { additions, deletions } = countDiffStats(chunk ?? '')
             return (
-              <Card
+              <div
                 key={file.path}
                 id={file.path ?? undefined}
-                sx={{
-                  overflow: 'hidden',
-                  scrollMarginTop: 16,
-                }}
+                className="scroll-mt-4 overflow-hidden rounded-[4px] border border-border bg-card shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]"
               >
-                <Box
-                  sx={{
-                    bgcolor: 'background.default',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    px: 2.5,
-                    py: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <InsertDriveFileOutlinedIcon
-                      fontSize="small"
-                      sx={{ color: 'text.secondary' }}
-                    />
-                    <Typography
-                      sx={{
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        fontSize: '0.875rem',
-                      }}
-                    >
-                      {file.path}
-                    </Typography>
+                <div className="flex items-center justify-between border-b border-border bg-background px-5 py-3">
+                  <div className="flex items-center gap-3">
+                    <FileText size={16} className="text-muted-foreground" />
+                    <span className="font-mono text-sm font-bold">{file.path}</span>
                     {file.status && file.status !== 'modified' && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          color:
-                            file.status === 'added'
-                              ? 'success.main'
-                              : 'error.main',
-                        }}
+                      <span
+                        className={`text-xs font-bold uppercase ${
+                          file.status === 'added' ? 'text-success-foreground' : 'text-destructive'
+                        }`}
                       >
                         {file.status}
-                      </Typography>
+                      </span>
                     )}
-                  </Box>
-                  <Box sx={{ display: 'flex', gap: 1.5 }}>
-                    <Typography
-                      variant="caption"
-                      sx={{ fontWeight: 700, color: 'success.main' }}
-                    >
-                      +{additions}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ fontWeight: 700, color: 'error.main' }}
-                    >
-                      -{deletions}
-                    </Typography>
-                  </Box>
-                </Box>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="text-xs font-bold text-success-foreground">+{additions}</span>
+                    <span className="text-xs font-bold text-destructive">-{deletions}</span>
+                  </div>
+                </div>
                 {chunk ? (
                   <DiffView
                     data={{
@@ -389,16 +240,14 @@ const CommitPage = () => {
                     diffViewFontSize={13}
                   />
                 ) : (
-                  <Typography color="text.secondary" sx={{ p: 2.5 }}>
-                    Binary file not shown.
-                  </Typography>
+                  <p className="p-5 text-muted-foreground">Binary file not shown.</p>
                 )}
-              </Card>
+              </div>
             )
           })}
-        </Box>
+        </div>
       </CollapsibleSidebarPane>
-    </Box>
+    </div>
   )
 }
 

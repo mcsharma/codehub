@@ -1,13 +1,10 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import Box from '@mui/material/Box'
-import Divider from '@mui/material/Divider'
-import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
-import Tooltip from '@mui/material/Tooltip'
-import useMediaQuery from '@mui/material/useMediaQuery'
-import { useTheme } from '@mui/material/styles'
-import SidebarToggleIcon from './icons/SidebarToggleIcon'
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Button } from './ui/button'
+import { Separator } from './ui/separator'
+import { useMediaQuery } from '../hooks/useMediaQuery'
+import { cn } from '@/lib/utils'
 
 interface CollapsibleSidebarPaneProps {
   label: string
@@ -21,7 +18,7 @@ interface CollapsibleSidebarPaneProps {
   children: ReactNode
 }
 
-const SIDEBAR_WIDTH = 280
+const SIDEBAR_WIDTH = 264
 
 // Split-pane shell shared by the Code tab (RepoCodeShell) and the commit
 // diff page (CommitPage): a sticky, collapsible sidebar with a label
@@ -35,91 +32,58 @@ const CollapsibleSidebarPane = ({
   contentPr = 0,
   children,
 }: CollapsibleSidebarPaneProps) => {
-  const theme = useTheme()
   // Below this width the sidebar collapses on its own to leave room for
   // the main content. A manual toggle always wins over this once the user
-  // has touched it, even if the viewport is still narrow.
-  const isNarrowViewport = useMediaQuery(theme.breakpoints.down('md'))
+  // has touched it, even if the viewport is still narrow. (900px — MUI's
+  // real `md` breakpoint, unmodified in theme.ts.)
+  const isNarrowViewport = useMediaQuery('(max-width: 899px)')
   const [manualCollapsed, setManualCollapsed] = useState<boolean | null>(null)
   const collapsed = manualCollapsed ?? isNarrowViewport
 
   const toggleCollapsed = () => setManualCollapsed(!collapsed)
 
+  const buttonLabel = collapsed
+    ? `Show ${label.toLowerCase()}`
+    : `Collapse ${label.toLowerCase()}`
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        minHeight: 'calc(100vh - 140px)',
-      }}
-    >
+    <div className="flex min-h-[calc(100vh-140px)] items-start">
       {!collapsed && (
         <>
-          <Box
-            sx={{
-              width: SIDEBAR_WIDTH,
-              flexShrink: 0,
-              position: 'sticky',
-              top: 16,
-              mt: 1,
-              maxHeight: 'calc(100vh - 32px)',
-              overflowY: 'auto',
-            }}
+          <div
+            style={{ width: SIDEBAR_WIDTH }}
+            className="sticky top-4 mt-1 max-h-[calc(100vh-32px)] shrink-0 overflow-y-auto"
           >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                py: 1.25,
-                px: 1.5,
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {label}
-              </Typography>
-            </Box>
+            <div className="flex items-center px-3 py-2.5">
+              <span className="text-sm font-semibold">{label}</span>
+            </div>
             {sidebar}
-          </Box>
+          </div>
 
-          <Divider orientation="vertical" flexItem />
+          <Separator orientation="vertical" className="h-auto self-stretch" />
         </>
       )}
 
-      <Box sx={{ flex: 1, minWidth: 0, pl: 2, pr: contentPr }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.5,
-            py: 1,
-          }}
-        >
-          <Tooltip
-            title={
-              collapsed
-                ? `Show ${label.toLowerCase()}`
-                : `Collapse ${label.toLowerCase()}`
-            }
+      <div className={cn('min-w-0 flex-1 pl-4', contentPr === 2 && 'pr-4')}>
+        <div className="flex items-center gap-1 py-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            title={buttonLabel}
+            aria-label={buttonLabel}
+            onClick={toggleCollapsed}
+            className="text-[#616161]"
           >
-            <IconButton
-              onClick={toggleCollapsed}
-              sx={{
-                color: 'grey.700',
-                width: 40,
-                height: 40,
-              }}
-            >
-              <SidebarToggleIcon
-                fontSize="small"
-                sx={collapsed ? { transform: 'scaleX(-1)' } : undefined}
-              />
-            </IconButton>
-          </Tooltip>
+            {collapsed ? (
+              <PanelLeftOpen className="size-5" />
+            ) : (
+              <PanelLeftClose className="size-5" />
+            )}
+          </Button>
           {mainHeader}
-        </Box>
+        </div>
         {children}
-      </Box>
-    </Box>
+      </div>
+    </div>
   )
 }
 

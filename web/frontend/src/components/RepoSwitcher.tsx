@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import type { MouseEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { fetchQuery, graphql } from 'react-relay'
+import { ChevronDown } from 'lucide-react'
 import type { RepoSwitcherQuery } from './__generated__/RepoSwitcherQuery.graphql'
-
-import Box from '@mui/material/Box'
-import Menu from '@mui/material/Menu'
-import MenuItem from '@mui/material/MenuItem'
-import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu'
+import { Button } from './ui/button'
 import { RelayEnv } from '../RelayEnvironment'
 
 interface RepoOption {
@@ -41,108 +43,94 @@ const activeTabSuffix = (pathname: string): string => {
 const RepoSwitcher = ({ ownerUsername, repoName }: RepoSwitcherProps) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [repos, setRepos] = useState<RepoOption[] | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const handleOpen = (event: MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget)
-    if (repos === null && !loading) {
-      setLoading(true)
-      fetchQuery<RepoSwitcherQuery>(
-        RelayEnv,
-        graphql`
-          query RepoSwitcherQuery($ownerUsername: String!) {
-            owner_by_name(name: $ownerUsername) {
-              __typename
-              ... on User {
-                owned_repositories(first: 50) {
-                  edges {
-                    node {
-                      name
-                    }
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen || repos !== null || loading) return
+    setLoading(true)
+    fetchQuery<RepoSwitcherQuery>(
+      RelayEnv,
+      graphql`
+        query RepoSwitcherQuery($ownerUsername: String!) {
+          owner_by_name(name: $ownerUsername) {
+            __typename
+            ... on User {
+              owned_repositories(first: 50) {
+                edges {
+                  node {
+                    name
                   }
                 }
               }
-              ... on Organization {
-                repositories(first: 50) {
-                  edges {
-                    node {
-                      name
-                    }
+            }
+            ... on Organization {
+              repositories(first: 50) {
+                edges {
+                  node {
+                    name
                   }
                 }
               }
             }
           }
-        `,
-        { ownerUsername },
-      ).subscribe({
-        next: (data) => {
-          const owner = data.owner_by_name
-          const edges =
-            owner?.__typename === 'User'
-              ? owner.owned_repositories?.edges
-              : owner?.__typename === 'Organization'
-                ? owner.repositories?.edges
-                : []
-          const list: RepoOption[] = (edges ?? [])
-            .map((edge) => edge?.node?.name)
-            .filter((name): name is string => !!name)
-            .map((name) => ({ name }))
-          setRepos(list)
-          setLoading(false)
-        },
-        error: () => {
-          setRepos([])
-          setLoading(false)
-        },
-      })
-    }
+        }
+      `,
+      { ownerUsername },
+    ).subscribe({
+      next: (data) => {
+        const owner = data.owner_by_name
+        const edges =
+          owner?.__typename === 'User'
+            ? owner.owned_repositories?.edges
+            : owner?.__typename === 'Organization'
+              ? owner.repositories?.edges
+              : []
+        const list: RepoOption[] = (edges ?? [])
+          .map((edge) => edge?.node?.name)
+          .filter((name): name is string => !!name)
+          .map((name) => ({ name }))
+        setRepos(list)
+        setLoading(false)
+      },
+      error: () => {
+        setRepos([])
+        setLoading(false)
+      },
+    })
   }
 
-  const handleClose = () => setAnchorEl(null)
-
   const handleSelect = (name: string) => {
-    handleClose()
     if (name !== repoName) {
       navigate(`/${ownerUsername}/${name}${activeTabSuffix(location.pathname)}`)
     }
   }
 
   return (
-    <>
-      <Box
-        component="span"
-        onClick={handleOpen}
-        sx={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 0.25,
-          cursor: 'pointer',
-          borderRadius: 1,
-          px: 0.5,
-          verticalAlign: 'middle',
-          '&:hover': { bgcolor: 'action.hover' },
-        }}
-      >
-        {repoName}
-        <ExpandMoreOutlinedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-      </Box>
-      <Menu anchorEl={anchorEl} open={!!anchorEl} onClose={handleClose}>
-        {loading && <MenuItem disabled>Loading…</MenuItem>}
-        {repos?.length === 0 && <MenuItem disabled>No repositories</MenuItem>}
+    <DropdownMenu onOpenChange={handleOpenChange}>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="ghost" size="sm" className="px-1">
+            {repoName}
+            <ChevronDown className="size-4 text-muted-foreground" />
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="start">
+        {loading && <DropdownMenuItem disabled>Loading…</DropdownMenuItem>}
+        {repos?.length === 0 && (
+          <DropdownMenuItem disabled>No repositories</DropdownMenuItem>
+        )}
         {repos?.map((repo) => (
-          <MenuItem
+          <DropdownMenuItem
             key={repo.name}
-            selected={repo.name === repoName}
             onClick={() => handleSelect(repo.name)}
           >
             {repo.name}
-          </MenuItem>
+          </DropdownMenuItem>
         ))}
-      </Menu>
-    </>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

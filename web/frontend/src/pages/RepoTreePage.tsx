@@ -4,11 +4,7 @@ import { Link, useLoaderData } from 'react-router'
 import type { RepoTreePageQuery } from './__generated__/RepoTreePageQuery.graphql'
 import type { PreloadedQuery } from 'react-relay'
 
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import Card from '@mui/material/Card'
-import FolderIcon from '@mui/icons-material/Folder'
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
+import { Folder, FileText } from 'lucide-react'
 import { formatRelativeTime } from '../utils/formatters'
 
 // Apple's HIG "System Blue" — closest common match to the macOS Finder
@@ -30,22 +26,13 @@ const FOLDER_BLUE = '#0A84FF'
 // weight (0.01) so it barely shrinks at all — until Name/Date both hit
 // their 60px floor and drop out, at which point Message is the only
 // flexible item left and absorbs 100% of any further squeeze.
-const NAME_COLUMN_SX = {
-  flex: '1 1 33%',
-  minWidth: '100px',
-  py: 1,
-  px: 2,
-} as const
-
-const MESSAGE_COLUMN_SX = {
+const NAME_COLUMN_STYLE = { flex: '1 1 33%', minWidth: '100px' }
+const MESSAGE_COLUMN_STYLE = {
   flex: '1 0.3 40%',
   maxWidth: '50%',
   minWidth: '20%',
-  py: 1,
-  px: 2,
-} as const
-
-const DATE_COLUMN_SX = {
+}
+const DATE_COLUMN_STYLE = {
   // flex-grow: 1 (not 0) — Message grows first and stops once it hits its
   // 40% cap, at which point it's excluded from further growth and Date
   // absorbs whatever's left, so its right-aligned text lands flush
@@ -53,10 +40,7 @@ const DATE_COLUMN_SX = {
   // Name + Message(40%) + Date(170px) happens to land.
   flex: '1 1 20%',
   minWidth: '100px',
-  py: 1,
-  px: 2,
-  textAlign: 'right',
-} as const
+}
 
 interface RepoTreeRowProps {
   to: string
@@ -67,56 +51,33 @@ interface RepoTreeRowProps {
 }
 
 const RepoTreeRow = ({ to, icon, name, message, date }: RepoTreeRowProps) => (
-  <Box
-    component={Link}
+  <Link
     to={to}
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      textDecoration: 'none',
-      color: 'inherit',
-      borderBottom: '1px solid',
-      borderColor: 'divider',
-      '&:hover': { bgcolor: 'action.hover' },
-    }}
+    className="flex items-center border-b border-border no-underline text-foreground last:border-b-0 hover:bg-accent"
   >
-    <Box
-      sx={{
-        ...NAME_COLUMN_SX,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1.5,
-      }}
+    <div
+      style={NAME_COLUMN_STYLE}
+      className="flex items-center gap-3 px-4 py-2"
     >
       {icon}
-      <Typography
-        variant="body2"
-        sx={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
+      <span className="overflow-hidden text-ellipsis whitespace-nowrap text-sm">
         {name}
-      </Typography>
-    </Box>
-    <Typography
-      variant="body2"
-      color="text.secondary"
+      </span>
+    </div>
+    <span
+      style={MESSAGE_COLUMN_STYLE}
       title={message ?? undefined}
-      sx={{
-        ...MESSAGE_COLUMN_SX,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-      }}
+      className="overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2 text-sm text-muted-foreground"
     >
       {message ?? ''}
-    </Typography>
-    <Typography variant="caption" color="text.secondary" sx={DATE_COLUMN_SX}>
+    </span>
+    <span
+      style={DATE_COLUMN_STYLE}
+      className="px-4 py-2 text-right text-xs text-muted-foreground"
+    >
       {date != null ? formatRelativeTime(date) : ''}
-    </Typography>
-  </Box>
+    </span>
+  </Link>
 )
 
 const RepoTreePage = () => {
@@ -167,67 +128,49 @@ const RepoTreePage = () => {
 
   if (!directory) {
     return (
-      <Typography color="text.secondary">
-        This path doesn&apos;t exist.
-      </Typography>
+      <p className="text-muted-foreground">This path doesn&apos;t exist.</p>
     )
   }
 
   if (directories.length === 0 && files.length === 0) {
-    return (
-      <Typography color="text.secondary">This directory is empty.</Typography>
-    )
+    return <p className="text-muted-foreground">This directory is empty.</p>
   }
 
   return (
-    <Card sx={{ boxShadow: 'none' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          bgcolor: 'grey.100',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        <Typography
-          variant="body2"
-          sx={{
-            ...NAME_COLUMN_SX,
-            fontWeight: 600,
-            color: 'text.secondary',
-            whiteSpace: 'nowrap',
-          }}
+    <div className="overflow-hidden rounded-[4px] border border-border">
+      <div className="flex border-b border-border bg-secondary">
+        <span
+          style={NAME_COLUMN_STYLE}
+          className="whitespace-nowrap px-4 py-2 text-sm font-semibold text-muted-foreground"
         >
           Name
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            ...MESSAGE_COLUMN_SX,
-            fontWeight: 600,
-            color: 'text.secondary',
-            whiteSpace: 'nowrap',
-          }}
+        </span>
+        <span
+          style={MESSAGE_COLUMN_STYLE}
+          className="whitespace-nowrap px-4 py-2 text-sm font-semibold text-muted-foreground"
         >
           Last commit message
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            ...DATE_COLUMN_SX,
-            fontWeight: 600,
-            color: 'text.secondary',
-            whiteSpace: 'nowrap',
-          }}
+        </span>
+        <span
+          style={DATE_COLUMN_STYLE}
+          className="whitespace-nowrap px-4 py-2 text-right text-sm font-semibold text-muted-foreground"
         >
           Last commit date
-        </Typography>
-      </Box>
+        </span>
+      </div>
       {directories.map((entry) => (
         <RepoTreeRow
           key={entry.path}
           to={`${treeBase}/${entry.path}`}
-          icon={<FolderIcon fontSize="small" sx={{ color: FOLDER_BLUE }} />}
+          icon={
+            <Folder
+              size={20}
+              fill={FOLDER_BLUE}
+              strokeWidth={1}
+              className="shrink-0"
+              style={{ color: FOLDER_BLUE }}
+            />
+          }
           name={entry.name ?? ''}
         />
       ))}
@@ -235,18 +178,13 @@ const RepoTreePage = () => {
         <RepoTreeRow
           key={entry.path}
           to={`${blobBase}/${entry.path}`}
-          icon={
-            <InsertDriveFileOutlinedIcon
-              fontSize="small"
-              sx={{ color: 'text.secondary' }}
-            />
-          }
+          icon={<FileText size={20} className="shrink-0 text-muted-foreground" />}
           name={entry.name ?? ''}
           message={entry.last_commit_message}
           date={entry.last_commit_date}
         />
       ))}
-    </Card>
+    </div>
   )
 }
 

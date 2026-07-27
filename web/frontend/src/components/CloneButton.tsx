@@ -1,92 +1,86 @@
-import { useState } from "react";
-import type { MouseEvent } from "react";
-import Button from "@mui/material/Button";
-import Popover from "@mui/material/Popover";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
-import TerminalOutlinedIcon from "@mui/icons-material/TerminalOutlined";
-import ExpandMoreOutlinedIcon from "@mui/icons-material/ExpandMoreOutlined";
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
+import { useState } from 'react'
+import { SquareTerminal, ChevronDown, Copy } from 'lucide-react'
+import { Button } from './ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { Input } from './ui/input'
 
 // The hg host every repo is served from — see services/hg/ and
 // web/bff/src/repos/hgweb-client.ts on the backend side. Overridden in
 // local dev (VITE_HG_HOST=localhost:8000, see .env.local) to point at the
 // local hgweb-proxy instead of prod's VM.
-const HG_HOST = import.meta.env.VITE_HG_HOST ?? "hg.greensnippet.com";
-const HG_PROTOCOL = HG_HOST.startsWith("localhost") ? "http" : "https";
+const HG_HOST = import.meta.env.VITE_HG_HOST ?? 'hg.greensnippet.com'
+const HG_PROTOCOL = HG_HOST.startsWith('localhost') ? 'http' : 'https'
 
 interface CloneButtonProps {
-  ownerUsername: string;
-  repoName: string;
+  ownerUsername: string
+  repoName: string
 }
 
 const CloneButton = ({ ownerUsername, repoName }: CloneButtonProps) => {
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [copied, setCopied] = useState(false);
-  const open = Boolean(anchorEl);
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
 
-  const cloneUrl = `${HG_PROTOCOL}://${HG_HOST}/${ownerUsername}/${repoName}`;
-  const cloneCommand = `hg clone ${cloneUrl}`;
-
-  const handleOpen = (event: MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
-  const handleClose = () => {
-    setAnchorEl(null);
-    setCopied(false);
-  };
+  const cloneUrl = `${HG_PROTOCOL}://${HG_HOST}/${ownerUsername}/${repoName}`
+  const cloneCommand = `hg clone ${cloneUrl}`
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(cloneCommand).then(() => setCopied(true));
-  };
+    navigator.clipboard.writeText(cloneCommand).then(() => setCopied(true))
+  }
 
   return (
-    <>
-      <Button
-        variant="contained"
-        startIcon={<TerminalOutlinedIcon fontSize="small" />}
-        endIcon={<ExpandMoreOutlinedIcon fontSize="small" />}
-        onClick={handleOpen}
-      >
-        Clone
-      </Button>
-      <Popover
-        open={open}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Box sx={{ p: 2.5, width: 380 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5 }}>
-            Clone this repository
-          </Typography>
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <TextField
-              value={cloneCommand}
-              fullWidth
-              size="small"
-              slotProps={{ input: { readOnly: true, sx: { fontFamily: "monospace", fontSize: "0.8125rem" } } }}
-              onFocus={(e) => e.target.select()}
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen)
+        if (!nextOpen) setCopied(false)
+      }}
+    >
+      <PopoverTrigger
+        render={
+          <Button size="sm">
+            <SquareTerminal className="size-4" />
+            Clone
+            <ChevronDown className="size-4" />
+          </Button>
+        }
+      />
+      <PopoverContent align="end" arrow={false} className="w-[380px]">
+        <p className="mb-3 text-sm font-bold">Clone this repository</p>
+        <div className="flex items-center gap-2">
+          <Input
+            value={cloneCommand}
+            readOnly
+            onFocus={(e) => e.target.select()}
+            inputContainerClassName="flex-1 min-w-0"
+            className="bg-background font-mono text-[0.8125rem]"
+          />
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label="Copy clone command"
+                  onClick={handleCopy}
+                >
+                  <Copy className="size-4" />
+                </Button>
+              }
             />
-            <Tooltip title={copied ? "Copied!" : "Copy"}>
-              <IconButton onClick={handleCopy} size="small" sx={{ border: "1px solid", borderColor: "divider" }}>
-                <ContentCopyOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5 }}>
-            When prompted for a password, use a{" "}
-            <Box component="a" href="/settings/tokens" sx={{ color: "primary.main" }}>
-              personal access token
-            </Box>
-            .
-          </Typography>
-        </Box>
-      </Popover>
-    </>
-  );
-};
+            <TooltipContent>{copied ? 'Copied!' : 'Copy'}</TooltipContent>
+          </Tooltip>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          When prompted for a password, use a{' '}
+          <a href="/settings/tokens" className="text-primary hover:underline">
+            personal access token
+          </a>
+          .
+        </p>
+      </PopoverContent>
+    </Popover>
+  )
+}
 
-export default CloneButton;
+export default CloneButton

@@ -1,80 +1,41 @@
-import { Link } from "react-router";
-import Card from "@mui/material/Card";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import StatusBadge from "./StatusBadge";
-import { formatRelativeTime } from "../utils/formatters";
+import { Link } from 'react-router'
+import StatusBadge from './StatusBadge'
+import { formatRelativeTime } from '../utils/formatters'
 
 interface RepoCardProps {
-  ownerUsername: string;
-  name: string;
-  description: string | null;
-  visibility: "PUBLIC" | "PRIVATE";
-  updatedTime: number;
+  ownerUsername: string
+  name: string
+  description: string | null
+  visibility: 'PUBLIC' | 'PRIVATE'
+  updatedTime: number
 }
 
 const RepoCard = ({ ownerUsername, name, description, visibility, updatedTime }: RepoCardProps) => {
   return (
-    <Card
-      component={Link}
+    <Link
       to={`/${ownerUsername}/${name}`}
-      sx={{
-        p: 3,
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        textDecoration: "none",
-        color: "inherit",
-        transition: "box-shadow 0.15s, border-color 0.15s",
-        "&:hover": {
-          borderColor: "primary.main",
-          boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)",
-        },
-      }}
+      className="flex h-full flex-col rounded-[4px] border border-border bg-card p-6 text-foreground no-underline shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)] transition-[box-shadow,border-color] duration-150 hover:border-primary hover:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]"
     >
-      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 2 }}>
-        <Box
-          sx={{
-            width: 44,
-            height: 44,
-            borderRadius: 3,
-            bgcolor: "#eff6ff",
-            color: "primary.main",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "1rem",
-            fontWeight: 700,
-          }}
-        >
+      <div className="mb-4 flex items-start justify-between">
+        <div className="flex size-11 items-center justify-center rounded-full bg-[#eff6ff] text-base font-bold text-primary">
           {name.slice(0, 2).toUpperCase()}
-        </Box>
+        </div>
         <StatusBadge
-          label={visibility === "PUBLIC" ? "Public" : "Private"}
-          tone={visibility === "PUBLIC" ? "neutral" : "primary"}
+          label={visibility === 'PUBLIC' ? 'Public' : 'Private'}
+          tone={visibility === 'PUBLIC' ? 'neutral' : 'primary'}
         />
-      </Box>
-      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-        {name}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ flex: 1, mb: 2 }}>
-        {description ?? "No description provided."}
-      </Typography>
-      <Box
-        sx={{
-          pt: 2,
-          borderTop: "1px solid",
-          borderColor: "divider",
-          display: "flex",
-          justifyContent: "flex-end",
-        }}
-      >
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+      </div>
+      <h3 className="mb-2 text-xl font-bold">{name}</h3>
+      <p className="mb-4 flex-1 text-sm text-muted-foreground">
+        {description ?? 'No description provided.'}
+      </p>
+      <div className="flex justify-end border-t border-border pt-4">
+        <span className="text-xs font-bold text-muted-foreground">
           Updated {formatRelativeTime(updatedTime)}
-        </Typography>
-      </Box>
-    </Card>
-  );
-};
+        </span>
+      </div>
+    </Link>
+  )
+}
 
-export default RepoCard;
+export default RepoCard

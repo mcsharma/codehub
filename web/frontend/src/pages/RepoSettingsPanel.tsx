@@ -1,42 +1,41 @@
-import { useState } from "react";
-import { graphql, useMutation } from "react-relay";
-import { useNavigate, useRevalidator } from "react-router";
-import type { RepoSettingsPanelUpdateVisibilityMutation } from "./__generated__/RepoSettingsPanelUpdateVisibilityMutation.graphql";
-import type { RepoSettingsPanelDeleteMutation } from "./__generated__/RepoSettingsPanelDeleteMutation.graphql";
+import { useState } from 'react'
+import { graphql, useMutation } from 'react-relay'
+import { useNavigate, useRevalidator } from 'react-router'
+import { TriangleAlert } from 'lucide-react'
+import type { RepoSettingsPanelUpdateVisibilityMutation } from './__generated__/RepoSettingsPanelUpdateVisibilityMutation.graphql'
+import type { RepoSettingsPanelDeleteMutation } from './__generated__/RepoSettingsPanelDeleteMutation.graphql'
 
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Card from "@mui/material/Card";
-import Button from "@mui/material/Button";
-import RadioGroup from "@mui/material/RadioGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Radio from "@mui/material/Radio";
-import Alert from "@mui/material/Alert";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
-import TextField from "@mui/material/TextField";
-import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
+import { Button } from '../components/ui/button'
+import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group'
+import { Alert, AlertDescription } from '../components/ui/alert'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../components/ui/dialog'
+import { Input } from '../components/ui/input'
+import { cn } from '@/lib/utils'
 
 interface RepoSettingsPanelProps {
-  repositoryId: string;
-  ownerUsername: string;
-  repoName: string;
-  visibility: "PUBLIC" | "PRIVATE";
+  repositoryId: string
+  ownerUsername: string
+  repoName: string
+  visibility: 'PUBLIC' | 'PRIVATE'
 }
 
 const VISIBILITY_OPTIONS = [
-  { value: "PUBLIC", label: "Public", helper: "Anyone on the internet can see this repository." },
-  { value: "PRIVATE", label: "Private", helper: "Only you and people you choose can see this." },
-] as const;
+  { value: 'PUBLIC', label: 'Public', helper: 'Anyone on the internet can see this repository.' },
+  { value: 'PRIVATE', label: 'Private', helper: 'Only you and people you choose can see this.' },
+] as const
 
 const RepoSettingsPanel = ({ repositoryId, ownerUsername, repoName, visibility }: RepoSettingsPanelProps) => {
-  const navigate = useNavigate();
-  const revalidator = useRevalidator();
+  const navigate = useNavigate()
+  const revalidator = useRevalidator()
 
-  const [selectedVisibility, setSelectedVisibility] = useState<"PUBLIC" | "PRIVATE">(visibility);
-  const [visibilityError, setVisibilityError] = useState<string | null>(null);
+  const [selectedVisibility, setSelectedVisibility] = useState<'PUBLIC' | 'PRIVATE'>(visibility)
+  const [visibilityError, setVisibilityError] = useState<string | null>(null)
 
   const [commitUpdateVisibility, isSavingVisibility] = useMutation<RepoSettingsPanelUpdateVisibilityMutation>(graphql`
     mutation RepoSettingsPanelUpdateVisibilityMutation($id: ID!, $visibility: RepositoryVisibility!) {
@@ -45,165 +44,154 @@ const RepoSettingsPanel = ({ repositoryId, ownerUsername, repoName, visibility }
         visibility
       }
     }
-  `);
+  `)
 
   const [commitDelete, isDeleting] = useMutation<RepoSettingsPanelDeleteMutation>(graphql`
     mutation RepoSettingsPanelDeleteMutation($id: ID!) {
       delete_repository(id: $id)
     }
-  `);
+  `)
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [confirmText, setConfirmText] = useState('')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const handleSaveVisibility = () => {
-    setVisibilityError(null);
+    setVisibilityError(null)
     commitUpdateVisibility({
       variables: { id: repositoryId, visibility: selectedVisibility },
       onCompleted: () => {
-        revalidator.revalidate();
+        revalidator.revalidate()
       },
       onError: (err) => setVisibilityError(err.message),
-    });
-  };
+    })
+  }
 
   const handleCloseDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-    setConfirmText("");
-    setDeleteError(null);
-  };
+    setDeleteDialogOpen(false)
+    setConfirmText('')
+    setDeleteError(null)
+  }
 
   const handleDelete = () => {
-    setDeleteError(null);
+    setDeleteError(null)
     commitDelete({
       variables: { id: repositoryId },
       onCompleted: () => {
-        navigate(`/${ownerUsername}`);
+        navigate(`/${ownerUsername}`)
       },
       onError: (err) => setDeleteError(err.message),
-    });
-  };
+    })
+  }
 
   return (
-    <Box sx={{ maxWidth: 720, mx: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
-      <Card sx={{ p: 4 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-          General
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
-          Control who can see this repository.
-        </Typography>
+    <div className="mx-auto flex max-w-[720px] flex-col gap-8">
+      <div className="rounded-[4px] border border-border bg-card p-8 shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]">
+        <h2 className="mb-1 text-xl font-bold">General</h2>
+        <p className="mb-6 text-muted-foreground">Control who can see this repository.</p>
 
         {visibilityError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {visibilityError}
+          <Alert variant="danger" className="mb-4">
+            <AlertDescription>{visibilityError}</AlertDescription>
           </Alert>
         )}
 
         <RadioGroup
           value={selectedVisibility}
-          onChange={(e) => setSelectedVisibility(e.target.value as "PUBLIC" | "PRIVATE")}
-          sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2, mb: 3 }}
+          onValueChange={(value) => setSelectedVisibility(value as 'PUBLIC' | 'PRIVATE')}
+          className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
         >
           {VISIBILITY_OPTIONS.map((option) => (
-            <Card
+            <label
               key={option.value}
-              variant="outlined"
-              sx={{
-                p: 2,
-                cursor: "pointer",
-                borderColor: selectedVisibility === option.value ? "primary.main" : "divider",
-                borderWidth: 2,
-                bgcolor: selectedVisibility === option.value ? "#eff6ff" : "transparent",
-              }}
-              onClick={() => setSelectedVisibility(option.value)}
+              className={cn(
+                'flex cursor-pointer items-start gap-2 rounded-[4px] border-2 p-4',
+                selectedVisibility === option.value ? 'border-primary bg-[#eff6ff]' : 'border-border bg-transparent',
+              )}
             >
-              <FormControlLabel
-                value={option.value}
-                control={<Radio />}
-                sx={{ alignItems: "flex-start", m: 0 }}
-                label={
-                  <Box sx={{ ml: 1 }}>
-                    <Typography sx={{ fontWeight: 700 }}>{option.label}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {option.helper}
-                    </Typography>
-                  </Box>
-                }
-              />
-            </Card>
+              <RadioGroupItem value={option.value} className="mt-0.5" />
+              <div>
+                <p className="font-bold">{option.label}</p>
+                <p className="text-xs text-muted-foreground">{option.helper}</p>
+              </div>
+            </label>
           ))}
         </RadioGroup>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+        <div className="flex justify-end">
           <Button
-            variant="contained"
             disabled={selectedVisibility === visibility || isSavingVisibility}
             onClick={handleSaveVisibility}
           >
-            {isSavingVisibility ? "Saving…" : "Save"}
+            {isSavingVisibility ? 'Saving…' : 'Save'}
           </Button>
-        </Box>
-      </Card>
+        </div>
+      </div>
 
-      <Card sx={{ p: 4, border: "1px solid", borderColor: "error.main" }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: "error.main" }}>
-          Danger Zone
-        </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, mt: 2 }}>
-          <Box>
-            <Typography sx={{ fontWeight: 700 }}>Delete this repository</Typography>
-            <Typography variant="body2" color="text.secondary">
+      <div className="rounded-[4px] border border-destructive bg-card p-8 shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]">
+        <h2 className="mb-1 text-xl font-bold text-destructive">Danger Zone</h2>
+        <div className="mt-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="font-bold">Delete this repository</p>
+            <p className="text-sm text-muted-foreground">
               Once deleted, this repository and its history are gone for good. There is no undo.
-            </Typography>
-          </Box>
-          <Button variant="outlined" color="error" onClick={() => setDeleteDialogOpen(true)} sx={{ flexShrink: 0 }}>
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setDeleteDialogOpen(true)}
+            className="shrink-0 border-destructive text-destructive hover:bg-destructive/10"
+          >
             Delete
           </Button>
-        </Box>
-      </Card>
+        </div>
+      </div>
 
-      <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1, color: "error.main" }}>
-          <WarningAmberOutlinedIcon fontSize="small" /> Delete {ownerUsername}/{repoName}
-        </DialogTitle>
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => !open && handleCloseDeleteDialog()}>
         <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <TriangleAlert className="size-5" /> Delete {ownerUsername}/{repoName}
+            </DialogTitle>
+          </DialogHeader>
+
           {deleteError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {deleteError}
+            <Alert variant="danger">
+              <AlertDescription>{deleteError}</AlertDescription>
             </Alert>
           )}
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            This permanently deletes the repository, including all commits. This cannot be undone.
+          <Alert variant="warning">
+            <AlertDescription>
+              This permanently deletes the repository, including all commits. This cannot be undone.
+            </AlertDescription>
           </Alert>
-          <Typography sx={{ mb: 1 }}>
+
+          <p className="text-sm">
             Type <strong>{repoName}</strong> to confirm.
-          </Typography>
-          <TextField
+          </p>
+          <Input
             autoFocus
-            fullWidth
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder={repoName}
           />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} color="inherit">
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            disabled={confirmText !== repoName || isDeleting}
-            onClick={handleDelete}
-          >
-            {isDeleting ? "Deleting…" : "Delete this repository"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
-};
 
-export default RepoSettingsPanel;
+          <DialogFooter>
+            <Button variant="ghost" onClick={handleCloseDeleteDialog}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={confirmText !== repoName || isDeleting}
+              onClick={handleDelete}
+            >
+              {isDeleting ? 'Deleting…' : 'Delete this repository'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+export default RepoSettingsPanel

@@ -13,6 +13,10 @@
       "allowImportingTsExtensions": true,
       "verbatimModuleSyntax": true,
       "moduleDetection": "force",
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["./src/*"]
+      },
 
       /* 3. Strict Safety Flags (Borrowed from your previous project) */
       "strict": true,

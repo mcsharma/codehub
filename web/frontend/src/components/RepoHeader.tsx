@@ -1,14 +1,7 @@
 import { Link, useLocation } from 'react-router'
-
-import Container from '@mui/material/Container'
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import Tabs from '@mui/material/Tabs'
-import Tab from '@mui/material/Tab'
-import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined'
-import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined'
-import AdjustOutlinedIcon from '@mui/icons-material/AdjustOutlined'
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
+import { Code, History, Disc, Settings } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs'
+import { Button } from './ui/button'
 import StatusBadge from './StatusBadge'
 import CloneButton from './CloneButton'
 import RepoSwitcher from './RepoSwitcher'
@@ -19,11 +12,6 @@ interface RepoHeaderProps {
   visibility: 'PUBLIC' | 'PRIVATE'
   isOwner: boolean
 }
-
-const tabSx = {
-  minHeight: 40,
-  py: 0.75,
-} as const
 
 // Shared breadcrumb/badge/clone-button/tabs chrome for every repo-scoped
 // page (RepoPage, RepoTreePage, RepoBlobPage, the settings route) — each
@@ -47,84 +35,78 @@ const RepoHeader = ({
   const repoBase = `/${ownerUsername}/${repoName}`
 
   return (
-    <Box
-      sx={{
-        bgcolor: 'background.paper',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-      }}
-    >
-      <Container maxWidth={false} sx={{ pb: 0 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            mb: 1,
-            gap: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              <Typography
-                component={Link}
-                to={`/${ownerUsername}`}
-                color="text.secondary"
-                sx={{ fontWeight: 400 }}
-              >
-                {ownerUsername}
-              </Typography>{' '}
-              /{' '}
-              <RepoSwitcher ownerUsername={ownerUsername} repoName={repoName} />
-            </Typography>
+    <div className="border-b border-border bg-background">
+      <div className="pt-4 pb-0 px-4">
+        <div className="mb-2 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-1 font-normal"
+              render={<Link to={`/${ownerUsername}`} />}
+            >
+              {ownerUsername}
+            </Button>
+            {' / '}
+            <RepoSwitcher ownerUsername={ownerUsername} repoName={repoName} />
             <StatusBadge
               label={visibility === 'PUBLIC' ? 'Public' : 'Private'}
               tone={visibility === 'PUBLIC' ? 'neutral' : 'primary'}
             />
-          </Box>
+          </div>
           <CloneButton ownerUsername={ownerUsername} repoName={repoName} />
-        </Box>
+        </div>
 
-        <Tabs value={activeTab} sx={{ minHeight: 40 }}>
-          <Tab
-            component={Link}
-            to={`${repoBase}/tree/tip`}
-            value="code"
-            icon={<CodeOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Code"
-            sx={tabSx}
-          />
-          <Tab
-            component={Link}
-            to={repoBase}
-            value="commits"
-            icon={<HistoryOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Commits"
-            sx={tabSx}
-          />
-          <Tab
-            value="issues"
-            disabled
-            icon={<AdjustOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Issues"
-            sx={tabSx}
-          />
-          <Tab
-            component={Link}
-            to={`${repoBase}/settings`}
-            value="settings"
-            disabled={!isOwner}
-            icon={<SettingsOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Settings"
-            sx={tabSx}
-          />
+        {/* Drives navigation via the URL, not panel-switching — `value`
+            is derived from the current route, each Tab wraps a
+            react-router `Link` via `render`, and no `TabsContent` is
+            rendered since the router (not Tabs) swaps the page content.
+            Don't "simplify" this back to plain links — Tabs still buys
+            real keyboard/ARIA tablist behavior. */}
+        <Tabs value={activeTab} variant="underline">
+          <TabsList className="h-10 w-full justify-start gap-6 bg-transparent p-0">
+            <TabsTrigger
+              value="code"
+              render={<Link to={`${repoBase}/tree/tip`} />}
+              nativeButton={false}
+              className="flex-none gap-1.5 rounded-none px-0.5 py-1.5"
+            >
+              <Code className="size-4" />
+              Code
+            </TabsTrigger>
+            <TabsTrigger
+              value="commits"
+              render={<Link to={repoBase} />}
+              nativeButton={false}
+              className="flex-none gap-1.5 rounded-none px-0.5 py-1.5"
+            >
+              <History className="size-4" />
+              Commits
+            </TabsTrigger>
+            <TabsTrigger
+              value="issues"
+              disabled
+              className="flex-none gap-1.5 rounded-none px-0.5 py-1.5"
+            >
+              <Disc className="size-4" />
+              Issues
+            </TabsTrigger>
+            <TabsTrigger
+              value="settings"
+              disabled={!isOwner}
+              render={
+                isOwner ? <Link to={`${repoBase}/settings`} /> : undefined
+              }
+              nativeButton={!isOwner}
+              className="flex-none gap-1.5 rounded-none px-0.5 py-1.5"
+            >
+              <Settings className="size-4" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
         </Tabs>
-      </Container>
-    </Box>
+      </div>
+    </div>
   )
 }
 

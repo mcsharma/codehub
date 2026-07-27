@@ -6,13 +6,9 @@ import type { PreloadedQuery } from 'react-relay'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github.css'
 
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import Card from '@mui/material/Card'
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
+import { FileText } from 'lucide-react'
 import { formatFileSize } from '../utils/formatters'
 import { languageFromPath } from '../utils/languageFromPath'
-import { monoFontFamily } from '../theme'
 
 const RepoBlobPage = () => {
   const { repoBlobQueryRef } = useLoaderData() as {
@@ -63,95 +59,43 @@ const RepoBlobPage = () => {
   }
 
   if (!file) {
-    return (
-      <Typography color="text.secondary">
-        This file doesn&apos;t exist.
-      </Typography>
-    )
+    return <p className="text-muted-foreground">This file doesn&apos;t exist.</p>
   }
 
   if (file.isBinary || file.isTooLarge) {
     return (
-      <Card
-        sx={{
-          borderRadius: '8px',
-          p: 4,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-        }}
-      >
-        <InsertDriveFileOutlinedIcon
-          fontSize="small"
-          sx={{ color: 'text.secondary' }}
-        />
-        <Box>
-          <Typography sx={{ fontWeight: 700 }}>
-            {file.isBinary
-              ? 'Binary file not shown'
-              : 'File too large to display'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {formatFileSize(file.size ?? 0)}
-          </Typography>
-        </Box>
-      </Card>
+      <div className="flex items-center gap-4 rounded-[8px] border border-border bg-card p-8 shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]">
+        <FileText size={16} className="text-muted-foreground" />
+        <div>
+          <p className="font-bold">
+            {file.isBinary ? 'Binary file not shown' : 'File too large to display'}
+          </p>
+          <p className="text-sm text-muted-foreground">{formatFileSize(file.size ?? 0)}</p>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Card sx={{ borderRadius: '8px', overflow: 'hidden' }}>
-      <Box
-        component="pre"
-        sx={{
-          m: 0,
-          p: 0,
-          overflowX: 'auto',
-          fontFamily: monoFontFamily,
-          fontSize: '0.8125rem',
-          lineHeight: 1.6,
-        }}
-      >
-        <Box
-          component="code"
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'max-content 1fr',
-            width: '100%',
-          }}
-        >
+    <div className="overflow-hidden rounded-[8px] border border-border bg-card shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]">
+      <pre className="m-0 overflow-x-auto p-0 font-mono text-[0.8125rem] leading-[1.6]">
+        <code className="grid w-full grid-cols-[max-content_1fr]">
           {highlightedLines!.map((line, index) => (
             <Fragment key={index}>
-              <Box
-                component="span"
-                sx={{
-                  textAlign: 'right',
-                  pl: 1.5,
-                  pr: 1,
-                  userSelect: 'none',
-                  color: 'text.disabled',
-                  borderRight: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
+              <span className="border-r border-border py-0 pr-2 pl-3 text-right text-[rgba(0,0,0,0.38)] select-none">
                 {index + 1}
-              </Box>
-              <Box
-                component="span"
-                sx={{
-                  pl: 2,
-                  pr: 3,
-                  whiteSpace: 'pre',
-                }}
+              </span>
+              <span
+                className="py-0 pr-6 pl-4 whitespace-pre"
                 dangerouslySetInnerHTML={{
                   __html: line || '&nbsp;',
                 }}
               />
             </Fragment>
           ))}
-        </Box>
-      </Box>
-    </Card>
+        </code>
+      </pre>
+    </div>
   )
 }
 
