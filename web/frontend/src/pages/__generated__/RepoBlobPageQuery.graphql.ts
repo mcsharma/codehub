@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<4fd19518d9c5cca920ca2a74f1000f8b>>
+ * @generated SignedSource<<7e568cf872d19ff58929e1ac3336c1a9>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,7 +9,6 @@
 // @ts-nocheck
 
 import { ConcreteRequest } from 'relay-runtime';
-export type RepositoryVisibility = "PRIVATE" | "PUBLIC" | "%future added value";
 export type RepoBlobPageQuery$variables = {
   name: string;
   owner_username: string;
@@ -17,9 +16,6 @@ export type RepoBlobPageQuery$variables = {
   rev: string;
 };
 export type RepoBlobPageQuery$data = {
-  readonly current_user: {
-    readonly username: string | null | undefined;
-  } | null | undefined;
   readonly repository_by_owner_and_name: {
     readonly file: {
       readonly content: string | null | undefined;
@@ -28,19 +24,6 @@ export type RepoBlobPageQuery$data = {
       readonly path: string | null | undefined;
       readonly size: number | null | undefined;
     } | null | undefined;
-    readonly name: string | null | undefined;
-    readonly owner: {
-      readonly __typename: "Organization";
-      readonly name: string | null | undefined;
-    } | {
-      readonly __typename: "User";
-      readonly username: string | null | undefined;
-    } | {
-      // This will never be '%other', but we need some
-      // value in case none of the concrete values match.
-      readonly __typename: "%other";
-    } | null | undefined;
-    readonly visibility: RepositoryVisibility | null | undefined;
   } | null | undefined;
 };
 export type RepoBlobPageQuery = {
@@ -69,17 +52,7 @@ v3 = {
   "kind": "LocalArgument",
   "name": "rev"
 },
-v4 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "username",
-  "storageKey": null
-},
-v5 = [
-  (v4/*: any*/)
-],
-v6 = [
+v4 = [
   {
     "kind": "Variable",
     "name": "name",
@@ -91,28 +64,7 @@ v6 = [
     "variableName": "owner_username"
   }
 ],
-v7 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "name",
-  "storageKey": null
-},
-v8 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "visibility",
-  "storageKey": null
-},
-v9 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "__typename",
-  "storageKey": null
-},
-v10 = {
+v5 = {
   "alias": null,
   "args": [
     {
@@ -168,18 +120,7 @@ v10 = {
     }
   ],
   "storageKey": null
-},
-v11 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "id",
-  "storageKey": null
-},
-v12 = [
-  (v4/*: any*/),
-  (v11/*: any*/)
-];
+};
 return {
   "fragment": {
     "argumentDefinitions": [
@@ -194,51 +135,13 @@ return {
     "selections": [
       {
         "alias": null,
-        "args": null,
-        "concreteType": "User",
-        "kind": "LinkedField",
-        "name": "current_user",
-        "plural": false,
-        "selections": (v5/*: any*/),
-        "storageKey": null
-      },
-      {
-        "alias": null,
-        "args": (v6/*: any*/),
+        "args": (v4/*: any*/),
         "concreteType": "Repository",
         "kind": "LinkedField",
         "name": "repository_by_owner_and_name",
         "plural": false,
         "selections": [
-          (v7/*: any*/),
-          (v8/*: any*/),
-          {
-            "alias": null,
-            "args": null,
-            "concreteType": null,
-            "kind": "LinkedField",
-            "name": "owner",
-            "plural": false,
-            "selections": [
-              (v9/*: any*/),
-              {
-                "kind": "InlineFragment",
-                "selections": (v5/*: any*/),
-                "type": "User",
-                "abstractKey": null
-              },
-              {
-                "kind": "InlineFragment",
-                "selections": [
-                  (v7/*: any*/)
-                ],
-                "type": "Organization",
-                "abstractKey": null
-              }
-            ],
-            "storageKey": null
-          },
-          (v10/*: any*/)
+          (v5/*: any*/)
         ],
         "storageKey": null
       }
@@ -259,69 +162,36 @@ return {
     "selections": [
       {
         "alias": null,
-        "args": null,
-        "concreteType": "User",
-        "kind": "LinkedField",
-        "name": "current_user",
-        "plural": false,
-        "selections": (v12/*: any*/),
-        "storageKey": null
-      },
-      {
-        "alias": null,
-        "args": (v6/*: any*/),
+        "args": (v4/*: any*/),
         "concreteType": "Repository",
         "kind": "LinkedField",
         "name": "repository_by_owner_and_name",
         "plural": false,
         "selections": [
-          (v7/*: any*/),
-          (v8/*: any*/),
+          (v5/*: any*/),
           {
             "alias": null,
             "args": null,
-            "concreteType": null,
-            "kind": "LinkedField",
-            "name": "owner",
-            "plural": false,
-            "selections": [
-              (v9/*: any*/),
-              {
-                "kind": "InlineFragment",
-                "selections": (v12/*: any*/),
-                "type": "User",
-                "abstractKey": null
-              },
-              {
-                "kind": "InlineFragment",
-                "selections": [
-                  (v7/*: any*/),
-                  (v11/*: any*/)
-                ],
-                "type": "Organization",
-                "abstractKey": null
-              }
-            ],
+            "kind": "ScalarField",
+            "name": "id",
             "storageKey": null
-          },
-          (v10/*: any*/),
-          (v11/*: any*/)
+          }
         ],
         "storageKey": null
       }
     ]
   },
   "params": {
-    "cacheID": "76c2b98a70a254fe585a9528519e79e8",
+    "cacheID": "de35eea8fec3cfd77781e5b8ea35149a",
     "id": null,
     "metadata": {},
     "name": "RepoBlobPageQuery",
     "operationKind": "query",
-    "text": "query RepoBlobPageQuery(\n  $owner_username: String!\n  $name: String!\n  $rev: String!\n  $path: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    file(rev: $rev, path: $path) {\n      path\n      size\n      isBinary\n      isTooLarge\n      content\n    }\n    id\n  }\n}\n"
+    "text": "query RepoBlobPageQuery(\n  $owner_username: String!\n  $name: String!\n  $rev: String!\n  $path: String!\n) {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    file(rev: $rev, path: $path) {\n      path\n      size\n      isBinary\n      isTooLarge\n      content\n    }\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "73ae5c2c0ddd4d50624707118da444ef";
+(node as any).hash = "7796b16cd5d729a7fbb670969d0b8ff5";
 
 export default node;

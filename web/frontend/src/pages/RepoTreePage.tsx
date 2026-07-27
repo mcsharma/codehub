@@ -9,9 +9,6 @@ import Typography from '@mui/material/Typography'
 import Card from '@mui/material/Card'
 import FolderIcon from '@mui/icons-material/Folder'
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
-import RepoCodeLayout from '../components/RepoCodeLayout'
-import RepoNotFound from '../components/RepoNotFound'
-import { resolveOwnerName } from '../utils/repoOwner'
 import { formatRelativeTime } from '../utils/formatters'
 
 // Apple's HIG "System Blue" — closest common match to the macOS Finder
@@ -135,24 +132,11 @@ const RepoTreePage = () => {
         $rev: String!
         $path: String!
       ) {
-        current_user {
-          username
-        }
         repository_by_owner_and_name(
           owner_username: $owner_username
           name: $name
         ) {
           name
-          visibility
-          owner {
-            __typename
-            ... on User {
-              username
-            }
-            ... on Organization {
-              name
-            }
-          }
           directory(rev: $rev, path: $path) {
             path
             directories {
@@ -175,105 +159,94 @@ const RepoTreePage = () => {
   const repository = data.repository_by_owner_and_name
   const { owner_username, name: repoName, rev } = repoTreeQueryRef.variables
 
-  if (!repository) {
-    return <RepoNotFound ownerUsername={owner_username} repoName={repoName} />
-  }
-
-  const ownerName = resolveOwnerName(repository.owner, owner_username)
-  const isOwner = data.current_user?.username === ownerName
-  const directory = repository.directory
+  const directory = repository?.directory
   const directories = directory?.directories ?? []
   const files = directory?.files ?? []
-  const treeBase = `/${ownerName}/${repository.name ?? repoName}/tree/${rev}`
-  const blobBase = `/${ownerName}/${repository.name ?? repoName}/blob/${rev}`
+  const treeBase = `/${owner_username}/${repository?.name ?? repoName}/tree/${rev}`
+  const blobBase = `/${owner_username}/${repository?.name ?? repoName}/blob/${rev}`
 
-  const activePath = directory?.path ?? ''
+  if (!directory) {
+    return (
+      <Typography color="text.secondary">
+        This path doesn&apos;t exist.
+      </Typography>
+    )
+  }
+
+  if (directories.length === 0 && files.length === 0) {
+    return (
+      <Typography color="text.secondary">This directory is empty.</Typography>
+    )
+  }
 
   return (
-    <RepoCodeLayout
-      ownerUsername={ownerName}
-      repoName={repository.name ?? repoName}
-      visibility={repository.visibility === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE'}
-      isOwner={isOwner}
-      rev={rev}
-      activePath={activePath}
-    >
-      {!directory ? (
-        <Typography color="text.secondary">
-          This path doesn&apos;t exist.
+    <Card sx={{ boxShadow: 'none' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          bgcolor: 'grey.100',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Typography
+          variant="body2"
+          sx={{
+            ...NAME_COLUMN_SX,
+            fontWeight: 600,
+            color: 'text.secondary',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Name
         </Typography>
-      ) : directories.length === 0 && files.length === 0 ? (
-        <Typography color="text.secondary">This directory is empty.</Typography>
-      ) : (
-        <Card sx={{ boxShadow: 'none' }}>
-          <Box
-            sx={{
-              display: 'flex',
-              bgcolor: 'grey.100',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{
-                ...NAME_COLUMN_SX,
-                fontWeight: 600,
-                color: 'text.secondary',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Name
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                ...MESSAGE_COLUMN_SX,
-                fontWeight: 600,
-                color: 'text.secondary',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Last commit message
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                ...DATE_COLUMN_SX,
-                fontWeight: 600,
-                color: 'text.secondary',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Last commit date
-            </Typography>
-          </Box>
-          {directories.map((entry) => (
-            <RepoTreeRow
-              key={entry.path}
-              to={`${treeBase}/${entry.path}`}
-              icon={<FolderIcon fontSize="small" sx={{ color: FOLDER_BLUE }} />}
-              name={entry.name ?? ''}
+        <Typography
+          variant="body2"
+          sx={{
+            ...MESSAGE_COLUMN_SX,
+            fontWeight: 600,
+            color: 'text.secondary',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Last commit message
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            ...DATE_COLUMN_SX,
+            fontWeight: 600,
+            color: 'text.secondary',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Last commit date
+        </Typography>
+      </Box>
+      {directories.map((entry) => (
+        <RepoTreeRow
+          key={entry.path}
+          to={`${treeBase}/${entry.path}`}
+          icon={<FolderIcon fontSize="small" sx={{ color: FOLDER_BLUE }} />}
+          name={entry.name ?? ''}
+        />
+      ))}
+      {files.map((entry) => (
+        <RepoTreeRow
+          key={entry.path}
+          to={`${blobBase}/${entry.path}`}
+          icon={
+            <InsertDriveFileOutlinedIcon
+              fontSize="small"
+              sx={{ color: 'text.secondary' }}
             />
-          ))}
-          {files.map((entry) => (
-            <RepoTreeRow
-              key={entry.path}
-              to={`${blobBase}/${entry.path}`}
-              icon={
-                <InsertDriveFileOutlinedIcon
-                  fontSize="small"
-                  sx={{ color: 'text.secondary' }}
-                />
-              }
-              name={entry.name ?? ''}
-              message={entry.last_commit_message}
-              date={entry.last_commit_date}
-            />
-          ))}
-        </Card>
-      )}
-    </RepoCodeLayout>
+          }
+          name={entry.name ?? ''}
+          message={entry.last_commit_message}
+          date={entry.last_commit_date}
+        />
+      ))}
+    </Card>
   )
 }
 

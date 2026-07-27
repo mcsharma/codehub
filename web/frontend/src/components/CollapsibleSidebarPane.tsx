@@ -23,7 +23,7 @@ interface CollapsibleSidebarPaneProps {
 
 const SIDEBAR_WIDTH = 280
 
-// Split-pane shell shared by the Code tab (RepoCodeLayout) and the commit
+// Split-pane shell shared by the Code tab (RepoCodeShell) and the commit
 // diff page (CommitPage): a sticky, collapsible sidebar with a label
 // header, a full-height vertical divider, and a main column whose header
 // row always carries the collapse/expand toggle — in both states — so it

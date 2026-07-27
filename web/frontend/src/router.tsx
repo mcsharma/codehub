@@ -19,6 +19,7 @@ import NewRepoPageQueryNode from "./pages/__generated__/NewRepoPageQuery.graphql
 import CommitPageQueryNode from "./pages/__generated__/CommitPageQuery.graphql";
 import TokensPageQueryNode from "./pages/__generated__/TokensPageQuery.graphql";
 import RepoSettingsPageQueryNode from "./pages/__generated__/RepoSettingsPageQuery.graphql";
+import RepoCodeShellQueryNode from "./pages/__generated__/RepoCodeShellQuery.graphql";
 import RepoTreePageQueryNode from "./pages/__generated__/RepoTreePageQuery.graphql";
 import RepoBlobPageQueryNode from "./pages/__generated__/RepoBlobPageQuery.graphql";
 
@@ -146,28 +147,55 @@ export const router = createBrowserRouter([
         }),
       },
       {
-        path: ":owner/:repo/tree/:rev/*",
-        Component: React.lazy(() => import("./pages/RepoTreePage")),
+        // Pathless layout shared by both Code-tab views (tree + blob):
+        // renders the header and file-tree sidebar once via RepoCodeShell,
+        // with <Outlet/> swapping in just the directory listing or file
+        // content below. Keeps the sidebar mounted (and its fetch/expand
+        // state intact) when switching between the two, instead of the
+        // whole page unmounting and remounting — which is what caused a
+        // visible flicker, especially in prod where the previous sibling
+        // routes' separate JS chunks each had to be fetched over the
+        // network on first switch.
+        Component: React.lazy(() => import("./pages/RepoCodeShell")),
         loader: ({ params }) => ({
-          repoTreeQueryRef: loadQuery(RelayEnv, RepoTreePageQueryNode, {
+          repoCodeShellQueryRef: loadQuery(RelayEnv, RepoCodeShellQueryNode, {
             owner_username: params.owner!,
             name: params.repo!,
-            rev: params.rev!,
-            path: params["*"] ?? "",
           }),
         }),
-      },
-      {
-        path: ":owner/:repo/blob/:rev/*",
-        Component: React.lazy(() => import("./pages/RepoBlobPage")),
-        loader: ({ params }) => ({
-          repoBlobQueryRef: loadQuery(RelayEnv, RepoBlobPageQueryNode, {
-            owner_username: params.owner!,
-            name: params.repo!,
-            rev: params.rev!,
-            path: params["*"] ?? "",
-          }),
-        }),
+        // Only refetch the shell's repo metadata when the owner/repo
+        // actually changes — not on every tree<->blob or rev/path
+        // navigation within the same repo, which would otherwise
+        // re-suspend the shell (and flicker the sidebar) on every switch.
+        shouldRevalidate: ({ currentParams, nextParams }) =>
+          currentParams.owner !== nextParams.owner ||
+          currentParams.repo !== nextParams.repo,
+        children: [
+          {
+            path: ":owner/:repo/tree/:rev/*",
+            Component: React.lazy(() => import("./pages/RepoTreePage")),
+            loader: ({ params }) => ({
+              repoTreeQueryRef: loadQuery(RelayEnv, RepoTreePageQueryNode, {
+                owner_username: params.owner!,
+                name: params.repo!,
+                rev: params.rev!,
+                path: params["*"] ?? "",
+              }),
+            }),
+          },
+          {
+            path: ":owner/:repo/blob/:rev/*",
+            Component: React.lazy(() => import("./pages/RepoBlobPage")),
+            loader: ({ params }) => ({
+              repoBlobQueryRef: loadQuery(RelayEnv, RepoBlobPageQueryNode, {
+                owner_username: params.owner!,
+                name: params.repo!,
+                rev: params.rev!,
+                path: params["*"] ?? "",
+              }),
+            }),
+          },
+        ],
       },
     ],
   },

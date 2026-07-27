@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<5379a2a9a843c24c478a33368e0a08fd>>
+ * @generated SignedSource<<b278bcbc636163b6f945d50fb88bcdbe>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,7 +9,6 @@
 // @ts-nocheck
 
 import { ConcreteRequest } from 'relay-runtime';
-export type RepositoryVisibility = "PRIVATE" | "PUBLIC" | "%future added value";
 export type RepoTreePageQuery$variables = {
   name: string;
   owner_username: string;
@@ -17,9 +16,6 @@ export type RepoTreePageQuery$variables = {
   rev: string;
 };
 export type RepoTreePageQuery$data = {
-  readonly current_user: {
-    readonly username: string | null | undefined;
-  } | null | undefined;
   readonly repository_by_owner_and_name: {
     readonly directory: {
       readonly directories: ReadonlyArray<{
@@ -35,18 +31,6 @@ export type RepoTreePageQuery$data = {
       readonly path: string | null | undefined;
     } | null | undefined;
     readonly name: string | null | undefined;
-    readonly owner: {
-      readonly __typename: "Organization";
-      readonly name: string | null | undefined;
-    } | {
-      readonly __typename: "User";
-      readonly username: string | null | undefined;
-    } | {
-      // This will never be '%other', but we need some
-      // value in case none of the concrete values match.
-      readonly __typename: "%other";
-    } | null | undefined;
-    readonly visibility: RepositoryVisibility | null | undefined;
   } | null | undefined;
 };
 export type RepoTreePageQuery = {
@@ -75,17 +59,7 @@ v3 = {
   "kind": "LocalArgument",
   "name": "rev"
 },
-v4 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "username",
-  "storageKey": null
-},
-v5 = [
-  (v4/*: any*/)
-],
-v6 = [
+v4 = [
   {
     "kind": "Variable",
     "name": "name",
@@ -97,35 +71,21 @@ v6 = [
     "variableName": "owner_username"
   }
 ],
-v7 = {
+v5 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
   "name": "name",
   "storageKey": null
 },
-v8 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "visibility",
-  "storageKey": null
-},
-v9 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "__typename",
-  "storageKey": null
-},
-v10 = {
+v6 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
   "name": "path",
   "storageKey": null
 },
-v11 = {
+v7 = {
   "alias": null,
   "args": [
     {
@@ -144,7 +104,7 @@ v11 = {
   "name": "directory",
   "plural": false,
   "selections": [
-    (v10/*: any*/),
+    (v6/*: any*/),
     {
       "alias": null,
       "args": null,
@@ -153,8 +113,8 @@ v11 = {
       "name": "directories",
       "plural": true,
       "selections": [
-        (v7/*: any*/),
-        (v10/*: any*/)
+        (v5/*: any*/),
+        (v6/*: any*/)
       ],
       "storageKey": null
     },
@@ -166,8 +126,8 @@ v11 = {
       "name": "files",
       "plural": true,
       "selections": [
-        (v7/*: any*/),
-        (v10/*: any*/),
+        (v5/*: any*/),
+        (v6/*: any*/),
         {
           "alias": null,
           "args": null,
@@ -187,18 +147,7 @@ v11 = {
     }
   ],
   "storageKey": null
-},
-v12 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "id",
-  "storageKey": null
-},
-v13 = [
-  (v4/*: any*/),
-  (v12/*: any*/)
-];
+};
 return {
   "fragment": {
     "argumentDefinitions": [
@@ -213,51 +162,14 @@ return {
     "selections": [
       {
         "alias": null,
-        "args": null,
-        "concreteType": "User",
-        "kind": "LinkedField",
-        "name": "current_user",
-        "plural": false,
-        "selections": (v5/*: any*/),
-        "storageKey": null
-      },
-      {
-        "alias": null,
-        "args": (v6/*: any*/),
+        "args": (v4/*: any*/),
         "concreteType": "Repository",
         "kind": "LinkedField",
         "name": "repository_by_owner_and_name",
         "plural": false,
         "selections": [
-          (v7/*: any*/),
-          (v8/*: any*/),
-          {
-            "alias": null,
-            "args": null,
-            "concreteType": null,
-            "kind": "LinkedField",
-            "name": "owner",
-            "plural": false,
-            "selections": [
-              (v9/*: any*/),
-              {
-                "kind": "InlineFragment",
-                "selections": (v5/*: any*/),
-                "type": "User",
-                "abstractKey": null
-              },
-              {
-                "kind": "InlineFragment",
-                "selections": [
-                  (v7/*: any*/)
-                ],
-                "type": "Organization",
-                "abstractKey": null
-              }
-            ],
-            "storageKey": null
-          },
-          (v11/*: any*/)
+          (v5/*: any*/),
+          (v7/*: any*/)
         ],
         "storageKey": null
       }
@@ -278,69 +190,37 @@ return {
     "selections": [
       {
         "alias": null,
-        "args": null,
-        "concreteType": "User",
-        "kind": "LinkedField",
-        "name": "current_user",
-        "plural": false,
-        "selections": (v13/*: any*/),
-        "storageKey": null
-      },
-      {
-        "alias": null,
-        "args": (v6/*: any*/),
+        "args": (v4/*: any*/),
         "concreteType": "Repository",
         "kind": "LinkedField",
         "name": "repository_by_owner_and_name",
         "plural": false,
         "selections": [
+          (v5/*: any*/),
           (v7/*: any*/),
-          (v8/*: any*/),
           {
             "alias": null,
             "args": null,
-            "concreteType": null,
-            "kind": "LinkedField",
-            "name": "owner",
-            "plural": false,
-            "selections": [
-              (v9/*: any*/),
-              {
-                "kind": "InlineFragment",
-                "selections": (v13/*: any*/),
-                "type": "User",
-                "abstractKey": null
-              },
-              {
-                "kind": "InlineFragment",
-                "selections": [
-                  (v7/*: any*/),
-                  (v12/*: any*/)
-                ],
-                "type": "Organization",
-                "abstractKey": null
-              }
-            ],
+            "kind": "ScalarField",
+            "name": "id",
             "storageKey": null
-          },
-          (v11/*: any*/),
-          (v12/*: any*/)
+          }
         ],
         "storageKey": null
       }
     ]
   },
   "params": {
-    "cacheID": "0321a0d168094ab4abcc0236a0dbeb75",
+    "cacheID": "fff73eff981d2f4ff826140df9cb70b8",
     "id": null,
     "metadata": {},
     "name": "RepoTreePageQuery",
     "operationKind": "query",
-    "text": "query RepoTreePageQuery(\n  $owner_username: String!\n  $name: String!\n  $rev: String!\n  $path: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    directory(rev: $rev, path: $path) {\n      path\n      directories {\n        name\n        path\n      }\n      files {\n        name\n        path\n        last_commit_message\n        last_commit_date\n      }\n    }\n    id\n  }\n}\n"
+    "text": "query RepoTreePageQuery(\n  $owner_username: String!\n  $name: String!\n  $rev: String!\n  $path: String!\n) {\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    directory(rev: $rev, path: $path) {\n      path\n      directories {\n        name\n        path\n      }\n      files {\n        name\n        path\n        last_commit_message\n        last_commit_date\n      }\n    }\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "10cdb3313712d1586eedb072b8a6aaa8";
+(node as any).hash = "d76ea908da5c705085a87cf04d722c82";
 
 export default node;
