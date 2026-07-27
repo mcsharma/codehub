@@ -18,6 +18,7 @@ import {
   fetchRawFile,
   fetchShortlog,
   type HgChangeset,
+  type HgLogEntry,
 } from '../../repos/hgweb-client.js'
 import { canAccessRepo } from '../../auth/repo-access.js'
 import { resolveCursorConnection } from '@pothos/plugin-relay'
@@ -193,8 +194,26 @@ interface RepoFileEntryShape {
   name: string
   path: string
   size: number
-  lastCommitMessage: string | null
-  lastCommitDate: number | null
+  // Carried so `last_commit_message`/`last_commit_date` can look up the
+  // file's log entry lazily, on demand — only paid for when a query
+  // actually selects one of those fields (see `getFileLog` below), not
+  // eagerly for every file in the directory regardless of what's asked
+  // for.
+  _ownerName: string
+  _repoName: string
+  _rev: string
+  // Memoizes the (at most one) fetchFileLog call across both fields, in
+  // case a query selects both `last_commit_message` and
+  // `last_commit_date` — they'd otherwise each trigger their own
+  // redundant hgweb round-trip for the same file.
+  _logPromise?: Promise<HgLogEntry | null>
+}
+
+function getFileLog(file: RepoFileEntryShape): Promise<HgLogEntry | null> {
+  if (!file._logPromise) {
+    file._logPromise = fetchFileLog(file._ownerName, file._repoName, file._rev, file.path)
+  }
+  return file._logPromise
 }
 
 const RepoDirectoryEntryObject = builder.objectRef<RepoDirectoryEntryShape>('RepoDirectoryEntry').implement({
@@ -209,8 +228,22 @@ const RepoFileEntryObject = builder.objectRef<RepoFileEntryShape>('RepoFileEntry
     name: t.exposeString('name'),
     path: t.exposeString('path'),
     size: t.exposeInt('size'),
-    last_commit_message: t.exposeString('lastCommitMessage', { nullable: true }),
-    last_commit_date: t.exposeInt('lastCommitDate', { nullable: true }),
+    last_commit_message: t.field({
+      type: 'String',
+      nullable: true,
+      resolve: async (file) => {
+        const log = await getFileLog(file)
+        return log?.desc ?? null
+      },
+    }),
+    last_commit_date: t.field({
+      type: 'Int',
+      nullable: true,
+      resolve: async (file) => {
+        const log = await getFileLog(file)
+        return log ? Math.floor(log.date[0]) : null
+      },
+    }),
   }),
 })
 
@@ -348,22 +381,19 @@ builder.prismaObject('Repository', {
         const path = args.path ?? ''
         try {
           const listing = await fetchDirectory(ownerName, repository.name, rev, path)
-          const filePaths = listing.files.map((f) => stripLeadingSlash(f.abspath))
-          const lastCommits = await Promise.all(
-            filePaths.map((filePath) => fetchFileLog(ownerName, repository.name, rev, filePath)),
-          )
           return {
             path,
             directories: listing.directories.map((d) => ({
               name: d.basename,
               path: stripLeadingSlash(d.abspath),
             })),
-            files: listing.files.map((f, i) => ({
+            files: listing.files.map((f) => ({
               name: f.basename,
-              path: filePaths[i]!,
+              path: stripLeadingSlash(f.abspath),
               size: f.size,
-              lastCommitMessage: lastCommits[i]?.desc ?? null,
-              lastCommitDate: lastCommits[i] ? Math.floor(lastCommits[i]!.date[0]) : null,
+              _ownerName: ownerName,
+              _repoName: repository.name,
+              _rev: rev,
             })),
           }
         } catch {
