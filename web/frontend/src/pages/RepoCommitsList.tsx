@@ -1,30 +1,109 @@
-import { graphql, usePaginationFragment } from "react-relay";
-import { Link } from "react-router";
-import type { RepoCommitsList_query$key } from "./__generated__/RepoCommitsList_query.graphql";
+import { graphql, usePaginationFragment } from 'react-relay'
+import { Link } from 'react-router'
+import type { RepoCommitsList_query$key } from './__generated__/RepoCommitsList_query.graphql'
+import * as stylex from '@stylexjs/stylex'
 
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
-import UserAvatar from "../components/UserAvatar";
-import { formatRelativeTime, formatCommitAuthor } from "../utils/formatters";
+import { Card } from '../ui/Card'
+import { Text } from '../ui/Text'
+import { Button } from '../ui/Button'
+import { Divider } from '../ui/Divider'
+import UserAvatar from '../components/UserAvatar'
+import { formatRelativeTime, formatCommitAuthor } from '../utils/formatters'
+import { colors, fonts, fontSizes, fontWeights, radii, space } from '../theme/tokens.stylex'
 
 interface Props {
-  query: RepoCommitsList_query$key;
-  ownerUsername: string;
-  repoName: string;
+  query: RepoCommitsList_query$key
+  ownerUsername: string
+  repoName: string
 }
+
+const styles = stylex.create({
+  noCommitsText: {
+    paddingVertical: space[4],
+  },
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: space[5],
+  },
+  groupHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[2],
+    marginBottom: space[2],
+  },
+  groupHeading: {
+    fontWeight: fontWeights.bold,
+    textTransform: 'uppercase',
+    color: colors.fgMuted,
+    whiteSpace: 'nowrap',
+  },
+  dividerLine: {
+    flex: 1,
+    height: '1px',
+    backgroundColor: colors.border,
+  },
+  commitRow: {
+    padding: space[2.5],
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: space[2],
+    textDecoration: 'none',
+    color: 'inherit',
+    ':hover': { backgroundColor: colors.bgSubtle },
+  },
+  commitTextContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+  commitHeaderRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space[2],
+  },
+  commitDescription: {
+    fontWeight: fontWeights.bold,
+    fontSize: fontSizes.sm,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  shortNode: {
+    fontFamily: fonts.mono,
+    color: colors.brandFg,
+    backgroundColor: colors.brandSubtle,
+    paddingInline: space[1],
+    paddingBlock: space[0.25],
+    borderRadius: radii.sm,
+    flexShrink: 0,
+    fontSize: fontSizes.xs,
+  },
+  commitMetaRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[1.5],
+    marginTop: space[0.5],
+  },
+  authorName: {
+    fontWeight: fontWeights.bold,
+  },
+  loadMoreContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    paddingTop: space[1],
+  },
+})
 
 // Groups the (already tip-first) commit list into "Commits on <date>"
 // sections, matching repoPage.html — a client-side grouping over data
 // that's already in the right order, no extra fetching involved.
 function formatDateHeading(unixSeconds: number): string {
   return new Date(unixSeconds * 1000).toLocaleDateString(undefined, {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
 }
 
 const RepoCommitsList = ({ query: queryRef, ownerUsername, repoName }: Props) => {
@@ -59,118 +138,87 @@ const RepoCommitsList = ({ query: queryRef, ownerUsername, repoName }: Props) =>
         }
       }
     `,
-    queryRef
-  );
+    queryRef,
+  )
 
-  const commits = data.repository_by_owner_and_name?.commits?.edges ?? [];
+  const commits = data.repository_by_owner_and_name?.commits?.edges ?? []
 
   if (commits.length === 0) {
     return (
-      <Typography color="text.secondary" sx={{ py: 4 }}>
+      <Text color="muted" xstyle={styles.noCommitsText}>
         No commits yet.
-      </Typography>
-    );
+      </Text>
+    )
   }
 
-  const groups: { heading: string; commits: (typeof commits)[number][] }[] = [];
+  const groups: { heading: string; commits: (typeof commits)[number][] }[] = []
   for (const edge of commits) {
-    if (!edge?.node) continue;
-    const heading = formatDateHeading(edge.node.date ?? 0);
-    const lastGroup = groups[groups.length - 1];
+    if (!edge?.node) continue
+    const heading = formatDateHeading(edge.node.date ?? 0)
+    const lastGroup = groups[groups.length - 1]
     if (lastGroup?.heading === heading) {
-      lastGroup.commits.push(edge);
+      lastGroup.commits.push(edge)
     } else {
-      groups.push({ heading, commits: [edge] });
+      groups.push({ heading, commits: [edge] })
     }
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 5 }}>
+    <div {...stylex.props(styles.root)}>
       {groups.map((group) => (
-        <Box key={group.heading}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-            <Typography
-              variant="caption"
-              sx={{ fontWeight: 700, textTransform: "uppercase", color: "text.secondary", whiteSpace: "nowrap" }}
-            >
+        <div key={group.heading}>
+          <div {...stylex.props(styles.groupHeader)}>
+            <Text size="xs" color="muted" xstyle={styles.groupHeading}>
               Commits on {group.heading}
-            </Typography>
-            <Box sx={{ flex: 1, height: "1px", bgcolor: "divider" }} />
-          </Box>
+            </Text>
+            <div {...stylex.props(styles.dividerLine)} />
+          </div>
           <Card>
             {group.commits.map((edge, index) => {
-              const commit = edge!.node!;
+              const commit = edge!.node!
               return (
-                <Box key={commit.node}>
+                <div key={commit.node}>
                   {index > 0 && <Divider />}
-                  <Box
-                    component={Link}
+                  <Link
                     to={`/${ownerUsername}/${repoName}/commit/${commit.node}`}
-                    sx={{
-                      p: 2.5,
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: 2,
-                      textDecoration: "none",
-                      color: "inherit",
-                      "&:hover": { bgcolor: "background.default" },
-                    }}
+                    {...stylex.props(styles.commitRow)}
                   >
                     <UserAvatar />
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
-                        <Typography
-                          sx={{
-                            fontWeight: 700,
-                            fontSize: "0.875rem",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
+                    <div {...stylex.props(styles.commitTextContainer)}>
+                      <div {...stylex.props(styles.commitHeaderRow)}>
+                        <Text size="sm" xstyle={styles.commitDescription}>
                           {commit.description}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontFamily: "monospace",
-                            color: "primary.main",
-                            bgcolor: "#eff6ff",
-                            px: 1,
-                            py: 0.25,
-                            borderRadius: 1,
-                            flexShrink: 0,
-                          }}
-                        >
+                        </Text>
+                        <span {...stylex.props(styles.shortNode)}>
                           {commit.short_node}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 0.5 }}>
-                        <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                          {formatCommitAuthor(commit.author ?? "")}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        </span>
+                      </div>
+                      <div {...stylex.props(styles.commitMetaRow)}>
+                        <Text size="xs" xstyle={styles.authorName}>
+                          {formatCommitAuthor(commit.author ?? '')}
+                        </Text>
+                        <Text size="xs" color="muted">
                           {formatRelativeTime(commit.date ?? 0)}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-                </Box>
-              );
+                        </Text>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              )
             })}
           </Card>
-        </Box>
+        </div>
       ))}
 
       {hasNext && (
-        <Box sx={{ display: "flex", justifyContent: "center", pt: 1 }}>
-          <Button variant="outlined" disabled={isLoadingNext} onClick={() => loadNext(15)}>
-            {isLoadingNext ? "Loading…" : "Load earlier commits"}
+        <div {...stylex.props(styles.loadMoreContainer)}>
+          <Button variant="outline" disabled={isLoadingNext} onClick={() => loadNext(15)}>
+            {isLoadingNext ? 'Loading…' : 'Load earlier commits'}
           </Button>
-        </Box>
+        </div>
       )}
-    </Box>
-  );
-};
+    </div>
+  )
+}
 
-export default RepoCommitsList;
+export default RepoCommitsList

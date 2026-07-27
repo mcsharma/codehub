@@ -1,30 +1,26 @@
-import Avatar from '@mui/material/Avatar'
-import AccountCircleIcon from '@mui/icons-material/AccountCircle'
-import type { SxProps, Theme } from '@mui/material/styles'
+import * as stylex from '@stylexjs/stylex'
+import { CircleUserRound } from 'lucide-react'
+import { Avatar } from '../ui/Avatar'
+import { colors } from '../theme/tokens.stylex'
 
 interface UserAvatarProps {
   size?: number
-  sx?: SxProps<Theme>
 }
+
+const styles = stylex.create({
+  root: {
+    backgroundColor: colors.bg,
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    color: colors.fgMuted,
+  },
+})
 
 // No photo storage exists yet (Google profile pictures aren't persisted),
 // so every avatar is this generic icon rather than a broken/missing image.
-const UserAvatar = ({ size = 32, sx }: UserAvatarProps) => {
-  return (
-    <Avatar
-      sx={{
-        width: size,
-        height: size,
-        bgcolor: 'background.paper',
-        border: '1px solid',
-        borderColor: 'divider',
-        color: 'text.secondary',
-        ...sx,
-      }}
-    >
-      <AccountCircleIcon sx={{ width: '80%', height: '80%' }} />
-    </Avatar>
-  )
-}
+const UserAvatar = ({ size = 32 }: UserAvatarProps) => (
+  <Avatar size={size} xstyle={styles.root} fallback={<CircleUserRound size={Math.round(size * 0.8)} />} />
+)
 
 export default UserAvatar

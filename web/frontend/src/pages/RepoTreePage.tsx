@@ -1,14 +1,13 @@
+import * as stylex from '@stylexjs/stylex'
 import type { ReactNode } from 'react'
 import { graphql, usePreloadedQuery } from 'react-relay'
 import { Link, useLoaderData } from 'react-router'
 import type { RepoTreePageQuery } from './__generated__/RepoTreePageQuery.graphql'
 import type { PreloadedQuery } from 'react-relay'
-
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import Card from '@mui/material/Card'
-import FolderIcon from '@mui/icons-material/Folder'
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
+import { Folder, FileText } from 'lucide-react'
+import { Card } from '../ui/Card'
+import { Text } from '../ui/Text'
+import { colors, space } from '../theme/tokens.stylex'
 import { formatRelativeTime } from '../utils/formatters'
 
 // Apple's HIG "System Blue" — closest common match to the macOS Finder
@@ -27,36 +26,86 @@ const FOLDER_BLUE = '#0A84FF'
 // and any item that would go below its own `min-width` gets pinned there
 // and dropped from the next pass. Name/Date use a normal shrink weight
 // (1) so nearly all shrinkage lands on them first; Message uses a tiny
-// weight (0.01) so it barely shrinks at all — until Name/Date both hit
-// their 60px floor and drop out, at which point Message is the only
-// flexible item left and absorbs 100% of any further squeeze.
-const NAME_COLUMN_SX = {
-  flex: '1 1 33%',
-  minWidth: '100px',
-  py: 1,
-  px: 2,
-} as const
-
-const MESSAGE_COLUMN_SX = {
-  flex: '1 0.3 40%',
-  maxWidth: '50%',
-  minWidth: '20%',
-  py: 1,
-  px: 2,
-} as const
-
-const DATE_COLUMN_SX = {
-  // flex-grow: 1 (not 0) — Message grows first and stops once it hits its
-  // 40% cap, at which point it's excluded from further growth and Date
-  // absorbs whatever's left, so its right-aligned text lands flush
-  // against the row's actual right edge instead of stopping wherever
-  // Name + Message(40%) + Date(170px) happens to land.
-  flex: '1 1 20%',
-  minWidth: '100px',
-  py: 1,
-  px: 2,
-  textAlign: 'right',
-} as const
+// weight (0.3) so it barely shrinks at all — until Name/Date both hit
+// their floor and drop out, at which point Message is the only flexible
+// item left and absorbs 100% of any further squeeze.
+const styles = stylex.create({
+  // Header row — grey.100 background to match prod
+  headerRow: {
+    display: 'flex',
+    backgroundColor: colors.bgMuted,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: colors.border,
+  },
+  // Data row
+  dataRow: {
+    display: 'flex',
+    alignItems: 'center',
+    textDecoration: 'none',
+    color: colors.fg,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: colors.border,
+    ':hover': {
+      backgroundColor: colors.bgSubtle,
+    },
+  },
+  // Column flex rules
+  nameCol: {
+    flex: '1 1 33%',
+    minWidth: '100px',
+    paddingBlock: space[1],
+    paddingInline: space[2],
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[1.5],
+  },
+  messageCol: {
+    flex: '1 0.3 40%',
+    maxWidth: '50%',
+    minWidth: '20%',
+    paddingBlock: space[1],
+    paddingInline: space[2],
+    overflow: 'hidden',
+  },
+  dateCol: {
+    // flex-grow: 1 (not 0) — Message grows first and stops once it hits
+    // its 40% cap, at which point it's excluded from further growth and
+    // Date absorbs whatever's left, so its right-aligned text lands flush
+    // against the row's actual right edge instead of stopping wherever
+    // Name + Message(40%) + Date(170px) happens to land.
+    flex: '1 1 20%',
+    minWidth: '100px',
+    paddingBlock: space[1],
+    paddingInline: space[2],
+    textAlign: 'right',
+  },
+  // Header-cell typography tweak — same weight as prod's `fontWeight: 600`
+  headerCell: {
+    fontWeight: '600',
+    whiteSpace: 'nowrap',
+  },
+  nameText: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    minWidth: 0,
+  },
+  messageText: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  folderIcon: {
+    flexShrink: 0,
+    color: FOLDER_BLUE,
+  },
+  fileIcon: {
+    flexShrink: 0,
+    color: colors.fgMuted,
+  },
+})
 
 interface RepoTreeRowProps {
   to: string
@@ -67,56 +116,24 @@ interface RepoTreeRowProps {
 }
 
 const RepoTreeRow = ({ to, icon, name, message, date }: RepoTreeRowProps) => (
-  <Box
-    component={Link}
-    to={to}
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      textDecoration: 'none',
-      color: 'inherit',
-      borderBottom: '1px solid',
-      borderColor: 'divider',
-      '&:hover': { bgcolor: 'action.hover' },
-    }}
-  >
-    <Box
-      sx={{
-        ...NAME_COLUMN_SX,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1.5,
-      }}
-    >
+  <Link to={to} {...stylex.props(styles.dataRow)}>
+    <div {...stylex.props(styles.nameCol)}>
       {icon}
-      <Typography
-        variant="body2"
-        sx={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
+      <Text as="span" size="sm" xstyle={styles.nameText}>
         {name}
-      </Typography>
-    </Box>
-    <Typography
-      variant="body2"
-      color="text.secondary"
-      title={message ?? undefined}
-      sx={{
-        ...MESSAGE_COLUMN_SX,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {message ?? ''}
-    </Typography>
-    <Typography variant="caption" color="text.secondary" sx={DATE_COLUMN_SX}>
-      {date != null ? formatRelativeTime(date) : ''}
-    </Typography>
-  </Box>
+      </Text>
+    </div>
+    <div {...stylex.props(styles.messageCol)} title={message ?? undefined}>
+      <Text as="span" size="sm" color="muted" xstyle={styles.messageText}>
+        {message ?? ''}
+      </Text>
+    </div>
+    <div {...stylex.props(styles.dateCol)}>
+      <Text as="span" size="xs" color="muted">
+        {date != null ? formatRelativeTime(date) : ''}
+      </Text>
+    </div>
+  </Link>
 )
 
 const RepoTreePage = () => {
@@ -167,67 +184,36 @@ const RepoTreePage = () => {
 
   if (!directory) {
     return (
-      <Typography color="text.secondary">
-        This path doesn&apos;t exist.
-      </Typography>
+      <Text color="muted">This path doesn&apos;t exist.</Text>
     )
   }
 
   if (directories.length === 0 && files.length === 0) {
     return (
-      <Typography color="text.secondary">This directory is empty.</Typography>
+      <Text color="muted">This directory is empty.</Text>
     )
   }
 
   return (
-    <Card sx={{ boxShadow: 'none' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          bgcolor: 'grey.100',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        <Typography
-          variant="body2"
-          sx={{
-            ...NAME_COLUMN_SX,
-            fontWeight: 600,
-            color: 'text.secondary',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Name
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            ...MESSAGE_COLUMN_SX,
-            fontWeight: 600,
-            color: 'text.secondary',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Last commit message
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            ...DATE_COLUMN_SX,
-            fontWeight: 600,
-            color: 'text.secondary',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Last commit date
-        </Typography>
-      </Box>
+    <Card>
+      {/* Header row — grey.100 background matches prod */}
+      <div {...stylex.props(styles.headerRow)}>
+        <div {...stylex.props(styles.nameCol, styles.headerCell)}>
+          <Text as="span" size="sm" color="muted">Name</Text>
+        </div>
+        <div {...stylex.props(styles.messageCol, styles.headerCell)}>
+          <Text as="span" size="sm" color="muted">Last commit message</Text>
+        </div>
+        <div {...stylex.props(styles.dateCol, styles.headerCell)}>
+          <Text as="span" size="sm" color="muted">Last commit date</Text>
+        </div>
+      </div>
+
       {directories.map((entry) => (
         <RepoTreeRow
           key={entry.path}
           to={`${treeBase}/${entry.path}`}
-          icon={<FolderIcon fontSize="small" sx={{ color: FOLDER_BLUE }} />}
+          icon={<Folder size={16} fill={FOLDER_BLUE} {...stylex.props(styles.folderIcon)} />}
           name={entry.name ?? ''}
         />
       ))}
@@ -235,12 +221,7 @@ const RepoTreePage = () => {
         <RepoTreeRow
           key={entry.path}
           to={`${blobBase}/${entry.path}`}
-          icon={
-            <InsertDriveFileOutlinedIcon
-              fontSize="small"
-              sx={{ color: 'text.secondary' }}
-            />
-          }
+          icon={<FileText size={16} {...stylex.props(styles.fileIcon)} />}
           name={entry.name ?? ''}
           message={entry.last_commit_message}
           date={entry.last_commit_date}

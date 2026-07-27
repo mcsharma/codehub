@@ -4,21 +4,159 @@ import { useLoaderData, useNavigate } from 'react-router'
 import type { PreloadedQuery } from 'react-relay'
 import type { NewRepoPageQuery } from './__generated__/NewRepoPageQuery.graphql'
 import type { NewRepoPageCreateMutation } from './__generated__/NewRepoPageCreateMutation.graphql'
+import * as stylex from '@stylexjs/stylex'
+import { Lightbulb } from 'lucide-react'
 
-import Container from '@mui/material/Container'
-import Typography from '@mui/material/Typography'
-import TextField from '@mui/material/TextField'
-import InputAdornment from '@mui/material/InputAdornment'
-import Button from '@mui/material/Button'
-import RadioGroup from '@mui/material/RadioGroup'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Radio from '@mui/material/Radio'
-import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import Alert from '@mui/material/Alert'
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined'
+import { Container } from '../ui/Container'
+import { Card, CardBody } from '../ui/Card'
+import { Text } from '../ui/Text'
+import { Heading } from '../ui/Heading'
+import { Button } from '../ui/Button'
+import { Alert } from '../ui/Alert'
+import { FieldRoot, FieldTextarea } from '../ui/Field'
+import { RadioCardRoot, RadioCardItem, radioCardRootStyle } from '../ui/RadioCard'
+import { colors, fontWeights, fontSizes, radii, space } from '../theme/tokens.stylex'
 
 export type { NewRepoPageQuery }
+
+const styles = stylex.create({
+  containerWarningPadding: {
+    paddingVertical: space[4],
+  },
+  containerPagePadding: {
+    paddingVertical: space[8],
+  },
+  labelMargin: {
+    marginBottom: space[2],
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: space[5],
+  },
+  title: {
+    fontWeight: fontWeights.bold,
+    fontSize: fontSizes['2xl'],
+  },
+  subtitle: {
+    marginTop: space[1],
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: space[4],
+  },
+  cardBody: {
+    padding: space[4],
+  },
+  fieldBlock: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: space[1],
+  },
+  fieldLabel: {
+    fontWeight: fontWeights.bold,
+    fontSize: fontSizes.sm,
+  },
+  fieldLabelWithMargin: {
+    fontWeight: fontWeights.bold,
+    fontSize: fontSizes.sm,
+    marginBottom: space[2],
+  },
+  inputWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    borderRadius: radii.md,
+    backgroundColor: colors.bgSubtle,
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    paddingLeft: '14px',
+    ':focus-within': {
+      borderColor: colors.brandSolid,
+      outlineWidth: '2px',
+      outlineStyle: 'solid',
+      outlineColor: colors.brandFocusRing,
+      outlineOffset: '-1px',
+    },
+  },
+  prefix: {
+    color: colors.fgMuted,
+    fontWeight: fontWeights.medium,
+    marginRight: space[1.5],
+    userSelect: 'none',
+  },
+  innerInput: {
+    flex: 1,
+    minWidth: 0,
+    outline: 'none',
+    appearance: 'none',
+    border: 'none',
+    backgroundColor: 'transparent',
+    paddingBlock: '16.5px',
+    paddingRight: '14px',
+    fontSize: fontSizes.md,
+    color: colors.fg,
+    fontFamily: 'inherit',
+  },
+  hintText: {
+    display: 'block',
+    marginTop: space[1],
+    fontWeight: fontWeights.bold,
+    textTransform: 'uppercase',
+  },
+  visibilitySection: {
+    paddingTop: space[3],
+    borderTopWidth: '1px',
+    borderTopStyle: 'solid',
+    borderTopColor: colors.border,
+  },
+  radioGroup: {
+    gridTemplateColumns: {
+      default: '1fr',
+      '@media (min-width: 600px)': '1fr 1fr',
+    },
+    gap: space[2],
+  },
+  actionsRow: {
+    paddingTop: space[3],
+    borderTopWidth: '1px',
+    borderTopStyle: 'solid',
+    borderTopColor: colors.border,
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: space[2],
+  },
+  tipCard: {
+    marginTop: space[4],
+    backgroundColor: colors.bgSubtle,
+    borderColor: colors.border,
+  },
+  tipCardBody: {
+    padding: space[3],
+    display: 'flex',
+    gap: space[2],
+  },
+  tipIconWrapper: {
+    width: '40px',
+    height: '40px',
+    borderRadius: radii.md,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: colors.brandFg,
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    flexShrink: 0,
+    backgroundColor: colors.bg,
+  },
+  tipTitle: {
+    fontWeight: fontWeights.bold,
+  },
+  tipText: {
+    marginTop: space[0.5],
+  },
+})
 
 const NewRepoPage = () => {
   const navigate = useNavigate()
@@ -62,8 +200,8 @@ const NewRepoPage = () => {
 
   if (!data.current_user) {
     return (
-      <Container maxWidth="sm" sx={{ py: 4 }}>
-        <Alert severity="warning">
+      <Container maxWidth="sm" xstyle={styles.containerWarningPadding}>
+        <Alert status="warning">
           You need to be logged in to create a repository.
         </Alert>
       </Container>
@@ -86,195 +224,110 @@ const NewRepoPage = () => {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Box sx={{ textAlign: 'center', mb: 5 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+    <Container maxWidth="sm" xstyle={styles.containerPagePadding}>
+      <div {...stylex.props(styles.header)}>
+        <Heading as="h1" size="2xl" xstyle={styles.title}>
           Create a new repository
-        </Typography>
-        <Typography color="text.secondary" sx={{ mt: 1 }}>
+        </Heading>
+        <Text color="muted" xstyle={styles.subtitle}>
           A repository contains all your project files and revision history.
-        </Typography>
-      </Box>
+        </Text>
+      </div>
 
-      <Card sx={{ p: 4 }}>
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}
-        >
-          {error && <Alert severity="error">{error}</Alert>}
+      <Card>
+        <CardBody xstyle={styles.cardBody}>
+          <form onSubmit={handleSubmit} {...stylex.props(styles.form)}>
+            {error && <Alert status="error">{error}</Alert>}
 
-          <Box>
-            <Typography sx={{ fontWeight: 700, mb: 1 }}>
-              Repository Name *
-            </Typography>
-            <TextField
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              fullWidth
-              autoFocus
-              placeholder="my-awesome-project"
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Typography
-                        color="text.secondary"
-                        sx={{ fontWeight: 500 }}
-                      >
-                        {username} /
-                      </Typography>
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{
-                display: 'block',
-                mt: 1,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-              }}
-            >
-              Great repository names are short and memorable.
-            </Typography>
-          </Box>
+            <div {...stylex.props(styles.fieldBlock)}>
+              <label {...stylex.props(styles.fieldLabel)}>
+                Repository Name *
+              </label>
+              <div {...stylex.props(styles.inputWrapper)}>
+                <span {...stylex.props(styles.prefix)}>{username} /</span>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  autoFocus
+                  placeholder="my-awesome-project"
+                  {...stylex.props(styles.innerInput)}
+                />
+              </div>
+              <Text size="xs" color="muted" xstyle={styles.hintText}>
+                Great repository names are short and memorable.
+              </Text>
+            </div>
 
-          <Box>
-            <Typography sx={{ fontWeight: 700, mb: 1 }}>
-              Description{' '}
-              <Typography
-                component="span"
-                color="text.secondary"
-                sx={{ fontWeight: 400 }}
+            <div {...stylex.props(styles.fieldBlock)}>
+              <label {...stylex.props(styles.fieldLabel)}>
+                Description{' '}
+                <span style={{ fontWeight: 400, color: colors.fgMuted }}>
+                  (optional)
+                </span>
+              </label>
+              <FieldRoot>
+                <FieldTextarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  placeholder="A brief description of your project..."
+                />
+              </FieldRoot>
+            </div>
+
+            <div {...stylex.props(styles.visibilitySection)}>
+              <Text xstyle={styles.fieldLabelWithMargin}>
+                Visibility
+              </Text>
+              <RadioCardRoot
+                value={visibility}
+                onValueChange={(val) => setVisibility(val as 'PUBLIC' | 'PRIVATE')}
+                {...stylex.props(radioCardRootStyle, styles.radioGroup)}
               >
-                (optional)
-              </Typography>
-            </Typography>
-            <TextField
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              fullWidth
-              multiline
-              rows={3}
-              placeholder="A brief description of your project..."
-            />
-          </Box>
+                <RadioCardItem
+                  value="PUBLIC"
+                  label="Public"
+                  description="Anyone on the internet can see this repository."
+                />
+                <RadioCardItem
+                  value="PRIVATE"
+                  label="Private"
+                  description="Only you and people you choose can see this."
+                />
+              </RadioCardRoot>
+            </div>
 
-          <Box sx={{ pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
-            <Typography sx={{ fontWeight: 700, mb: 2 }}>Visibility</Typography>
-            <RadioGroup
-              value={visibility}
-              onChange={(e) =>
-                setVisibility(e.target.value as 'PUBLIC' | 'PRIVATE')
-              }
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                gap: 2,
-              }}
-            >
-              {(
-                [
-                  {
-                    value: 'PUBLIC',
-                    label: 'Public',
-                    helper: 'Anyone on the internet can see this repository.',
-                  },
-                  {
-                    value: 'PRIVATE',
-                    label: 'Private',
-                    helper: 'Only you and people you choose can see this.',
-                  },
-                ] as const
-              ).map((option) => (
-                <Card
-                  key={option.value}
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    cursor: 'pointer',
-                    borderColor:
-                      visibility === option.value ? 'primary.main' : 'divider',
-                    borderWidth: 2,
-                    bgcolor:
-                      visibility === option.value ? '#eff6ff' : 'transparent',
-                  }}
-                  onClick={() => setVisibility(option.value)}
-                >
-                  <FormControlLabel
-                    value={option.value}
-                    control={<Radio />}
-                    sx={{ alignItems: 'flex-start', m: 0 }}
-                    label={
-                      <Box sx={{ ml: 1 }}>
-                        <Typography sx={{ fontWeight: 700 }}>
-                          {option.label}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {option.helper}
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                </Card>
-              ))}
-            </RadioGroup>
-          </Box>
-
-          <Box
-            sx={{
-              pt: 3,
-              borderTop: '1px solid',
-              borderColor: 'divider',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 2,
-            }}
-          >
-            <Button onClick={() => navigate(-1)} color="inherit">
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={isCreating || !name}
-              size="large"
-            >
-              {isCreating ? 'Creating…' : 'Create Repository'}
-            </Button>
-          </Box>
-        </Box>
+            <div {...stylex.props(styles.actionsRow)}>
+              <Button onClick={() => navigate(-1)} variant="subtle">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="solid"
+                disabled={isCreating || !name}
+                size="lg"
+              >
+                {isCreating ? 'Creating…' : 'Create Repository'}
+              </Button>
+            </div>
+          </form>
+        </CardBody>
       </Card>
 
-      <Card sx={{ mt: 4, p: 3, display: 'flex', gap: 2, bgcolor: 'grey.50' }}>
-        <Box
-          sx={{
-            width: 40,
-            height: 40,
-            borderRadius: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'primary.main',
-            border: '1px solid',
-            borderColor: 'divider',
-            flexShrink: 0,
-          }}
-        >
-          <LightbulbOutlinedIcon fontSize="small" />
-        </Box>
-        <Box>
-          <Typography sx={{ fontWeight: 700 }}>Pro Tip</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            You can initialize this repository with a README or an .hgignore
-            file later using our CLI once it&apos;s created.
-          </Typography>
-        </Box>
+      <Card xstyle={styles.tipCard}>
+        <CardBody xstyle={styles.tipCardBody}>
+          <div {...stylex.props(styles.tipIconWrapper)}>
+            <Lightbulb size={20} />
+          </div>
+          <div>
+            <Text xstyle={styles.tipTitle}>Pro Tip</Text>
+            <Text size="sm" color="muted" xstyle={styles.tipText}>
+              You can initialize this repository with a README or an .hgignore
+              file later using our CLI once it&apos;s created.
+            </Text>
+          </div>
+        </CardBody>
       </Card>
     </Container>
   )

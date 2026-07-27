@@ -1,12 +1,12 @@
+import * as stylex from '@stylexjs/stylex'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import Box from '@mui/material/Box'
-import Divider from '@mui/material/Divider'
-import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
-import Tooltip from '@mui/material/Tooltip'
-import useMediaQuery from '@mui/material/useMediaQuery'
-import { useTheme } from '@mui/material/styles'
+import { Text } from '../ui/Text'
+import { IconButton } from '../ui/IconButton'
+import { Tooltip } from '../ui/Tooltip'
+import { Divider } from '../ui/Divider'
+import { useMediaQuery } from '../hooks/useMediaQuery'
+import { rawColors, space } from '../theme/tokens.stylex'
 import SidebarToggleIcon from './icons/SidebarToggleIcon'
 
 interface CollapsibleSidebarPaneProps {
@@ -23,6 +23,57 @@ interface CollapsibleSidebarPaneProps {
 
 const SIDEBAR_WIDTH = 280
 
+const styles = stylex.create({
+  root: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    minHeight: 'calc(100vh - 140px)',
+  },
+  sidebar: {
+    width: SIDEBAR_WIDTH,
+    flexShrink: 0,
+    position: 'sticky',
+    top: 16,
+    marginTop: space[1],
+    maxHeight: 'calc(100vh - 32px)',
+    overflowY: 'auto',
+  },
+  sidebarHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    paddingBlock: '10px',
+    paddingInline: space[1.5],
+  },
+  // MUI's body2 usage here has a literal `fontWeight: 600` — not one of
+  // the named weights in the token scale (400/500/700), so it's inline.
+  sidebarLabel: {
+    fontWeight: '600',
+  },
+  main: {
+    flex: 1,
+    minWidth: 0,
+    paddingLeft: space[2],
+  },
+  // contentPr is only ever 0 (default) or 2 in practice across the two
+  // callers — static variants rather than a dynamic inline value, since
+  // StyleX styles must be statically analyzable.
+  mainPr2: {
+    paddingRight: space[2],
+  },
+  mainHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[0.5],
+    paddingBlock: space[1],
+  },
+  toggleButton: {
+    color: rawColors.grey700,
+  },
+  toggleIconCollapsed: {
+    transform: 'scaleX(-1)',
+  },
+})
+
 // Split-pane shell shared by the Code tab (RepoCodeShell) and the commit
 // diff page (CommitPage): a sticky, collapsible sidebar with a label
 // header, a full-height vertical divider, and a main column whose header
@@ -35,91 +86,63 @@ const CollapsibleSidebarPane = ({
   contentPr = 0,
   children,
 }: CollapsibleSidebarPaneProps) => {
-  const theme = useTheme()
   // Below this width the sidebar collapses on its own to leave room for
   // the main content. A manual toggle always wins over this once the user
-  // has touched it, even if the viewport is still narrow.
-  const isNarrowViewport = useMediaQuery(theme.breakpoints.down('md'))
+  // has touched it, even if the viewport is still narrow. (900px — MUI's
+  // real `md` breakpoint, unmodified in theme.ts — this governs layout
+  // behavior, not visual theming, so it isn't sourced from the token file.)
+  const isNarrowViewport = useMediaQuery('(max-width: 899px)')
   const [manualCollapsed, setManualCollapsed] = useState<boolean | null>(null)
   const collapsed = manualCollapsed ?? isNarrowViewport
 
   const toggleCollapsed = () => setManualCollapsed(!collapsed)
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        minHeight: 'calc(100vh - 140px)',
-      }}
-    >
+    <div {...stylex.props(styles.root)}>
       {!collapsed && (
         <>
-          <Box
-            sx={{
-              width: SIDEBAR_WIDTH,
-              flexShrink: 0,
-              position: 'sticky',
-              top: 16,
-              mt: 1,
-              maxHeight: 'calc(100vh - 32px)',
-              overflowY: 'auto',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                py: 1.25,
-                px: 1.5,
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          <div {...stylex.props(styles.sidebar)}>
+            <div {...stylex.props(styles.sidebarHeader)}>
+              <Text as="span" size="sm" xstyle={styles.sidebarLabel}>
                 {label}
-              </Typography>
-            </Box>
+              </Text>
+            </div>
             {sidebar}
-          </Box>
+          </div>
 
-          <Divider orientation="vertical" flexItem />
+          <Divider orientation="vertical" />
         </>
       )}
 
-      <Box sx={{ flex: 1, minWidth: 0, pl: 2, pr: contentPr }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.5,
-            py: 1,
-          }}
-        >
+      <div {...stylex.props(styles.main, contentPr === 2 && styles.mainPr2)}>
+        <div {...stylex.props(styles.mainHeader)}>
           <Tooltip
-            title={
+            content={
               collapsed
                 ? `Show ${label.toLowerCase()}`
                 : `Collapse ${label.toLowerCase()}`
             }
           >
             <IconButton
+              aria-label={
+                collapsed
+                  ? `Show ${label.toLowerCase()}`
+                  : `Collapse ${label.toLowerCase()}`
+              }
+              variant="ghost"
               onClick={toggleCollapsed}
-              sx={{
-                color: 'grey.700',
-                width: 40,
-                height: 40,
-              }}
+              xstyle={styles.toggleButton}
             >
               <SidebarToggleIcon
-                fontSize="small"
-                sx={collapsed ? { transform: 'scaleX(-1)' } : undefined}
+                {...stylex.props(collapsed && styles.toggleIconCollapsed)}
               />
             </IconButton>
           </Tooltip>
           {mainHeader}
-        </Box>
+        </div>
         {children}
-      </Box>
-    </Box>
+      </div>
+    </div>
   )
 }
 

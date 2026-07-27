@@ -1,5 +1,11 @@
-import Container from '@mui/material/Container'
-import Typography from '@mui/material/Typography'
+import * as stylex from '@stylexjs/stylex'
+import { Container } from '../ui/Container'
+import { Text } from '../ui/Text'
+import { space } from '../theme/tokens.stylex'
+
+const styles = stylex.create({
+  container: { paddingBlock: space[6] },
+})
 
 interface RepoNotFoundProps {
   ownerUsername: string
@@ -7,10 +13,10 @@ interface RepoNotFoundProps {
 }
 
 const RepoNotFound = ({ ownerUsername, repoName }: RepoNotFoundProps) => (
-  <Container maxWidth="lg" sx={{ py: 6 }}>
-    <Typography color="text.secondary">
+  <Container maxWidth="lg" xstyle={styles.container}>
+    <Text color="muted">
       Repository &quot;{ownerUsername}/{repoName}&quot; not found.
-    </Typography>
+    </Text>
   </Container>
 )
 

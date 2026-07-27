@@ -5,25 +5,20 @@ import type { PreloadedQuery } from 'react-relay'
 import type { TokensPageQuery } from './__generated__/TokensPageQuery.graphql'
 import type { TokensPageCreateMutation } from './__generated__/TokensPageCreateMutation.graphql'
 import type { TokensPageRevokeMutation } from './__generated__/TokensPageRevokeMutation.graphql'
+import * as stylex from '@stylexjs/stylex'
+import { Info, Edit2, Trash2, Key } from 'lucide-react'
 
-import Container from '@mui/material/Container'
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import Card from '@mui/material/Card'
-import Button from '@mui/material/Button'
-import IconButton from '@mui/material/IconButton'
-import Divider from '@mui/material/Divider'
-import Alert from '@mui/material/Alert'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogContent from '@mui/material/DialogContent'
-import DialogActions from '@mui/material/DialogActions'
-import TextField from '@mui/material/TextField'
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
-import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined'
+import { Container } from '../ui/Container'
+import { Card } from '../ui/Card'
+import { Text } from '../ui/Text'
+import { Button } from '../ui/Button'
+import { IconButton } from '../ui/IconButton'
+import { Divider } from '../ui/Divider'
+import { Alert } from '../ui/Alert'
+import { DialogRoot, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '../ui/Dialog'
+import { FieldRoot, FieldInput, FieldLabel } from '../ui/Field'
 import StatusBadge from '../components/StatusBadge'
+import { colors, fonts, fontSizes, fontWeights, radii, space } from '../theme/tokens.stylex'
 
 const SIDEBAR_ITEMS = [
   'Profile',
@@ -33,6 +28,141 @@ const SIDEBAR_ITEMS = [
   'SSH Keys',
   'Billing',
 ]
+
+const styles = stylex.create({
+  containerPadding: {
+    paddingVertical: space[5],
+  },
+  deleteButton: {
+    color: colors.errorFg,
+  },
+  noTokensText: {
+    padding: space[3],
+  },
+  monoFont: {
+    fontFamily: fonts.mono,
+  },
+  dialogTitleText: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[1],
+  },
+  generateButton: {
+    flexShrink: 0,
+  },
+  container: {
+    display: 'flex',
+    flexDirection: {
+      default: 'column',
+      '@media (min-width: 1024px)': 'row',
+    },
+    gap: space[6],
+  },
+  sidebar: {
+    width: {
+      default: '100%',
+      '@media (min-width: 1024px)': '260px',
+    },
+    flexShrink: 0,
+  },
+  sidebarLabel: {
+    display: 'block',
+    paddingInline: space[1.5],
+    marginBottom: space[1.5],
+    fontWeight: fontWeights.bold,
+    textTransform: 'uppercase',
+    color: colors.fgMuted,
+  },
+  sidebarItem: {
+    paddingInline: space[1.5],
+    paddingBlock: space[1],
+    borderRadius: radii.md,
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.medium,
+    color: colors.fgMuted,
+    backgroundColor: 'transparent',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'transparent',
+  },
+  sidebarItemActive: {
+    fontWeight: fontWeights.bold,
+    color: colors.brandFg,
+    backgroundColor: colors.bg,
+    borderColor: colors.border,
+  },
+  main: {
+    flex: 1,
+    maxWidth: '720px',
+  },
+  mainHeader: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: space[2],
+    marginBottom: space[4],
+  },
+  title: {
+    fontWeight: fontWeights.bold,
+    fontSize: fontSizes.xl,
+  },
+  subtitle: {
+    marginTop: space[0.5],
+  },
+  securityCard: {
+    padding: space[2.5],
+    marginBottom: space[4],
+    display: 'flex',
+    gap: space[2],
+    backgroundColor: colors.info,
+    borderColor: 'transparent',
+  },
+  securityIcon: {
+    color: colors.brandFg,
+  },
+  securityTitle: {
+    fontWeight: fontWeights.bold,
+    color: colors.brandFg,
+  },
+  securityText: {
+    marginTop: space[0.5],
+    color: colors.brandFg,
+  },
+  tokenRow: {
+    padding: space[3],
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space[2],
+  },
+  tokenInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  tokenHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[1],
+    marginBottom: space[0.5],
+  },
+  tokenLabelText: {
+    fontWeight: fontWeights.bold,
+  },
+  tokenDates: {
+    display: 'flex',
+    gap: space[2],
+  },
+  actions: {
+    display: 'flex',
+    gap: space[0.5],
+  },
+  alert: {
+    marginBottom: space[2],
+  },
+  fieldWrapper: {
+    marginBottom: space[3],
+  },
+})
 
 const TokensPage = () => {
   const { tokensQueryRef } = useLoaderData() as {
@@ -110,239 +240,185 @@ const TokensPage = () => {
   const tokens = data.my_personal_access_tokens ?? []
 
   return (
-    <Container maxWidth="lg" sx={{ py: 5 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', lg: 'row' },
-          gap: 6,
-        }}
-      >
-        <Box component="aside" sx={{ width: { lg: 260 }, flexShrink: 0 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              display: 'block',
-              px: 1.5,
-              mb: 1.5,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              color: 'text.secondary',
-            }}
-          >
+    <Container maxWidth="lg" xstyle={styles.containerPadding}>
+      <div {...stylex.props(styles.container)}>
+        <aside {...stylex.props(styles.sidebar)}>
+          <Text size="xs" color="muted" xstyle={styles.sidebarLabel}>
             Account Settings
-          </Typography>
+          </Text>
           {SIDEBAR_ITEMS.map((item) => {
             const active = item === 'Access Tokens'
             return (
-              <Box
+              <div
                 key={item}
-                sx={{
-                  px: 1.5,
-                  py: 1,
-                  borderRadius: 2,
-                  fontSize: '0.875rem',
-                  fontWeight: active ? 700 : 500,
-                  color: active ? 'primary.main' : 'text.secondary',
-                  bgcolor: active ? 'background.default' : 'transparent',
-                  border: active ? '1px solid' : 'none',
-                  borderColor: 'divider',
-                  cursor: active ? 'default' : 'default',
-                }}
+                {...stylex.props(
+                  styles.sidebarItem,
+                  active && styles.sidebarItemActive,
+                )}
               >
                 {item}
-              </Box>
+              </div>
             )
           })}
-        </Box>
+        </aside>
 
-        <Box sx={{ flex: 1, maxWidth: 720 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              gap: 2,
-              mb: 4,
-            }}
-          >
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+        <div {...stylex.props(styles.main)}>
+          <div {...stylex.props(styles.mainHeader)}>
+            <div>
+              <Text xstyle={styles.title}>
                 Personal Access Tokens
-              </Typography>
-              <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+              </Text>
+              <Text color="muted" size="sm" xstyle={styles.subtitle}>
                 Tokens you can use to authenticate with the CodeHub CLI or API.
-              </Typography>
-            </Box>
+              </Text>
+            </div>
             <Button
-              variant="contained"
+              variant="solid"
               onClick={() => setCreateDialogOpen(true)}
-              sx={{ flexShrink: 0 }}
+              xstyle={styles.generateButton}
             >
               Generate Token
             </Button>
-          </Box>
+          </div>
 
-          <Card
-            sx={{
-              p: 2.5,
-              mb: 4,
-              display: 'flex',
-              gap: 2,
-              bgcolor: '#eff6ff',
-              border: 'none',
-            }}
-          >
-            <InfoOutlinedIcon sx={{ color: 'primary.main' }} />
-            <Box>
-              <Typography sx={{ fontWeight: 700, color: 'primary.main' }}>
+          <Card xstyle={styles.securityCard}>
+            <Info size={20} {...stylex.props(styles.securityIcon)} />
+            <div>
+              <Text xstyle={styles.securityTitle}>
                 Security Note
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ mt: 0.5, color: 'primary.main' }}
-              >
+              </Text>
+              <Text size="sm" xstyle={styles.securityText}>
                 Treat these tokens like passwords. CodeHub will only show you
                 the full token string once, immediately after generation.
-              </Typography>
-            </Box>
+              </Text>
+            </div>
           </Card>
 
           <Card>
             {tokens.length === 0 ? (
-              <Typography color="text.secondary" sx={{ p: 3 }}>
+              <Text color="muted" xstyle={styles.noTokensText}>
                 No tokens yet.
-              </Typography>
+              </Text>
             ) : (
               tokens.map((token, index) => (
-                <Box key={token.id}>
+                <div key={token.id}>
                   {index > 0 && <Divider />}
-                  <Box
-                    sx={{
-                      p: 3,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 2,
-                    }}
-                  >
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          mb: 0.5,
-                        }}
-                      >
-                        <Typography sx={{ fontWeight: 700 }}>
+                  <div {...stylex.props(styles.tokenRow)}>
+                    <div {...stylex.props(styles.tokenInfo)}>
+                      <div {...stylex.props(styles.tokenHeader)}>
+                        <Text xstyle={styles.tokenLabelText}>
                           {token.label}
-                        </Typography>
+                        </Text>
                         <StatusBadge
                           label={token.last_used_time ? 'Active' : 'Never used'}
                           tone={token.last_used_time ? 'success' : 'neutral'}
                         />
-                      </Box>
-                      <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Typography variant="caption" color="text.secondary">
+                      </div>
+                      <div {...stylex.props(styles.tokenDates)}>
+                        <Text size="xs" color="muted">
                           Created{' '}
                           {new Date(
                             (token.created_time ?? 0) * 1000,
                           ).toLocaleDateString()}
-                        </Typography>
+                        </Text>
                         {token.last_used_time && (
-                          <Typography variant="caption" color="text.secondary">
+                          <Text size="xs" color="muted">
                             Last used{' '}
                             {new Date(
                               token.last_used_time * 1000,
                             ).toLocaleDateString()}
-                          </Typography>
+                          </Text>
                         )}
-                      </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <IconButton size="small" disabled>
-                        <EditOutlinedIcon fontSize="small" />
+                      </div>
+                    </div>
+                    <div {...stylex.props(styles.actions)}>
+                      <IconButton size="sm" disabled aria-label="Edit token">
+                        <Edit2 size={16} />
                       </IconButton>
                       <IconButton
-                        size="small"
+                        size="sm"
                         onClick={() => handleRevoke(token.id ?? '')}
-                        color="error"
+                        xstyle={styles.deleteButton}
+                        aria-label="Revoke token"
                       >
-                        <DeleteOutlineOutlinedIcon fontSize="small" />
+                        <Trash2 size={16} />
                       </IconButton>
-                    </Box>
-                  </Box>
-                </Box>
+                    </div>
+                  </div>
+                </div>
               ))
             )}
           </Card>
-        </Box>
-      </Box>
+        </div>
+      </div>
 
-      <Dialog
-        open={createDialogOpen}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        {createdToken ? (
-          <>
-            <DialogTitle>Your new token</DialogTitle>
-            <DialogContent>
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                Copy this token now — you won&apos;t be able to see it again.
-              </Alert>
-              <TextField
-                value={createdToken}
-                fullWidth
-                slotProps={{
-                  input: { readOnly: true, sx: { fontFamily: 'monospace' } },
-                }}
-                onFocus={(e) => e.target.select()}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button variant="contained" onClick={handleCloseDialog}>
-                Done
-              </Button>
-            </DialogActions>
-          </>
-        ) : (
-          <>
-            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <KeyOutlinedIcon fontSize="small" /> Generate a new token
-            </DialogTitle>
-            <DialogContent>
-              {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
+      <DialogRoot open={createDialogOpen} onOpenChange={(open) => !open && handleCloseDialog()}>
+        <DialogContent>
+          {createdToken ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Your new token</DialogTitle>
+              </DialogHeader>
+              <DialogBody>
+                <Alert status="warning" xstyle={styles.alert}>
+                  Copy this token now — you won&apos;t be able to see it again.
                 </Alert>
-              )}
-              <TextField
-                autoFocus
-                label="Label"
-                placeholder="e.g. MacBook Pro CLI"
-                fullWidth
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseDialog} color="inherit">
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                disabled={!label || isCreating}
-                onClick={handleCreate}
-              >
-                {isCreating ? 'Generating…' : 'Generate Token'}
-              </Button>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
+                <FieldRoot>
+                  <FieldInput
+                    value={createdToken}
+                    readOnly
+                    xstyle={styles.monoFont}
+                    onFocus={(e) => e.target.select()}
+                  />
+                </FieldRoot>
+              </DialogBody>
+              <DialogFooter>
+                <Button variant="solid" onClick={handleCloseDialog}>
+                  Done
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  <span {...stylex.props(styles.dialogTitleText)}>
+                    <Key size={18} /> Generate a new token
+                  </span>
+                </DialogTitle>
+              </DialogHeader>
+              <DialogBody>
+                {error && (
+                  <Alert status="error" xstyle={styles.alert}>
+                    {error}
+                  </Alert>
+                )}
+                <FieldRoot xstyle={styles.fieldWrapper}>
+                  <FieldLabel>Label</FieldLabel>
+                  <FieldInput
+                    autoFocus
+                    placeholder="e.g. MacBook Pro CLI"
+                    value={label}
+                    onChange={(e) => setLabel(e.target.value)}
+                  />
+                </FieldRoot>
+              </DialogBody>
+              <DialogFooter>
+                <Button onClick={handleCloseDialog} variant="subtle">
+                  Cancel
+                </Button>
+                <Button
+                  variant="solid"
+                  disabled={!label || isCreating}
+                  onClick={handleCreate}
+                >
+                  {isCreating ? 'Generating…' : 'Generate Token'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </DialogRoot>
     </Container>
   )
 }

@@ -3,9 +3,24 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" id="favicon" type="image/svg+xml" href="/favicon.svg" />
+  <!-- Dev-only: swaps to an orange favicon on localhost so it's visually
+       distinct from prod's blue one in the browser tab bar. Doesn't touch
+       the real favicon.svg asset, so this has no effect on what actually
+       ships. -->
+  <script>
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+      document.getElementById('favicon').href = '/favicon-dev.svg';
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CodeHub</title>
+  <!-- Dev-only: @stylexjs/unplugin's devMode:'css-only' doesn't auto-inject
+       this (only its 'full' mode does) — served by the plugin's own dev
+       middleware, not a real file on disk. Harmless no-op in production
+       builds (nothing serves this path there; real CSS lands in the
+       built index.css asset instead). -->
+  <link rel="stylesheet" href="/virtual:stylex.css" />
 </head>
 
 <body>

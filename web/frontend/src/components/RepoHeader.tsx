@@ -1,17 +1,18 @@
+import * as stylex from '@stylexjs/stylex'
 import { Link, useLocation } from 'react-router'
-
-import Container from '@mui/material/Container'
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import Tabs from '@mui/material/Tabs'
-import Tab from '@mui/material/Tab'
-import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined'
-import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined'
-import AdjustOutlinedIcon from '@mui/icons-material/AdjustOutlined'
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
+import {
+  MuiCodeIcon,
+  MuiHistoryIcon,
+  MuiAdjustIcon,
+  MuiSettingsIcon,
+} from './icons/MuiIcons'
+import { Container } from '../ui/Container'
+import { Heading } from '../ui/Heading'
+import { TabsRoot, TabsList, TabsTrigger } from '../ui/Tabs'
 import StatusBadge from './StatusBadge'
 import CloneButton from './CloneButton'
 import RepoSwitcher from './RepoSwitcher'
+import { colors, fontSizes, space } from '../theme/tokens.stylex'
 
 interface RepoHeaderProps {
   ownerUsername: string
@@ -20,10 +21,30 @@ interface RepoHeaderProps {
   isOwner: boolean
 }
 
-const tabSx = {
-  minHeight: 40,
-  py: 0.75,
-} as const
+const styles = stylex.create({
+  container: {
+    paddingBottom: 0,
+  },
+  top: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[1],
+    gap: space[2],
+  },
+  left: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[1],
+  },
+  ownerLink: {
+    color: colors.brandFg,
+    textDecoration: 'none',
+    fontSize: fontSizes.md,
+    fontWeight: '400',
+    ':hover': { textDecoration: 'underline' },
+  },
+})
 
 // Shared breadcrumb/badge/clone-button/tabs chrome for every repo-scoped
 // page (RepoPage, RepoTreePage, RepoBlobPage, the settings route) — each
@@ -47,84 +68,60 @@ const RepoHeader = ({
   const repoBase = `/${ownerUsername}/${repoName}`
 
   return (
-    <Box
-      sx={{
-        bgcolor: 'background.paper',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-      }}
-    >
-      <Container maxWidth={false} sx={{ pb: 0 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            mb: 1,
-            gap: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              <Typography
-                component={Link}
-                to={`/${ownerUsername}`}
-                color="text.secondary"
-                sx={{ fontWeight: 400 }}
-              >
-                {ownerUsername}
-              </Typography>{' '}
-              /{' '}
-              <RepoSwitcher ownerUsername={ownerUsername} repoName={repoName} />
-            </Typography>
-            <StatusBadge
-              label={visibility === 'PUBLIC' ? 'Public' : 'Private'}
-              tone={visibility === 'PUBLIC' ? 'neutral' : 'primary'}
-            />
-          </Box>
-          <CloneButton ownerUsername={ownerUsername} repoName={repoName} />
-        </Box>
+    <Container maxWidth="full" xstyle={styles.container}>
+      <div {...stylex.props(styles.top)}>
+        <div {...stylex.props(styles.left)}>
+          <Heading as="h1" size="lg">
+            <Link to={`/${ownerUsername}`} {...stylex.props(styles.ownerLink)}>
+              {ownerUsername}
+            </Link>{' '}
+            / <RepoSwitcher ownerUsername={ownerUsername} repoName={repoName} />
+          </Heading>
+          <StatusBadge
+            label={visibility === 'PUBLIC' ? 'Public' : 'Private'}
+            tone={visibility === 'PUBLIC' ? 'neutral' : 'primary'}
+          />
+        </div>
+        <CloneButton ownerUsername={ownerUsername} repoName={repoName} />
+      </div>
 
-        <Tabs value={activeTab} sx={{ minHeight: 40 }}>
-          <Tab
-            component={Link}
-            to={`${repoBase}/tree/tip`}
+      {/* Drives navigation via the URL, not panel-switching — see
+            ui/Tabs.tsx's file-level comment for why this is still Tabs
+            and not plain links. */}
+      <TabsRoot value={activeTab}>
+        <TabsList>
+          <TabsTrigger
             value="code"
-            icon={<CodeOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Code"
-            sx={tabSx}
-          />
-          <Tab
-            component={Link}
-            to={repoBase}
-            value="commits"
-            icon={<HistoryOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Commits"
-            sx={tabSx}
-          />
-          <Tab
-            value="issues"
-            disabled
-            icon={<AdjustOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Issues"
-            sx={tabSx}
-          />
-          <Tab
-            component={Link}
-            to={`${repoBase}/settings`}
-            value="settings"
-            disabled={!isOwner}
-            icon={<SettingsOutlinedIcon fontSize="small" />}
-            iconPosition="start"
-            label="Settings"
-            sx={tabSx}
-          />
-        </Tabs>
-      </Container>
-    </Box>
+            render={<Link to={`${repoBase}/tree/tip`} />}
+          >
+            <MuiCodeIcon />
+            Code
+          </TabsTrigger>
+          <TabsTrigger value="commits" render={<Link to={repoBase} />}>
+            <MuiHistoryIcon />
+            Commits
+          </TabsTrigger>
+          <TabsTrigger value="issues" disabled>
+            <MuiAdjustIcon />
+            Issues
+          </TabsTrigger>
+          {isOwner ? (
+            <TabsTrigger
+              value="settings"
+              render={<Link to={`${repoBase}/settings`} />}
+            >
+              <MuiSettingsIcon />
+              Settings
+            </TabsTrigger>
+          ) : (
+            <TabsTrigger value="settings" disabled>
+              <MuiSettingsIcon />
+              Settings
+            </TabsTrigger>
+          )}
+        </TabsList>
+      </TabsRoot>
+    </Container>
   )
 }
 

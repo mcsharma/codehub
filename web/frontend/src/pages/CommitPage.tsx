@@ -6,22 +6,215 @@ import type { CommitPageQuery } from './__generated__/CommitPageQuery.graphql'
 import { DiffView, DiffModeEnum } from '@git-diff-view/react'
 import '@git-diff-view/react/styles/diff-view.css'
 import './CommitPage.css'
+import * as stylex from '@stylexjs/stylex'
+import { ChevronLeft, FileText } from 'lucide-react'
 
-import Container from '@mui/material/Container'
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import Card from '@mui/material/Card'
-import Button from '@mui/material/Button'
-import ToggleButton from '@mui/material/ToggleButton'
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
-import Divider from '@mui/material/Divider'
-import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined'
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
+import { Container } from '../ui/Container'
+import { Card, CardBody } from '../ui/Card'
+import { Text } from '../ui/Text'
+import { buttonStyles } from '../ui/Button'
+import { Divider } from '../ui/Divider'
+import { SegmentGroup } from '../ui/SegmentGroup'
 import UserAvatar from '../components/UserAvatar'
 import CommitFileTree from '../components/CommitFileTree'
 import CollapsibleSidebarPane from '../components/CollapsibleSidebarPane'
 import { formatCommitAuthor } from '../utils/formatters'
 import { parseUnifiedDiff, countDiffStats } from '../utils/parseUnifiedDiff'
+import { colors, fonts, fontSizes, fontWeights, radii, space } from '../theme/tokens.stylex'
+
+const styles = stylex.create({
+  containerPadding: {
+    paddingVertical: space[6],
+  },
+  cardMarginBottom: {
+    marginBottom: space[4],
+  },
+  dividerMargin: {
+    marginBlock: space[3],
+  },
+  root: {
+    paddingVertical: space[3],
+    paddingHorizontal: '20px',
+  },
+  subHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[3],
+  },
+  breadcrumbs: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[1],
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.bold,
+  },
+  ownerLink: {
+    color: colors.brandFg,
+    textDecoration: 'none',
+    fontWeight: fontWeights.bold,
+    ':hover': { textDecoration: 'underline' },
+  },
+  repoLink: {
+    color: colors.brandFg,
+    textDecoration: 'none',
+    fontWeight: fontWeights.bold,
+    ':hover': { textDecoration: 'underline' },
+  },
+  breadcrumbText: {
+    color: colors.fgMuted,
+  },
+  shortNode: {
+    fontFamily: fonts.mono,
+    backgroundColor: colors.bg,
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    paddingInline: space[1],
+    paddingBlock: space[0.25],
+    borderRadius: radii.sm,
+    color: colors.brandFg,
+  },
+  backButton: {
+    color: colors.fg,
+  },
+  cardBody: {
+    padding: space[4],
+  },
+  commitMetaRow: {
+    display: 'flex',
+    flexDirection: {
+      default: 'column',
+      '@media (min-width: 768px)': 'row',
+    },
+    justifyContent: 'space-between',
+    gap: space[3],
+  },
+  metaLeft: {
+    flex: 1,
+    minWidth: 0,
+  },
+  commitDescription: {
+    fontWeight: fontWeights.normal,
+    marginBottom: space[2],
+  },
+  authorRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[1.5],
+  },
+  authorName: {
+    fontWeight: fontWeights.bold,
+    fontSize: fontSizes.sm,
+  },
+  committedOnText: {
+    fontWeight: fontWeights.bold,
+    textTransform: 'uppercase',
+  },
+  metaRight: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: {
+      default: 'flex-start',
+      '@media (min-width: 768px)': 'flex-end',
+    },
+    gap: space[1],
+    flexShrink: 0,
+  },
+  metaRightRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[1],
+  },
+  metaLabel: {
+    fontWeight: fontWeights.bold,
+  },
+  fullNode: {
+    fontFamily: fonts.mono,
+    fontWeight: fontWeights.bold,
+    backgroundColor: colors.bg,
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: colors.border,
+    paddingInline: space[1.5],
+    paddingBlock: space[0.5],
+    borderRadius: radii.md,
+  },
+  parentNodeLink: {
+    fontFamily: fonts.mono,
+    fontWeight: fontWeights.bold,
+    color: colors.brandFg,
+    textDecoration: 'none',
+    ':hover': { textDecoration: 'underline' },
+  },
+  statsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statsText: {
+    fontWeight: fontWeights.bold,
+    textTransform: 'uppercase',
+  },
+  filesContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: space[3],
+  },
+  fileCard: {
+    overflow: 'hidden',
+    scrollMarginTop: '16px',
+  },
+  fileCardHeader: {
+    backgroundColor: colors.bg,
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: colors.border,
+    paddingInline: space[2.5],
+    paddingBlock: space[1.5],
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  fileHeaderLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[1.5],
+  },
+  fileIcon: {
+    color: colors.fgMuted,
+  },
+  filePath: {
+    fontFamily: fonts.mono,
+    fontWeight: fontWeights.bold,
+    fontSize: fontSizes.sm,
+  },
+  statusAdded: {
+    fontWeight: fontWeights.bold,
+    textTransform: 'uppercase',
+    color: colors.successFg,
+  },
+  statusDeleted: {
+    fontWeight: fontWeights.bold,
+    textTransform: 'uppercase',
+    color: colors.errorFg,
+  },
+  statsRight: {
+    display: 'flex',
+    gap: space[1.5],
+  },
+  additions: {
+    fontWeight: fontWeights.bold,
+    color: colors.successFg,
+  },
+  deletions: {
+    fontWeight: fontWeights.bold,
+    color: colors.errorFg,
+  },
+  binaryFallback: {
+    padding: space[2.5],
+  },
+})
 
 const CommitPage = () => {
   const { commitQueryRef } = useLoaderData() as {
@@ -81,8 +274,8 @@ const CommitPage = () => {
 
   if (!repository || !commit) {
     return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Typography color="text.secondary">Commit not found.</Typography>
+      <Container maxWidth="lg" xstyle={styles.containerPadding}>
+        <Text color="muted">Commit not found.</Text>
       </Container>
     )
   }
@@ -99,191 +292,109 @@ const CommitPage = () => {
   }
 
   return (
-    <Box sx={{ py: 3, px: '20px' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 3,
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            fontSize: '0.875rem',
-            fontWeight: 700,
-          }}
-        >
-          <Typography
-            component={Link}
-            to={`/${ownerUsername}`}
-            color="primary"
-            sx={{ fontWeight: 700 }}
-          >
+    <div {...stylex.props(styles.root)}>
+      <div {...stylex.props(styles.subHeader)}>
+        <div {...stylex.props(styles.breadcrumbs)}>
+          <Link to={`/${ownerUsername}`} {...stylex.props(styles.ownerLink)}>
             {ownerUsername}
-          </Typography>
-          <Typography color="text.secondary">/</Typography>
-          <Typography
-            component={Link}
+          </Link>
+          <span {...stylex.props(styles.breadcrumbText)}>/</span>
+          <Link
             to={`/${ownerUsername}/${repoName}`}
-            color="primary"
-            sx={{ fontWeight: 700 }}
+            {...stylex.props(styles.repoLink)}
           >
             {repoName}
-          </Typography>
-          <Typography color="text.secondary">/ commit /</Typography>
-          <Typography
-            sx={{
-              fontFamily: 'monospace',
-              bgcolor: 'background.default',
-              border: '1px solid',
-              borderColor: 'divider',
-              px: 1,
-              py: 0.25,
-              borderRadius: 1,
-              color: 'primary.main',
-            }}
-          >
+          </Link>
+          <span {...stylex.props(styles.breadcrumbText)}>/ commit /</span>
+          <span {...stylex.props(styles.shortNode)}>
             {commit.short_node}
-          </Typography>
-        </Box>
-        <Button
-          component={Link}
+          </span>
+        </div>
+        <Link
           to={`/${ownerUsername}/${repoName}`}
-          startIcon={<ChevronLeftOutlinedIcon fontSize="small" />}
-          color="inherit"
-          size="small"
+          {...stylex.props(...buttonStyles('outline', 'sm'), styles.backButton)}
         >
+          <ChevronLeft size={16} style={{ marginRight: 4 }} />
           Back to commits
-        </Button>
-      </Box>
+        </Link>
+      </div>
 
-      <Card sx={{ p: 4, mb: 4 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
-            justifyContent: 'space-between',
-            gap: 3,
-          }}
-        >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="body1" sx={{ fontWeight: 400, mb: 2 }}>
-              {commit.description}
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <UserAvatar />
-              <Typography sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
-                {formatCommitAuthor(commit.author ?? '')}
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ fontWeight: 700, textTransform: 'uppercase' }}
-              >
-                Committed on{' '}
-                {commit.date
-                  ? new Date(commit.date * 1000).toLocaleDateString(undefined, {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })
-                  : 'unknown date'}
-              </Typography>
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: { md: 'flex-end' },
-              gap: 1,
-              flexShrink: 0,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ fontWeight: 700 }}
-              >
-                Commit
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: 'monospace',
-                  fontWeight: 700,
-                  bgcolor: 'background.default',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 1.5,
-                }}
-              >
-                {commit.node}
-              </Typography>
-            </Box>
-            {commit.parents && commit.parents.length > 0 && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ fontWeight: 700 }}
+      <Card xstyle={styles.cardMarginBottom}>
+        <CardBody xstyle={styles.cardBody}>
+          <div {...stylex.props(styles.commitMetaRow)}>
+            <div {...stylex.props(styles.metaLeft)}>
+              <Text xstyle={styles.commitDescription}>
+                {commit.description}
+              </Text>
+              <div {...stylex.props(styles.authorRow)}>
+                <UserAvatar />
+                <span {...stylex.props(styles.authorName)}>
+                  {formatCommitAuthor(commit.author ?? '')}
+                </span>
+                <Text
+                  size="xs"
+                  color="muted"
+                  xstyle={styles.committedOnText}
                 >
-                  Parent
-                </Typography>
-                <Typography
-                  component={Link}
-                  to={`/${ownerUsername}/${repoName}/commit/${commit.parents[0]}`}
-                  sx={{
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    color: 'primary.main',
-                  }}
-                >
-                  {commit.parents[0]!.slice(0, 12)}
-                </Typography>
-              </Box>
-            )}
-          </Box>
-        </Box>
+                  Committed on{' '}
+                  {commit.date
+                    ? new Date(commit.date * 1000).toLocaleDateString(undefined, {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })
+                    : 'unknown date'}
+                </Text>
+              </div>
+            </div>
+            <div {...stylex.props(styles.metaRight)}>
+              <div {...stylex.props(styles.metaRightRow)}>
+                <Text size="xs" color="muted" xstyle={styles.metaLabel}>
+                  Commit
+                </Text>
+                <span {...stylex.props(styles.fullNode)}>
+                  {commit.node}
+                </span>
+              </div>
+              {commit.parents && commit.parents.length > 0 && (
+                <div {...stylex.props(styles.metaRightRow)}>
+                  <Text size="xs" color="muted" xstyle={styles.metaLabel}>
+                    Parent
+                  </Text>
+                  <Link
+                    to={`/${ownerUsername}/${repoName}/commit/${commit.parents[0]}`}
+                    {...stylex.props(styles.parentNodeLink)}
+                  >
+                    {commit.parents[0]!.slice(0, 12)}
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
 
-        <Divider sx={{ my: 3 }} />
+          <Divider xstyle={styles.dividerMargin} />
 
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Typography
-            variant="caption"
-            sx={{
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              color: 'text.secondary',
-            }}
-          >
-            Showing {files.length} changed file{files.length === 1 ? '' : 's'}{' '}
-            with {totalAdditions} addition
-            {totalAdditions === 1 ? '' : 's'} and {totalDeletions} deletion
-            {totalDeletions === 1 ? '' : 's'}
-          </Typography>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={mode}
-            onChange={(_e, value) => value && setMode(value)}
-          >
-            <ToggleButton value="split">Split</ToggleButton>
-            <ToggleButton value="unified">Unified</ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
+          <div {...stylex.props(styles.statsRow)}>
+            <Text
+              size="xs"
+              color="muted"
+              xstyle={styles.statsText}
+            >
+              Showing {files.length} changed file{files.length === 1 ? '' : 's'}{' '}
+              with {totalAdditions} addition
+              {totalAdditions === 1 ? '' : 's'} and {totalDeletions} deletion
+              {totalDeletions === 1 ? '' : 's'}
+            </Text>
+            <SegmentGroup
+              options={[
+                { value: 'split', label: 'Split' },
+                { value: 'unified', label: 'Unified' },
+              ]}
+              value={mode}
+              onValueChange={(val) => setMode(val as 'split' | 'unified')}
+            />
+          </div>
+        </CardBody>
       </Card>
 
       <Divider />
@@ -302,7 +413,7 @@ const CommitPage = () => {
           />
         }
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div {...stylex.props(styles.filesContainer)}>
           {files.map((file) => {
             const chunk = diffChunksByPath.get(file.path ?? '')
             const { additions, deletions } = countDiffStats(chunk ?? '')
@@ -310,68 +421,35 @@ const CommitPage = () => {
               <Card
                 key={file.path}
                 id={file.path ?? undefined}
-                sx={{
-                  overflow: 'hidden',
-                  scrollMarginTop: 16,
-                }}
+                xstyle={styles.fileCard}
               >
-                <Box
-                  sx={{
-                    bgcolor: 'background.default',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    px: 2.5,
-                    py: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <InsertDriveFileOutlinedIcon
-                      fontSize="small"
-                      sx={{ color: 'text.secondary' }}
-                    />
-                    <Typography
-                      sx={{
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        fontSize: '0.875rem',
-                      }}
-                    >
+                <div {...stylex.props(styles.fileCardHeader)}>
+                  <div {...stylex.props(styles.fileHeaderLeft)}>
+                    <FileText size={16} {...stylex.props(styles.fileIcon)} />
+                    <span {...stylex.props(styles.filePath)}>
                       {file.path}
-                    </Typography>
+                    </span>
                     {file.status && file.status !== 'modified' && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          color:
-                            file.status === 'added'
-                              ? 'success.main'
-                              : 'error.main',
-                        }}
+                      <span
+                        {...stylex.props(
+                          file.status === 'added'
+                            ? styles.statusAdded
+                            : styles.statusDeleted,
+                        )}
                       >
                         {file.status}
-                      </Typography>
+                      </span>
                     )}
-                  </Box>
-                  <Box sx={{ display: 'flex', gap: 1.5 }}>
-                    <Typography
-                      variant="caption"
-                      sx={{ fontWeight: 700, color: 'success.main' }}
-                    >
+                  </div>
+                  <div {...stylex.props(styles.statsRight)}>
+                    <span {...stylex.props(styles.additions)}>
                       +{additions}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ fontWeight: 700, color: 'error.main' }}
-                    >
+                    </span>
+                    <span {...stylex.props(styles.deletions)}>
                       -{deletions}
-                    </Typography>
-                  </Box>
-                </Box>
+                    </span>
+                  </div>
+                </div>
                 {chunk ? (
                   <DiffView
                     data={{
@@ -389,16 +467,16 @@ const CommitPage = () => {
                     diffViewFontSize={13}
                   />
                 ) : (
-                  <Typography color="text.secondary" sx={{ p: 2.5 }}>
+                  <Text color="muted" xstyle={styles.binaryFallback}>
                     Binary file not shown.
-                  </Typography>
+                  </Text>
                 )}
               </Card>
             )
           })}
-        </Box>
+        </div>
       </CollapsibleSidebarPane>
-    </Box>
+    </div>
   )
 }
 

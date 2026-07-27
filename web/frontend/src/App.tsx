@@ -5,9 +5,6 @@ import type { PreloadedQuery } from "react-relay";
 import type { AppRootLayoutQuery } from "./__generated__/AppRootLayoutQuery.graphql";
 import type { AppLogoutMutation } from "./__generated__/AppLogoutMutation.graphql";
 
-import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
 import AppNavBar from "./components/AppNavBar";
 
 export type { AppRootLayoutQuery };
@@ -45,18 +42,15 @@ const RootLayout = ({ rootLayoutQueryRef }: RootLayoutProps) => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <AppNavBar currentUser={data.current_user ?? null} onLogout={handleLogout} />
-      <Suspense
-        fallback={
-          <Container sx={{ mt: 4 }}>
-            <Typography color="text.secondary">Loading...</Typography>
-          </Container>
-        }
-      >
+      {/* Deliberately plain/dependency-light — this is the first thing
+          to paint and shouldn't depend on anything that could itself
+          suspend or error before the design tokens are ready. */}
+      <Suspense fallback={<div style={{ padding: "32px", color: "#6b7280" }}>Loading...</div>}>
         <Outlet />
       </Suspense>
-    </Box>
+    </div>
   );
 };
 

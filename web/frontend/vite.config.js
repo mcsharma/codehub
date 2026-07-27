@@ -2,9 +2,18 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import relay from 'vite-plugin-relay';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import stylex from '@stylexjs/unplugin';
 
 export default defineConfig({
   plugins: [
+    // Must run before react() so its babel/transform hooks see the raw
+    // stylex.create() calls. devMode: 'css-only' serves generated CSS at
+    // /virtual:stylex.css (wired manually in index.html/main.tsx below)
+    // instead of the full JS-runtime-injected variant — this app has no
+    // need for the heavier 'full' mode.
+    stylex.vite({
+      devMode: 'css-only',
+    }),
     react({
       babel: {
         // Suppresses Babel deoptimization warnings for large chunks > 500KB (like pre-bundled node_modules)

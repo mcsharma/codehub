@@ -1,37 +1,68 @@
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
+import * as stylex from '@stylexjs/stylex'
+import { Card, CardBody } from '../ui/Card'
+import { Heading } from '../ui/Heading'
+import { Text } from '../ui/Text'
+import { buttonStyles } from '../ui/Button'
+import { colors, fontWeights, radii, space } from '../theme/tokens.stylex'
 
-// Matches login.html — a standalone screen with no nav chrome, rendered
-// outside RootLayout (see router.tsx) when the visitor is logged out.
+const styles = stylex.create({
+  root: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingInline: space[2],
+    backgroundColor: colors.bgSubtle,
+  },
+  inner: {
+    width: '100%',
+    maxWidth: '384px',
+  },
+  header: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginBottom: space[4],
+  },
+  logoMark: {
+    width: '48px',
+    height: '48px',
+    borderRadius: radii.md,
+    backgroundColor: colors.brandSolid,
+    color: colors.brandContrast,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: space[2],
+  },
+  title: {
+    marginBottom: space[0.5],
+  },
+  cardBody: {
+    padding: space[4],
+  },
+  button: {
+    width: '100%',
+    color: colors.fg,
+  },
+  caption: {
+    display: 'block',
+    textAlign: 'center',
+    marginTop: space[3],
+    color: colors.fgMuted,
+    fontWeight: fontWeights.bold,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  },
+})
+
 const LoginPage = () => {
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        px: 2,
-      }}
-    >
-      <Box sx={{ width: "100%", maxWidth: 384 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 4 }}>
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 3,
-              bgcolor: "primary.main",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              mb: 2,
-            }}
-          >
+    <div {...stylex.props(styles.root)}>
+      <div {...stylex.props(styles.inner)}>
+        <div {...stylex.props(styles.header)}>
+          <div {...stylex.props(styles.logoMark)}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
               <path
                 d="M12 4V12M12 12L7 7M12 12L17 7M12 12V20"
@@ -41,24 +72,22 @@ const LoginPage = () => {
                 strokeLinejoin="round"
               />
             </svg>
-          </Box>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          </div>
+          <Heading as="h1" size="xl" xstyle={styles.title}>
             Welcome back to CodeHub
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          </Heading>
+          <Text size="sm" color="muted">
             Simple, modern source control.
-          </Typography>
-        </Box>
+          </Text>
+        </div>
 
-        <Card sx={{ p: 4 }}>
-          <Button
-            fullWidth
-            component="a"
-            href="/auth/google"
-            variant="outlined"
-            size="large"
-            startIcon={
-              <svg width="20" height="20" viewBox="0 0 24 24">
+        <Card>
+          <CardBody xstyle={styles.cardBody}>
+            <a
+              href="/auth/google"
+              {...stylex.props(...buttonStyles('outline', 'lg'), styles.button)}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" style={{ marginRight: 8 }}>
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   fill="#4285F4"
@@ -76,30 +105,17 @@ const LoginPage = () => {
                   fill="#EA4335"
                 />
               </svg>
-            }
-            sx={{ borderColor: "divider", color: "text.primary" }}
-          >
-            Continue with Google
-          </Button>
+              Continue with Google
+            </a>
 
-          <Typography
-            variant="caption"
-            sx={{
-              display: "block",
-              textAlign: "center",
-              mt: 3,
-              color: "text.secondary",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}
-          >
-            Secure authentication powered by Google.
-          </Typography>
+            <Text size="xs" xstyle={styles.caption}>
+              Secure authentication powered by Google.
+            </Text>
+          </CardBody>
         </Card>
-      </Box>
-    </Box>
-  );
-};
+      </div>
+    </div>
+  )
+}
 
-export default LoginPage;
+export default LoginPage

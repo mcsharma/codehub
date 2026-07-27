@@ -20,7 +20,16 @@ html {
 }
 
 body {
+  font-family: var(--font-sans);
   background: #f9fafb;
   color: #111827;
   min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }

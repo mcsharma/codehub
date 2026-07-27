@@ -1,19 +1,69 @@
-import { graphql, useFragment } from "react-relay";
-import { Link } from "react-router";
-import type { UserPage_user$key } from "./__generated__/UserPage_user.graphql";
+import { graphql, useFragment } from 'react-relay'
+import { Link } from 'react-router'
+import type { UserPage_user$key } from './__generated__/UserPage_user.graphql'
+import * as stylex from '@stylexjs/stylex'
+import { Plus } from 'lucide-react'
 
-import Container from "@mui/material/Container";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Grid from "@mui/material/Grid";
-import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import RepoCard from "../components/RepoCard";
+import { Container } from '../ui/Container'
+import { Text } from '../ui/Text'
+import { Heading } from '../ui/Heading'
+import { buttonStyles } from '../ui/Button'
+import RepoCard from '../components/RepoCard'
+import { fontWeights, fontSizes, space } from '../theme/tokens.stylex'
 
 interface Props {
-  user: UserPage_user$key;
-  isOwnProfile: boolean;
+  user: UserPage_user$key
+  isOwnProfile: boolean
 }
+
+const styles = stylex.create({
+  containerPadding: {
+    paddingVertical: space[6],
+  },
+  headerRow: {
+    display: 'flex',
+    flexDirection: {
+      default: 'column',
+      '@media (min-width: 768px)': 'row',
+    },
+    alignItems: {
+      default: 'flex-start',
+      '@media (min-width: 768px)': 'center',
+    },
+    justifyContent: 'space-between',
+    gap: space[3],
+    marginBottom: space[5],
+  },
+  title: {
+    fontWeight: fontWeights.bold,
+    fontSize: fontSizes['2xl'],
+  },
+  subtitle: {
+    marginTop: space[0.5],
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: {
+      default: '1fr',
+      '@media (min-width: 640px)': '1fr 1fr',
+      '@media (min-width: 960px)': '1fr 1fr 1fr',
+    },
+    gap: space[3],
+  },
+  orgsSection: {
+    marginTop: space[6],
+  },
+  orgsTitle: {
+    fontWeight: fontWeights.bold,
+    fontSize: fontSizes.lg,
+    marginBottom: space[2],
+  },
+  orgsList: {
+    display: 'flex',
+    gap: space[1],
+    flexWrap: 'wrap',
+  },
+})
 
 const UserPage = ({ user: userRef, isOwnProfile }: Props) => {
   const user = useFragment(
@@ -42,91 +92,83 @@ const UserPage = ({ user: userRef, isOwnProfile }: Props) => {
         }
       }
     `,
-    userRef
-  );
+    userRef,
+  )
 
-  const repos = user.owned_repositories?.edges ?? [];
-  const orgs = user.admin_of_organizations?.edges ?? [];
+  const repos = user.owned_repositories?.edges ?? []
+  const orgs = user.admin_of_organizations?.edges ?? []
 
   return (
-    <Container maxWidth="lg" sx={{ py: 6 }}>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          alignItems: { md: "center" },
-          justifyContent: "space-between",
-          gap: 3,
-          mb: 5,
-        }}
-      >
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            {isOwnProfile ? "Repositories" : `${user.first_name ?? user.username}'s repositories`}
-          </Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+    <Container maxWidth="lg" xstyle={styles.containerPadding}>
+      <div {...stylex.props(styles.headerRow)}>
+        <div>
+          <Heading as="h1" size="2xl" xstyle={styles.title}>
+            {isOwnProfile ? 'Repositories' : `${user.first_name ?? user.username}'s repositories`}
+          </Heading>
+          <Text color="muted" xstyle={styles.subtitle}>
             {isOwnProfile
-              ? "Manage and organize your projects."
+              ? 'Manage and organize your projects.'
               : `@${user.username}`}
-          </Typography>
-        </Box>
+          </Text>
+        </div>
         {isOwnProfile && (
-          <Button
-            variant="contained"
-            component={Link}
+          <Link
             to="/new"
-            startIcon={<AddOutlinedIcon />}
-            size="medium"
+            {...stylex.props(...buttonStyles('solid', 'md'))}
           >
+            <Plus size={16} style={{ marginRight: 6 }} />
             Create Repository
-          </Button>
+          </Link>
         )}
-      </Box>
+      </div>
 
       {repos.length > 0 ? (
-        <Grid container spacing={3}>
+        <div {...stylex.props(styles.grid)}>
           {repos.map((edge) => {
             if (!edge?.node) {
-              return null;
+              return null
             }
             return (
-              <Grid key={edge.node.id} size={{ xs: 12, sm: 6, md: 4 }}>
-                <RepoCard
-                  ownerUsername={user.username ?? ""}
-                  name={edge.node.name ?? ""}
-                  description={edge.node.description ?? null}
-                  visibility={edge.node.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
-                  updatedTime={edge.node.updated_time ?? 0}
-                />
-              </Grid>
-            );
+              <RepoCard
+                key={edge.node.id}
+                ownerUsername={user.username ?? ''}
+                name={edge.node.name ?? ''}
+                description={edge.node.description ?? null}
+                visibility={edge.node.visibility === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE'}
+                updatedTime={edge.node.updated_time ?? 0}
+              />
+            )
           })}
-        </Grid>
+        </div>
       ) : (
-        <Typography color="text.secondary">No repositories yet.</Typography>
+        <Text color="muted">No repositories yet.</Text>
       )}
 
       {orgs.length > 0 && (
-        <Box sx={{ mt: 6 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+        <div {...stylex.props(styles.orgsSection)}>
+          <Heading as="h2" size="lg" xstyle={styles.orgsTitle}>
             Organizations
-          </Typography>
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+          </Heading>
+          <div {...stylex.props(styles.orgsList)}>
             {orgs.map((edge) => {
               if (!edge?.node) {
-                return null;
+                return null
               }
               return (
-                <Button key={edge.node.id} component={Link} to={`/${edge.node.name}`} variant="outlined">
+                <Link
+                  key={edge.node.id}
+                  to={`/${edge.node.name}`}
+                  {...stylex.props(...buttonStyles('outline', 'md'))}
+                >
                   {edge.node.name}
-                </Button>
-              );
+                </Link>
+              )
             })}
-          </Box>
-        </Box>
+          </div>
+        </div>
       )}
     </Container>
-  );
-};
+  )
+}
 
-export default UserPage;
+export default UserPage

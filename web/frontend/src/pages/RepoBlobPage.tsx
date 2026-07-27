@@ -5,14 +5,61 @@ import type { RepoBlobPageQuery } from './__generated__/RepoBlobPageQuery.graphq
 import type { PreloadedQuery } from 'react-relay'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github.css'
+import { FileText } from 'lucide-react'
+import * as stylex from '@stylexjs/stylex'
 
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
-import Card from '@mui/material/Card'
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined'
+import { Card, CardBody } from '../ui/Card'
+import { Text } from '../ui/Text'
 import { formatFileSize } from '../utils/formatters'
 import { languageFromPath } from '../utils/languageFromPath'
-import { monoFontFamily } from '../theme'
+import { colors, fonts, fontWeights, radii, space } from '../theme/tokens.stylex'
+
+const styles = stylex.create({
+  card: {
+    borderRadius: radii.card,
+    overflow: 'hidden',
+  },
+  binaryCardBody: {
+    padding: space[4],
+    display: 'flex',
+    alignItems: 'center',
+    gap: space[2],
+  },
+  binaryIcon: {
+    color: colors.fgMuted,
+  },
+  boldText: {
+    fontWeight: fontWeights.bold,
+  },
+  pre: {
+    margin: 0,
+    padding: 0,
+    overflowX: 'auto',
+    fontFamily: fonts.mono,
+    fontSize: '0.8125rem',
+    lineHeight: 1.6,
+  },
+  code: {
+    display: 'grid',
+    gridTemplateColumns: 'max-content 1fr',
+    width: '100%',
+  },
+  lineNumber: {
+    textAlign: 'right',
+    paddingLeft: space[1.5],
+    paddingRight: space[1],
+    userSelect: 'none',
+    color: colors.fgSubtle,
+    borderRightWidth: '1px',
+    borderRightStyle: 'solid',
+    borderRightColor: colors.border,
+  },
+  lineContent: {
+    paddingLeft: space[2],
+    paddingRight: space[3],
+    whiteSpace: 'pre',
+  },
+})
 
 const RepoBlobPage = () => {
   const { repoBlobQueryRef } = useLoaderData() as {
@@ -64,93 +111,51 @@ const RepoBlobPage = () => {
 
   if (!file) {
     return (
-      <Typography color="text.secondary">
+      <Text color="muted">
         This file doesn&apos;t exist.
-      </Typography>
+      </Text>
     )
   }
 
   if (file.isBinary || file.isTooLarge) {
     return (
-      <Card
-        sx={{
-          borderRadius: '8px',
-          p: 4,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-        }}
-      >
-        <InsertDriveFileOutlinedIcon
-          fontSize="small"
-          sx={{ color: 'text.secondary' }}
-        />
-        <Box>
-          <Typography sx={{ fontWeight: 700 }}>
-            {file.isBinary
-              ? 'Binary file not shown'
-              : 'File too large to display'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {formatFileSize(file.size ?? 0)}
-          </Typography>
-        </Box>
+      <Card xstyle={styles.card}>
+        <CardBody xstyle={styles.binaryCardBody}>
+          <FileText size={20} {...stylex.props(styles.binaryIcon)} />
+          <div>
+            <Text xstyle={styles.boldText}>
+              {file.isBinary
+                ? 'Binary file not shown'
+                : 'File too large to display'}
+            </Text>
+            <Text size="sm" color="muted">
+              {formatFileSize(file.size ?? 0)}
+            </Text>
+          </div>
+        </CardBody>
       </Card>
     )
   }
 
   return (
-    <Card sx={{ borderRadius: '8px', overflow: 'hidden' }}>
-      <Box
-        component="pre"
-        sx={{
-          m: 0,
-          p: 0,
-          overflowX: 'auto',
-          fontFamily: monoFontFamily,
-          fontSize: '0.8125rem',
-          lineHeight: 1.6,
-        }}
-      >
-        <Box
-          component="code"
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'max-content 1fr',
-            width: '100%',
-          }}
-        >
+    <Card xstyle={styles.card}>
+      <pre {...stylex.props(styles.pre)}>
+        <code {...stylex.props(styles.code)}>
           {highlightedLines!.map((line, index) => (
             <Fragment key={index}>
-              <Box
-                component="span"
-                sx={{
-                  textAlign: 'right',
-                  pl: 1.5,
-                  pr: 1,
-                  userSelect: 'none',
-                  color: 'text.disabled',
-                  borderRight: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
+              <span {...stylex.props(styles.lineNumber)}>
                 {index + 1}
-              </Box>
-              <Box
-                component="span"
-                sx={{
-                  pl: 2,
-                  pr: 3,
-                  whiteSpace: 'pre',
-                }}
+              </span>
+              <span
+                {...stylex.props(styles.lineContent)}
                 dangerouslySetInnerHTML={{
                   __html: line || '&nbsp;',
                 }}
               />
             </Fragment>
           ))}
-        </Box>
-      </Box>
+        </code>
+      </pre>
     </Card>
   )
 }
