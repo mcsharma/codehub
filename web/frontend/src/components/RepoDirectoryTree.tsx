@@ -58,7 +58,14 @@ const RepoDirectoryTree = ({ ownerUsername, repoName, rev, activePath }: RepoDir
             }
           }
         `,
-        { owner_username: ownerUsername, name: repoName, rev, path }
+        { owner_username: ownerUsername, name: repoName, rev, path },
+        // Serve from the in-memory Relay store when this exact level was
+        // already fetched this session (e.g. navigating away and back)
+        // instead of fetchQuery's default of always hitting the network.
+        // Safe from staleness across a real reload (Cmd+R, URL bar) since
+        // RelayEnv's store is created fresh on every page load — there's
+        // nothing to read from until this component fetches again.
+        { fetchPolicy: "store-or-network" }
       ).subscribe({
         next: (data) => {
           const directory = data.repository_by_owner_and_name?.directory;
