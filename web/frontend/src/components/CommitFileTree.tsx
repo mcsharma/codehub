@@ -2,12 +2,17 @@ import { useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Collapse from "@mui/material/Collapse";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
+import FolderIcon from "@mui/icons-material/Folder";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import ExpandMoreOutlinedIcon from "@mui/icons-material/ExpandMoreOutlined";
 import ChevronRightOutlinedIcon from "@mui/icons-material/ChevronRightOutlined";
 import { buildFileTree } from "../utils/buildFileTree";
 import type { FileTreeNode } from "../utils/buildFileTree";
+
+// Apple's HIG "System Blue" — matches RepoDirectoryTree's folder color so
+// the two sidebar trees (Code tab vs. commit diff view) read as the same
+// component visually.
+const FOLDER_BLUE = "#0A84FF";
 
 const statusColor = (status: string): string | undefined => {
   if (status === "added") return "success.main";
@@ -34,11 +39,10 @@ const FileTreeNodeRow = ({ node, depth, activePath, onSelectFile }: NodeProps) =
         sx={{
           display: "flex",
           alignItems: "center",
-          gap: 1,
+          gap: 0.5,
           width: "100%",
           border: "none",
           background: isActive ? "#eff6ff" : "transparent",
-          borderRadius: 1,
           py: 0.5,
           pl: 1 + depth * 1.5,
           pr: 1,
@@ -47,17 +51,25 @@ const FileTreeNodeRow = ({ node, depth, activePath, onSelectFile }: NodeProps) =
           "&:hover": { background: isActive ? "#eff6ff" : "action.hover" },
         }}
       >
-        <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: statusColor(node.status ?? ""), flexShrink: 0 }} />
-        <InsertDriveFileOutlinedIcon sx={{ fontSize: 16, color: "text.secondary", flexShrink: 0 }} />
+        <Box sx={{ width: 20, flexShrink: 0, display: "flex", justifyContent: "center" }}>
+          <Box
+            sx={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              bgcolor: statusColor(node.status ?? ""),
+            }}
+          />
+        </Box>
+        <InsertDriveFileOutlinedIcon fontSize="small" sx={{ color: "text.secondary", flexShrink: 0 }} />
         <Typography
-          variant="caption"
+          variant="body2"
           sx={{
-            fontFamily: "monospace",
             color: isActive ? "primary.main" : "text.primary",
             fontWeight: isActive ? 700 : 400,
+            whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
           }}
         >
           {node.name}
@@ -78,9 +90,8 @@ const FileTreeNodeRow = ({ node, depth, activePath, onSelectFile }: NodeProps) =
           width: "100%",
           border: "none",
           background: "transparent",
-          borderRadius: 1,
           py: 0.5,
-          pl: depth * 1.5,
+          pl: 1 + depth * 1.5,
           pr: 1,
           cursor: "pointer",
           textAlign: "left",
@@ -88,18 +99,24 @@ const FileTreeNodeRow = ({ node, depth, activePath, onSelectFile }: NodeProps) =
         }}
       >
         {expanded ? (
-          <ExpandMoreOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+          <ExpandMoreOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
         ) : (
-          <ChevronRightOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+          <ChevronRightOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
         )}
-        <FolderOutlinedIcon sx={{ fontSize: 16, color: "text.secondary", flexShrink: 0 }} />
-        <Typography variant="caption" sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+        <FolderIcon fontSize="small" sx={{ color: FOLDER_BLUE, flexShrink: 0 }} />
+        <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
           {node.name}
         </Typography>
       </Box>
       <Collapse in={expanded}>
         {node.children?.map((child) => (
-          <FileTreeNodeRow key={child.path} node={child} depth={depth + 1} activePath={activePath} onSelectFile={onSelectFile} />
+          <FileTreeNodeRow
+            key={child.path}
+            node={child}
+            depth={depth + 1}
+            activePath={activePath}
+            onSelectFile={onSelectFile}
+          />
         ))}
       </Collapse>
     </Box>
@@ -112,17 +129,15 @@ interface CommitFileTreeProps {
   onSelectFile: (path: string) => void;
 }
 
+// Styling mirrors RepoDirectoryTree (the Code tab's sidebar) exactly —
+// same icon set, font, row height/padding — even though the two trees are
+// built differently (this one has the full file list up front and builds
+// a client-side trie, RepoDirectoryTree fetches level-by-level).
 const CommitFileTree = ({ files, activePath, onSelectFile }: CommitFileTreeProps) => {
   const tree = buildFileTree(files);
 
   return (
-    <Box sx={{ py: 1 }}>
-      <Typography
-        variant="caption"
-        sx={{ display: "block", px: 1.5, pb: 1, fontWeight: 700, textTransform: "uppercase", color: "text.secondary" }}
-      >
-        {files.length} changed file{files.length === 1 ? "" : "s"}
-      </Typography>
+    <Box>
       {tree.map((node) => (
         <FileTreeNodeRow key={node.path} node={node} depth={0} activePath={activePath} onSelectFile={onSelectFile} />
       ))}

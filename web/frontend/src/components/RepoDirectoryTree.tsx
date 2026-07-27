@@ -131,7 +131,6 @@ const RepoDirectoryTree = ({ ownerUsername, repoName, rev, activePath }: RepoDir
             width: "100%",
             textDecoration: "none",
             color: "inherit",
-            borderRadius: 1,
             py: 0.5,
             pl: 1 + depth * 1.5,
             pr: 1,
@@ -139,14 +138,12 @@ const RepoDirectoryTree = ({ ownerUsername, repoName, rev, activePath }: RepoDir
             "&:hover": { bgcolor: isActiveFile ? "#eff6ff" : "action.hover" },
           }}
         >
-          <Box sx={{ width: 16, flexShrink: 0 }} />
-          <InsertDriveFileOutlinedIcon sx={{ fontSize: 16, color: "text.secondary", flexShrink: 0 }} />
+          <Box sx={{ width: 20, flexShrink: 0 }} />
+          <InsertDriveFileOutlinedIcon fontSize="small" sx={{ color: "text.secondary", flexShrink: 0 }} />
           <Typography
-            variant="caption"
+            variant="body2"
             sx={{
-              fontFamily: "monospace",
               color: isActiveFile ? "primary.main" : "text.primary",
-              fontWeight: isActiveFile ? 700 : 400,
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -190,7 +187,6 @@ const RepoDirectoryTree = ({ ownerUsername, repoName, rev, activePath }: RepoDir
             width: "100%",
             textDecoration: "none",
             color: "inherit",
-            borderRadius: 1,
             py: 0.5,
             pl: 1 + depth * 1.5,
             pr: 1,
@@ -199,16 +195,14 @@ const RepoDirectoryTree = ({ ownerUsername, repoName, rev, activePath }: RepoDir
           }}
         >
           {isExpanded ? (
-            <ExpandMoreOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+            <ExpandMoreOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
           ) : (
-            <ChevronRightOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+            <ChevronRightOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
           )}
-          <FolderIcon sx={{ fontSize: 16, color: FOLDER_BLUE, flexShrink: 0 }} />
+          <FolderIcon fontSize="small" sx={{ color: FOLDER_BLUE, flexShrink: 0 }} />
           <Typography
-            variant="caption"
+            variant="body2"
             sx={{
-              fontFamily: "monospace",
-              fontWeight: 700,
               color: isActive ? "primary.main" : "text.primary",
               whiteSpace: "nowrap",
               overflow: "hidden",
@@ -226,7 +220,7 @@ const RepoDirectoryTree = ({ ownerUsername, repoName, rev, activePath }: RepoDir
   const rootChildren = childrenByPath.get("") ?? [];
 
   return (
-    <Box sx={{ py: 1 }}>
+    <Box>
       {rootChildren.length === 0 && !loadingPaths.has("") ? (
         <Typography variant="caption" sx={{ display: "block", px: 1.5, color: "text.secondary" }}>
           This directory is empty.

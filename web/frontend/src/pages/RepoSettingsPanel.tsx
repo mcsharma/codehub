@@ -86,7 +86,7 @@ const RepoSettingsPanel = ({ repositoryId, ownerUsername, repoName, visibility }
   };
 
   return (
-    <Box sx={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: 4 }}>
+    <Box sx={{ maxWidth: 720, mx: "auto", display: "flex", flexDirection: "column", gap: 4 }}>
       <Card sx={{ p: 4 }}>
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
           General

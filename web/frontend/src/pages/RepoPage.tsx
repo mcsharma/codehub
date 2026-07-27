@@ -5,9 +5,10 @@ import type { PreloadedQuery } from "react-relay";
 
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import RepoHeader from "../components/RepoHeader";
+import RepoNotFound from "../components/RepoNotFound";
 import RepoCommitsList from "./RepoCommitsList";
+import { resolveOwnerName } from "../utils/repoOwner";
 
 const RepoPage = () => {
   const { repoQueryRef } = useLoaderData() as {
@@ -46,22 +47,10 @@ const RepoPage = () => {
   const { owner_username, name: repoName } = repoQueryRef.variables;
 
   if (!repository) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Typography color="text.secondary">
-          Repository &quot;{owner_username}/{repoName}&quot; not found.
-        </Typography>
-      </Container>
-    );
+    return <RepoNotFound ownerUsername={owner_username} repoName={repoName} />;
   }
 
-  const ownerName: string =
-    (repository.owner?.__typename === "User"
-      ? repository.owner.username
-      : repository.owner?.__typename === "Organization"
-        ? repository.owner.name
-        : null) ?? owner_username;
-
+  const ownerName = resolveOwnerName(repository.owner, owner_username);
   const isOwner = data.current_user?.username === ownerName;
 
   return (

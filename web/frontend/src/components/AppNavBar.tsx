@@ -31,7 +31,7 @@ const InertNavLink = ({ label }: { label: string }) => (
     component="span"
     sx={{
       px: 1.5,
-      py: 0.75,
+      py: 0.5,
       borderRadius: 2,
       fontSize: "0.875rem",
       fontWeight: 500,
@@ -64,7 +64,7 @@ const AppNavBar = ({ currentUser: currentUserRef, onLogout }: AppNavBarProps) =>
 
   return (
     <AppBar position="sticky">
-      <Toolbar sx={{ gap: 4 }}>
+      <Toolbar sx={{ gap: 4, minHeight: 48, "@media (min-width: 600px)": { minHeight: 48 } }}>
         <Box
           component={Link}
           to="/"
@@ -80,8 +80,8 @@ const AppNavBar = ({ currentUser: currentUserRef, onLogout }: AppNavBarProps) =>
         >
           <Box
             sx={{
-              width: 32,
-              height: 32,
+              width: 28,
+              height: 28,
               borderRadius: 2,
               bgcolor: "primary.main",
               color: "#fff",
@@ -111,7 +111,7 @@ const AppNavBar = ({ currentUser: currentUserRef, onLogout }: AppNavBarProps) =>
               to={`/${currentUser.username}`}
               sx={{
                 px: 1.5,
-                py: 0.75,
+                py: 0.5,
                 borderRadius: 2,
                 fontSize: "0.875rem",
                 fontWeight: 700,
