@@ -12,7 +12,7 @@ interface UserAvatarProps {
 const UserAvatar = ({ size = 32, className }: UserAvatarProps) => (
   <Avatar
     style={{ width: size, height: size }}
-    className={cn("border border-border bg-background text-muted-foreground", className)}
+    className={cn("bg-background text-muted-foreground", className)}
   >
     <AvatarFallback className="bg-transparent">
       <CircleUserRound size={Math.round(size * 0.8)} />

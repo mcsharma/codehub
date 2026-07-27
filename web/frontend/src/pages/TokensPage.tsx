@@ -6,7 +6,7 @@ import type { TokensPageQuery } from './__generated__/TokensPageQuery.graphql'
 import type { TokensPageCreateMutation } from './__generated__/TokensPageCreateMutation.graphql'
 import type { TokensPageRevokeMutation } from './__generated__/TokensPageRevokeMutation.graphql'
 
-import { Info, Pencil, Trash2, Key } from 'lucide-react'
+import { Info, Trash2, Key, TriangleAlert } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Separator } from '../components/ui/separator'
 import { Alert, AlertDescription } from '../components/ui/alert'
@@ -65,11 +65,13 @@ const TokensPage = () => {
     `,
   )
 
-  const [commitRevoke] = useMutation<TokensPageRevokeMutation>(graphql`
+  const [commitRevoke, isRevoking] = useMutation<TokensPageRevokeMutation>(graphql`
     mutation TokensPageRevokeMutation($id: ID!) {
       revoke_personal_access_token(id: $id)
     }
   `)
+
+  const [revokeTarget, setRevokeTarget] = useState<{ id: string; label: string } | null>(null)
 
   const handleCreate = () => {
     setError(null)
@@ -94,10 +96,12 @@ const TokensPage = () => {
     }
   }
 
-  const handleRevoke = (id: string) => {
+  const handleRevoke = () => {
+    if (!revokeTarget) return
     commitRevoke({
-      variables: { id },
+      variables: { id: revokeTarget.id },
       onCompleted: () => {
+        setRevokeTarget(null)
         revalidator.revalidate()
       },
     })
@@ -138,7 +142,10 @@ const TokensPage = () => {
                 Tokens you can use to authenticate with the CodeHub CLI or API.
               </p>
             </div>
-            <Button onClick={() => setCreateDialogOpen(true)} className="shrink-0">
+            <Button
+              onClick={() => setCreateDialogOpen(true)}
+              className="shrink-0"
+            >
               Generate Token
             </Button>
           </div>
@@ -148,8 +155,8 @@ const TokensPage = () => {
             <div>
               <p className="font-bold text-primary">Security Note</p>
               <p className="mt-1 text-sm text-primary">
-                Treat these tokens like passwords. CodeHub will only show you the full token string once,
-                immediately after generation.
+                Treat these tokens like passwords. CodeHub will only show you
+                the full token string once, immediately after generation.
               </p>
             </div>
           </div>
@@ -172,28 +179,29 @@ const TokensPage = () => {
                       </div>
                       <div className="flex gap-4">
                         <span className="text-xs text-muted-foreground">
-                          Created {new Date((token.created_time ?? 0) * 1000).toLocaleDateString()}
+                          Created{' '}
+                          {new Date(
+                            (token.created_time ?? 0) * 1000,
+                          ).toLocaleDateString()}
                         </span>
                         {token.last_used_time && (
                           <span className="text-xs text-muted-foreground">
-                            Last used {new Date(token.last_used_time * 1000).toLocaleDateString()}
+                            Last used{' '}
+                            {new Date(
+                              token.last_used_time * 1000,
+                            ).toLocaleDateString()}
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon-sm" disabled>
-                        <Pencil />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => handleRevoke(token.id ?? '')}
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setRevokeTarget({ id: token.id ?? '', label: token.label ?? '' })}
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="size-5" />
+                    </Button>
                   </div>
                 </div>
               ))
@@ -202,7 +210,10 @@ const TokensPage = () => {
         </div>
       </div>
 
-      <Dialog open={createDialogOpen} onOpenChange={(open) => !open && handleCloseDialog()}>
+      <Dialog
+        open={createDialogOpen}
+        onOpenChange={(open) => !open && handleCloseDialog()}
+      >
         <DialogContent>
           {createdToken ? (
             <>
@@ -255,6 +266,28 @@ const TokensPage = () => {
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!revokeTarget} onOpenChange={(open) => !open && setRevokeTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <TriangleAlert className="size-5" /> Revoke token
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm">
+            Are you sure you want to revoke <strong>{revokeTarget?.label}</strong>? Any tools using it will stop
+            working immediately.
+          </p>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRevokeTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" disabled={isRevoking} onClick={handleRevoke}>
+              {isRevoking ? 'Revoking…' : 'Revoke'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -128,15 +128,17 @@ function DropdownMenuLabel({
 	inset?: boolean
 }) {
 	return (
-		<BaseMenu.GroupLabel
-			data-slot="dropdown-menu-label"
-			data-inset={inset}
-			className={cn(
-				"px-2 py-1.5 text-xs font-medium data-inset:pl-8",
-				className
-			)}
-			{...props}
-		/>
+		<BaseMenu.Group>
+			<BaseMenu.GroupLabel
+				data-slot="dropdown-menu-label"
+				data-inset={inset}
+				className={cn(
+					"px-2 py-1.5 text-xs font-medium data-inset:pl-8",
+					className
+				)}
+				{...props}
+			/>
+		</BaseMenu.Group>
 	)
 }
 

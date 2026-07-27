@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { graphql, useFragment } from "react-relay";
-import { FolderOpen, Key, LogOut } from "lucide-react";
+import { CircleUserRound, FolderOpen, Key, LogOut } from "lucide-react";
 import type { AppNavBar_user$key } from "./__generated__/AppNavBar_user.graphql";
 import { Button } from "./ui/button";
 import {
@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import UserAvatar from "./UserAvatar";
 
 interface AppNavBarProps {
   currentUser: AppNavBar_user$key | null;
@@ -76,11 +75,12 @@ const AppNavBar = ({ currentUser: currentUserRef, onLogout }: AppNavBarProps) =>
         {currentUser ? (
           <DropdownMenu>
             <DropdownMenuTrigger
-              aria-label="Account menu"
-              className="rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            >
-              <UserAvatar />
-            </DropdownMenuTrigger>
+              render={
+                <Button variant="ghost" size="icon" aria-label="Account menu" className="rounded-full">
+                  <CircleUserRound className="size-5 text-muted-foreground" />
+                </Button>
+              }
+            />
             <DropdownMenuContent align="end">
               <DropdownMenuLabel className="font-normal text-muted-foreground">
                 Signed in as {currentUser.first_name ?? currentUser.username}
