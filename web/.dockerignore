@@ -1,0 +1,7 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.local
+bff/src/__generated__
+frontend/src/__generated__
+.git

@@ -3,7 +3,5 @@ packages:
   - frontend
 allowBuilds:
   '@prisma/engines': true
-  cpu-features: true
   esbuild: true
   prisma: true
-  ssh2: true

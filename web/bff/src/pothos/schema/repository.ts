@@ -6,9 +6,8 @@ import type { ModelUser } from '@prisma/client'
 import { GraphQLError } from 'graphql'
 import { UserObject } from './user.js'
 import { OrganizationObject } from './organization.js'
-import { provisionRepoOnVm } from '../../repos/provision-on-vm.js'
-import { deleteRepoOnVm } from '../../repos/delete-on-vm.js'
-import { provisionRepoLocally, deleteRepoLocally } from '../../repos/provision-local.js'
+import { enqueueProvisionRepo } from '../../jobs/provision-repo.js'
+import { enqueueDeleteRepo } from '../../jobs/delete-repo.js'
 import {
   fetchBookmarks,
   fetchChangeset,
@@ -537,14 +536,13 @@ builder.mutationField('create_repository', (t) =>
       }
 
       try {
-        // HG_LOCAL_REPOS_DIR is only ever set in local dev (see
-        // services/hg/README.md "Local dev" section) — Railway never sets
-        // it, so prod always takes the provisionRepoOnVm branch.
-        if (process.env.HG_LOCAL_REPOS_DIR) {
-          await provisionRepoLocally(user.username, args.name)
-        } else {
-          await provisionRepoOnVm(user.username, args.name)
-        }
+        // Enqueues a provision-repo job, claimed and executed by whichever
+        // environment's VM worker stack polls this BFF (see
+        // jobs/provision-repo.ts and pothos/schema/hg-worker.ts) — the same
+        // job path for both local dev and prod now, no more
+        // HG_LOCAL_REPOS_DIR branch. Waits for completion so this mutation
+        // still only returns once the repo actually exists on disk.
+        await enqueueProvisionRepo(user.username, args.name)
       } catch (err) {
         // Compensating rollback — don't leave a Repository row with no
         // matching on-disk repo.
@@ -590,12 +588,9 @@ builder.mutationField('delete_repository', (t) =>
       // On-disk before Postgres, deliberately: if this throws, the
       // Postgres row is left untouched, so a failure leaves a repo that's
       // still visible and retryable rather than a row silently vanishing
-      // while its data survives, unreachable, on disk.
-      if (process.env.HG_LOCAL_REPOS_DIR) {
-        await deleteRepoLocally(ownerName, repo.name)
-      } else {
-        await deleteRepoOnVm(ownerName, repo.name)
-      }
+      // while its data survives, unreachable, on disk. Same job-queue path
+      // as create_repository — see jobs/delete-repo.ts.
+      await enqueueDeleteRepo(ownerName, repo.name)
 
       await ctx.prisma.repository.delete({ where: { id: repo.id } })
       return true

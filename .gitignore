@@ -12,6 +12,8 @@ build/
 .env
 .env.*
 !.env.example
+!services/hg/vm/.env.prod.example
+!services/hg/vm/.env.test.example
 
 # ─── Logs ────────────────────────────────────────────────────────
 *.log
