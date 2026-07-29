@@ -2,6 +2,10 @@
 **/dist
 **/.env
 **/.env.local
-bff/src/__generated__
-frontend/src/__generated__
+# Both apps' __generated__ dirs are checked into git and deliberately NOT
+# excluded here: frontend's build runs `tsc` before `relay-compiler`
+# regenerates its Relay artifacts (needs the committed copies present from
+# the start), and relay-compiler itself reads bff's checked-in
+# schema.graphql (frontend/package.json's relay config points at it) even
+# though the BFF never reads that file at runtime.
 .git
