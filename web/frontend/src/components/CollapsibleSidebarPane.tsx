@@ -67,7 +67,7 @@ const CollapsibleSidebarPane = ({
         <div className="flex items-center gap-1 py-2">
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-md"
             title={buttonLabel}
             aria-label={buttonLabel}
             onClick={toggleCollapsed}

@@ -196,7 +196,7 @@ const TokensPage = () => {
                     </div>
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="icon-md"
                       onClick={() => setRevokeTarget({ id: token.id ?? '', label: token.label ?? '' })}
                       className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >

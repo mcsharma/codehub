@@ -76,7 +76,7 @@ const AppNavBar = ({ currentUser: currentUserRef, onLogout }: AppNavBarProps) =>
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button variant="ghost" size="icon" aria-label="Account menu" className="rounded-full">
+                <Button variant="ghost" size="icon-md" aria-label="Account menu" className="rounded-full">
                   <CircleUserRound className="size-5 text-muted-foreground" />
                 </Button>
               }

@@ -38,7 +38,7 @@ const CloneButton = ({ ownerUsername, repoName }: CloneButtonProps) => {
     >
       <PopoverTrigger
         render={
-          <Button size="sm">
+          <Button>
             <SquareTerminal className="size-4" />
             Clone
             <ChevronDown className="size-4" />

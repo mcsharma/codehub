@@ -110,7 +110,7 @@ const RepoSwitcher = ({ ownerUsername, repoName }: RepoSwitcherProps) => {
     <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost" size="sm" className="px-1">
+          <Button variant="ghost" className="px-1">
             {repoName}
             <ChevronDown className="size-4 text-muted-foreground" />
           </Button>

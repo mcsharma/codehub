@@ -41,7 +41,6 @@ const RepoHeader = ({
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
-              size="sm"
               className="px-1 font-normal"
               render={<Link to={`/${ownerUsername}`} />}
             >

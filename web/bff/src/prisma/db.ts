@@ -39,7 +39,7 @@ if (logQuery) {
         /(?:[a-zA-Z_][a-zA-Z0-9_]*\.)+([a-zA-Z_][a-zA-Z0-9_]*)/g,
         "$1",
       );
-      console.log(`[prisma] ${out}  (${e.duration}ms)`);
+      // console.log(`[prisma] ${out}  (${e.duration}ms)`);
     },
   );
 }

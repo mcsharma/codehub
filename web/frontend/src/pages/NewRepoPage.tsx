@@ -15,8 +15,16 @@ import { cn } from '@/lib/utils'
 export type { NewRepoPageQuery }
 
 const VISIBILITY_OPTIONS = [
-  { value: 'PUBLIC', label: 'Public', helper: 'Anyone on the internet can see this repository.' },
-  { value: 'PRIVATE', label: 'Private', helper: 'Only you and people you choose can see this.' },
+  {
+    value: 'PUBLIC',
+    label: 'Public',
+    helper: 'Anyone on the internet can see this repository.',
+  },
+  {
+    value: 'PRIVATE',
+    label: 'Private',
+    helper: 'Only you and people you choose can see this.',
+  },
 ] as const
 
 const NewRepoPage = () => {
@@ -63,7 +71,9 @@ const NewRepoPage = () => {
     return (
       <div className="mx-auto max-w-[600px] px-4 py-8">
         <Alert variant="warning">
-          <AlertDescription>You need to be logged in to create a repository.</AlertDescription>
+          <AlertDescription>
+            You need to be logged in to create a repository.
+          </AlertDescription>
         </Alert>
       </div>
     )
@@ -104,7 +114,9 @@ const NewRepoPage = () => {
           <div>
             <p className="mb-2 font-bold">Repository Name *</p>
             <div className="flex h-9 w-full items-center rounded-md border border-input bg-[#f9fafb] px-3 shadow-xs transition-[color,box-shadow,border-color] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
-              <span className="shrink-0 text-sm font-medium text-muted-foreground">{username} /</span>
+              <span className="shrink-0 text-sm font-medium text-muted-foreground">
+                {username} /
+              </span>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -121,7 +133,10 @@ const NewRepoPage = () => {
 
           <div>
             <p className="mb-2 font-bold">
-              Description <span className="font-normal text-muted-foreground">(optional)</span>
+              Description{' '}
+              <span className="font-normal text-muted-foreground">
+                (optional)
+              </span>
             </p>
             <Textarea
               value={description}
@@ -135,7 +150,9 @@ const NewRepoPage = () => {
             <p className="mb-4 font-bold">Visibility</p>
             <RadioGroup
               value={visibility}
-              onValueChange={(value) => setVisibility(value as 'PUBLIC' | 'PRIVATE')}
+              onValueChange={(value) =>
+                setVisibility(value as 'PUBLIC' | 'PRIVATE')
+              }
               className="grid grid-cols-1 gap-4 sm:grid-cols-2"
             >
               {VISIBILITY_OPTIONS.map((option) => (
@@ -143,13 +160,17 @@ const NewRepoPage = () => {
                   key={option.value}
                   className={cn(
                     'flex cursor-pointer items-start gap-2 rounded-[4px] border-2 p-4',
-                    visibility === option.value ? 'border-primary bg-[#eff6ff]' : 'border-border bg-transparent',
+                    visibility === option.value
+                      ? 'border-primary bg-[#eff6ff]'
+                      : 'border-border bg-transparent',
                   )}
                 >
                   <RadioGroupItem value={option.value} className="mt-0.5" />
                   <div>
                     <p className="font-bold">{option.label}</p>
-                    <p className="text-xs text-muted-foreground">{option.helper}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {option.helper}
+                    </p>
                   </div>
                 </label>
               ))}
@@ -160,7 +181,7 @@ const NewRepoPage = () => {
             <Button type="button" variant="ghost" onClick={() => navigate(-1)}>
               Cancel
             </Button>
-            <Button type="submit" size="lg" disabled={isCreating || !name}>
+            <Button type="submit" disabled={isCreating || !name}>
               {isCreating ? 'Creating…' : 'Create Repository'}
             </Button>
           </div>
@@ -174,8 +195,8 @@ const NewRepoPage = () => {
         <div>
           <p className="font-bold">Pro Tip</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            You can initialize this repository with a README or an .hgignore file later using our CLI once
-            it&apos;s created.
+            You can initialize this repository with a README or an .hgignore
+            file later using our CLI once it&apos;s created.
           </p>
         </div>
       </div>

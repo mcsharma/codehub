@@ -97,11 +97,17 @@ const CommitPage = () => {
     <div className="px-5 py-6">
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-bold">
-          <Link to={`/${ownerUsername}`} className="text-primary no-underline hover:underline">
+          <Link
+            to={`/${ownerUsername}`}
+            className="text-primary no-underline hover:underline"
+          >
             {ownerUsername}
           </Link>
           <span className="text-muted-foreground">/</span>
-          <Link to={`/${ownerUsername}/${repoName}`} className="text-primary no-underline hover:underline">
+          <Link
+            to={`/${ownerUsername}/${repoName}`}
+            className="text-primary no-underline hover:underline"
+          >
             {repoName}
           </Link>
           <span className="text-muted-foreground">/ commit /</span>
@@ -109,7 +115,10 @@ const CommitPage = () => {
             {commit.short_node}
           </span>
         </div>
-        <Button variant="ghost" size="sm" render={<Link to={`/${ownerUsername}/${repoName}`} />}>
+        <Button
+          variant="ghost"
+          render={<Link to={`/${ownerUsername}/${repoName}`} />}
+        >
           <ChevronLeft className="size-4" />
           Back to commits
         </Button>
@@ -121,7 +130,9 @@ const CommitPage = () => {
             <p className="mb-4 text-base font-normal">{commit.description}</p>
             <div className="flex items-center gap-3">
               <UserAvatar />
-              <span className="text-sm font-bold">{formatCommitAuthor(commit.author ?? '')}</span>
+              <span className="text-sm font-bold">
+                {formatCommitAuthor(commit.author ?? '')}
+              </span>
               <span className="text-xs font-bold text-muted-foreground uppercase">
                 Committed on{' '}
                 {commit.date
@@ -136,14 +147,18 @@ const CommitPage = () => {
           </div>
           <div className="flex shrink-0 flex-col items-end gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-muted-foreground">Commit</span>
+              <span className="text-xs font-bold text-muted-foreground">
+                Commit
+              </span>
               <span className="rounded-full border border-border bg-background px-3 py-1 font-mono text-base font-bold">
                 {commit.node}
               </span>
             </div>
             {commit.parents && commit.parents.length > 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-muted-foreground">Parent</span>
+                <span className="text-xs font-bold text-muted-foreground">
+                  Parent
+                </span>
                 <Link
                   to={`/${ownerUsername}/${repoName}/commit/${commit.parents[0]}`}
                   className="font-mono font-bold text-primary no-underline hover:underline"
@@ -166,7 +181,9 @@ const CommitPage = () => {
           </span>
           <ToggleGroup
             value={[mode]}
-            onValueChange={(value) => value[0] && setMode(value[0] as 'unified' | 'split')}
+            onValueChange={(value) =>
+              value[0] && setMode(value[0] as 'unified' | 'split')
+            }
           >
             <Toggle value="split" variant="outline" size="sm">
               Split
@@ -207,11 +224,15 @@ const CommitPage = () => {
                 <div className="flex items-center justify-between border-b border-border bg-background px-5 py-3">
                   <div className="flex items-center gap-3">
                     <FileText size={16} className="text-muted-foreground" />
-                    <span className="font-mono text-sm font-bold">{file.path}</span>
+                    <span className="font-mono text-sm font-bold">
+                      {file.path}
+                    </span>
                     {file.status && file.status !== 'modified' && (
                       <span
                         className={`text-xs font-bold uppercase ${
-                          file.status === 'added' ? 'text-success-foreground' : 'text-destructive'
+                          file.status === 'added'
+                            ? 'text-success-foreground'
+                            : 'text-destructive'
                         }`}
                       >
                         {file.status}
@@ -219,8 +240,12 @@ const CommitPage = () => {
                     )}
                   </div>
                   <div className="flex gap-3">
-                    <span className="text-xs font-bold text-success-foreground">+{additions}</span>
-                    <span className="text-xs font-bold text-destructive">-{deletions}</span>
+                    <span className="text-xs font-bold text-success-foreground">
+                      +{additions}
+                    </span>
+                    <span className="text-xs font-bold text-destructive">
+                      -{deletions}
+                    </span>
                   </div>
                 </div>
                 {chunk ? (
@@ -240,7 +265,9 @@ const CommitPage = () => {
                     diffViewFontSize={13}
                   />
                 ) : (
-                  <p className="p-5 text-muted-foreground">Binary file not shown.</p>
+                  <p className="p-5 text-muted-foreground">
+                    Binary file not shown.
+                  </p>
                 )}
               </div>
             )

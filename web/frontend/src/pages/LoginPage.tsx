@@ -19,11 +19,18 @@ const LoginPage = () => {
             </svg>
           </div>
           <h1 className="text-2xl font-bold">Welcome back to CodeHub</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Simple, modern source control.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Simple, modern source control.
+          </p>
         </div>
 
         <div className="rounded-[4px] border border-border bg-card p-8 shadow-[0_1px_3px_0_rgba(0,0,0,0.05),0_1px_2px_0_rgba(0,0,0,0.03)]">
-          <Button variant="outline" size="lg" className="w-full" render={<a href="/auth/google" />}>
+          <Button
+            variant="outline"
+            size="md"
+            className="w-full"
+            render={<a href="/auth/google" />}
+          >
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
