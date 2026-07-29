@@ -32,11 +32,23 @@ RUN pnpm --filter @codehub/frontend run build
 
 FROM base AS runtime
 ENV NODE_ENV=production
+# pnpm hoists shared deps into a root .pnpm store and symlinks into each
+# workspace package's node_modules (relative symlinks, e.g.
+# bff/node_modules/prisma -> ../../node_modules/.pnpm/prisma@.../...) —
+# copying only bff/node_modules leaves those symlinks dangling. The root
+# node_modules has to come along too so they resolve.
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/bff/node_modules ./bff/node_modules
 COPY --from=build /app/bff/dist ./bff/dist
 COPY --from=build /app/bff/prisma ./bff/prisma
-COPY --from=build /app/bff/package.json ./bff/package.json
+COPY --from=build /app/bff/package.json /app/bff/prisma.config.ts ./bff/
 COPY --from=build /app/frontend/dist ./frontend/dist
 WORKDIR /app/bff
 EXPOSE 4000
-CMD ["node", "dist/index.js"]
+# Migrations run here, inside the built image, rather than via Railway's
+# separate "pre-deploy command" setting — that mechanism runs in its own
+# generic environment (a fresh `pnpm install` at the repo root) that doesn't
+# line up with a Dockerfile-built image's layout, and fails there instead of
+# ever reaching this container. Clear preDeployCommand on any service using
+# this image.
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
