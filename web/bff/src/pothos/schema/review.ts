@@ -181,6 +181,23 @@ builder.objectField(RepositoryObject, 'review', (t) =>
   }),
 )
 
+// Plain list, not a connection — matches the "simple list" v1 scope (see
+// RepoReviewsPage.tsx). Revisit if a repo's review count ever makes this
+// worth paginating, same as commits already are.
+builder.objectField(RepositoryObject, 'reviews', (t) =>
+  t.field({
+    type: [ReviewObject],
+    resolve: async (repository, _args, ctx) => {
+      const ownerName = await resolveOwnerName(repository, ctx.prisma)
+      await requireRepoReadAccess(ctx.user, ownerName, repository.name)
+      return ctx.prisma.review.findMany({
+        where: { repositoryId: repository.id },
+        orderBy: { createdTime: 'desc' },
+      })
+    },
+  }),
+)
+
 // --- Mutations ---
 // All CLI-facing (PAT bearer auth on /graphql — see index.ts), gated at the
 // same write-access bar as an hg push (see requireRepoWriteAccess above).

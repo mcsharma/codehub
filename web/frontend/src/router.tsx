@@ -18,6 +18,7 @@ import RepoPageQueryNode from "./pages/__generated__/RepoPageQuery.graphql";
 import NewRepoPageQueryNode from "./pages/__generated__/NewRepoPageQuery.graphql";
 import CommitPageQueryNode from "./pages/__generated__/CommitPageQuery.graphql";
 import ReviewPageQueryNode from "./pages/__generated__/ReviewPageQuery.graphql";
+import RepoReviewsPageQueryNode from "./pages/__generated__/RepoReviewsPageQuery.graphql";
 import TokensPageQueryNode from "./pages/__generated__/TokensPageQuery.graphql";
 import RepoSettingsPageQueryNode from "./pages/__generated__/RepoSettingsPageQuery.graphql";
 import RepoCodeShellQueryNode from "./pages/__generated__/RepoCodeShellQuery.graphql";
@@ -134,6 +135,16 @@ export const router = createBrowserRouter([
             owner_username: params.owner!,
             name: params.repo!,
             node: params.node!,
+          }),
+        }),
+      },
+      {
+        path: ":owner/:repo/reviews",
+        Component: React.lazy(() => import("./pages/RepoReviewsPage")),
+        loader: ({ params }) => ({
+          repoReviewsQueryRef: loadQuery(RelayEnv, RepoReviewsPageQueryNode, {
+            owner_username: params.owner!,
+            name: params.repo!,
           }),
         }),
       },

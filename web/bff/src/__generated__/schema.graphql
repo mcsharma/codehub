@@ -160,6 +160,7 @@ type Repository {
   name: String
   owner: RepositoryOwner
   review(number: Int!): Review
+  reviews: [Review!]
   updated_time: Int
   visibility: RepositoryVisibility
 }
