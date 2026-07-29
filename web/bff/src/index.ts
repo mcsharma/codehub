@@ -12,6 +12,7 @@ import { googleAuthRouter } from './auth/google.js'
 import { SESSION_COOKIE, resolveSession } from './auth/session.js'
 import { resolvePersonalAccessToken } from './auth/personal-access-token.js'
 import { canAccessRepo } from './auth/repo-access.js'
+import { startBoss, ensureHgQueues } from './jobs/boss.js'
 import { writeFileSync } from 'node:fs'
 import { printSchema, lexicographicSortSchema } from 'graphql'
 import path from 'node:path'
@@ -134,6 +135,16 @@ const yoga = createYoga<ExpressServerContext>({
   schema: builder.toSchema(),
   graphqlEndpoint: '/graphql',
   context: async (ctx) => {
+    // The `ch` CLI authenticates as a PAT bearer token, same credential
+    // used for hg wire-protocol pushes over Basic auth (see
+    // /internal/auth-check above) — the web UI keeps using the session
+    // cookie, PATs were never accepted on /graphql before this.
+    const authHeader = ctx.req.header('authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      const user = await resolvePersonalAccessToken(authHeader.slice('Bearer '.length))
+      return { prisma, req: ctx.req, res: ctx.res, user, session: null }
+    }
+
     const rawToken = ctx.req.cookies?.[SESSION_COOKIE]
     const { user, session } = rawToken
       ? await resolveSession(rawToken)
@@ -168,6 +179,15 @@ app.get('*any', (req, res) => {
     }
   })
 })
+
+// Job queue: must be started (and the hg job queues created) before
+// anything can enqueue a provision-repo/delete-repo/land-review job or the
+// VM worker can claim one — awaited before the server starts accepting
+// requests rather than fired-and-forgotten in the background. Nothing in
+// this process consumes these queues anymore; the VM worker does, via
+// claim_hg_job (see pothos/schema/hg-worker.ts).
+await startBoss()
+await ensureHgQueues()
 
 app.listen(port, () => {
   console.log(`

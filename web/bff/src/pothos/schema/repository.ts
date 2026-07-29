@@ -6,9 +6,8 @@ import type { ModelUser } from '@prisma/client'
 import { GraphQLError } from 'graphql'
 import { UserObject } from './user.js'
 import { OrganizationObject } from './organization.js'
-import { provisionRepoOnVm } from '../../repos/provision-on-vm.js'
-import { deleteRepoOnVm } from '../../repos/delete-on-vm.js'
-import { provisionRepoLocally, deleteRepoLocally } from '../../repos/provision-local.js'
+import { enqueueProvisionRepo } from '../../jobs/provision-repo.js'
+import { enqueueDeleteRepo } from '../../jobs/delete-repo.js'
 import {
   fetchBookmarks,
   fetchChangeset,
@@ -26,7 +25,9 @@ import type { prisma } from '../../prisma/db.js'
 
 // --- Shared helpers for the hgweb-backed fields below ---
 
-async function resolveOwnerName(
+// Exported for review.ts, which needs the same owner-name resolution and
+// read-access masking for hgweb-backed Review/ReviewVersion fields.
+export async function resolveOwnerName(
   repository: { ownerUserId: bigint | null; ownerOrganizationId: bigint | null },
   db: typeof prisma,
 ): Promise<string> {
@@ -53,7 +54,7 @@ async function resolveOwnerName(
 // does — same function, same shape, just called from the GraphQL side this
 // time. 404-shaped error (not 403) so unauthorized callers can't tell a
 // private repo apart from one that doesn't exist.
-async function requireRepoReadAccess(user: ModelUser | null, ownerName: string, repoName: string): Promise<void> {
+export async function requireRepoReadAccess(user: ModelUser | null, ownerName: string, repoName: string): Promise<void> {
   const allowed = await canAccessRepo(user, ownerName, repoName, 'read')
   if (!allowed) {
     throw new GraphQLError('Repository not found', { extensions: { code: 'NOT_FOUND' } })
@@ -109,7 +110,10 @@ const CommitFileObject = builder.objectRef<CommitFileShape>('CommitFile').implem
   }),
 })
 
-interface CommitShape {
+// Exported for review.ts's ReviewVersion.commit field — a review version
+// points at a real hg node, so it reuses this exact shape/fetch rather than
+// duplicating a second "commit-ish" type.
+export interface CommitShape {
   node: string
   short_node: string
   author: string
@@ -127,7 +131,7 @@ interface CommitShape {
   _repoName: string
 }
 
-function toCommitShape(owner: string, repoName: string, c: HgChangeset): CommitShape {
+export function toCommitShape(owner: string, repoName: string, c: HgChangeset): CommitShape {
   return {
     node: c.node,
     short_node: c.node.slice(0, 12),
@@ -144,7 +148,7 @@ function toCommitShape(owner: string, repoName: string, c: HgChangeset): CommitS
   }
 }
 
-const CommitObject = builder.objectRef<CommitShape>('Commit').implement({
+export const CommitObject = builder.objectRef<CommitShape>('Commit').implement({
   fields: (t) => ({
     node: t.exposeString('node'),
     short_node: t.exposeString('short_node'),
@@ -290,7 +294,11 @@ const BINARY_SNIFF_BYTES = 8_000
 
 // --- Repository object type ---
 
-builder.prismaObject('Repository', {
+// Exported so review.ts can add a `review(number)` field onto Repository
+// via builder.objectField without repository.ts needing to import anything
+// from review.ts in return (that would be a real circular import — this
+// keeps the dependency one-directional).
+export const RepositoryObject = builder.prismaObject('Repository', {
   name: 'Repository',
   fields: (t) => ({
     id: exposeID(t),
@@ -528,14 +536,13 @@ builder.mutationField('create_repository', (t) =>
       }
 
       try {
-        // HG_LOCAL_REPOS_DIR is only ever set in local dev (see
-        // services/hg/README.md "Local dev" section) — Railway never sets
-        // it, so prod always takes the provisionRepoOnVm branch.
-        if (process.env.HG_LOCAL_REPOS_DIR) {
-          await provisionRepoLocally(user.username, args.name)
-        } else {
-          await provisionRepoOnVm(user.username, args.name)
-        }
+        // Enqueues a provision-repo job, claimed and executed by whichever
+        // environment's VM worker stack polls this BFF (see
+        // jobs/provision-repo.ts and pothos/schema/hg-worker.ts) — the same
+        // job path for both local dev and prod now, no more
+        // HG_LOCAL_REPOS_DIR branch. Waits for completion so this mutation
+        // still only returns once the repo actually exists on disk.
+        await enqueueProvisionRepo(user.username, args.name)
       } catch (err) {
         // Compensating rollback — don't leave a Repository row with no
         // matching on-disk repo.
@@ -581,12 +588,9 @@ builder.mutationField('delete_repository', (t) =>
       // On-disk before Postgres, deliberately: if this throws, the
       // Postgres row is left untouched, so a failure leaves a repo that's
       // still visible and retryable rather than a row silently vanishing
-      // while its data survives, unreachable, on disk.
-      if (process.env.HG_LOCAL_REPOS_DIR) {
-        await deleteRepoLocally(ownerName, repo.name)
-      } else {
-        await deleteRepoOnVm(ownerName, repo.name)
-      }
+      // while its data survives, unreachable, on disk. Same job-queue path
+      // as create_repository — see jobs/delete-repo.ts.
+      await enqueueDeleteRepo(ownerName, repo.name)
 
       await ctx.prisma.repository.delete({ where: { id: repo.id } })
       return true

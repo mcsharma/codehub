@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Deploys services/hg/ config to the DigitalOcean VM. Change-detects each
-# file against what's already on the box and only restarts/reloads the
-# service(s) actually affected. See README.md for the stack this manages.
+# Deploys services/hg/ (hgweb image, worker image, both stacks' compose
+# files/nginx config) to the DigitalOcean VM and brings both Docker Compose
+# stacks (codehub-prod, codehub-test) up to date. See README.md for the
+# architecture this manages — no more per-file scp/systemctl change
+# detection now that everything's containerized; both images build fast
+# enough that an unconditional `docker compose up -d --build` per stack is
+# simpler and just as fast in practice.
 #
 # Usage: ./deploy.sh [--dry-run]
 
@@ -9,6 +13,7 @@ set -euo pipefail
 
 HOST="root@143.110.207.184"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REMOTE_DIR="/opt/codehub-hg"
 
 DRY_RUN=false
 if [[ "${1:-}" == "--dry-run" ]]; then
@@ -23,75 +28,28 @@ run() {
   fi
 }
 
-remote_sha() {
-  ssh "$HOST" "sha256sum '$1' 2>/dev/null | cut -d' ' -f1" || true
-}
+echo "== hg stack deploy — $HOST $($DRY_RUN && echo '(dry run)') =="
 
-# Copies $1 (local) to $2 (remote path) if its content differs from what's
-# already there. Echoes status; returns 0 if it deployed, 1 if unchanged.
-deploy_file() {
-  local local_file="$DIR/$1" remote_path="$2"
-  local local_sha remote_sha_val
-  local_sha=$(sha256sum "$local_file" | cut -d' ' -f1)
-  remote_sha_val=$(remote_sha "$remote_path")
-  if [[ "$local_sha" == "$remote_sha_val" ]]; then
-    echo "  unchanged: $remote_path"
-    return 1
-  fi
-  echo "  deploying: $1 -> $remote_path"
-  run scp "$local_file" "$HOST:$remote_path"
-  return 0
-}
+echo "-- syncing services/hg/ to $REMOTE_DIR --"
+run rsync -az --delete \
+  --exclude 'local-data' \
+  --exclude 'vm/.env.*' \
+  --exclude '.git' \
+  "$DIR/" "$HOST:$REMOTE_DIR/"
 
-echo "== hgweb service deploy — $HOST $($DRY_RUN && echo '(dry run)') =="
+for stack in prod test; do
+  echo "-- $stack: docker compose up -d --build --"
+  run ssh "$HOST" "cd $REMOTE_DIR/vm && docker compose -p codehub-$stack -f docker-compose.$stack.yml --env-file .env.$stack up -d --build"
+done
 
-hg_changed=false
-deploy_file hgweb.ini /etc/hgweb.ini && hg_changed=true
-deploy_file hgweb_wsgi.py /opt/hgservice/hgweb_wsgi.py && hg_changed=true
-
-service_changed=false
-deploy_file hgweb.service /etc/systemd/system/hgweb.service && service_changed=true
-
-nginx_changed=false
-deploy_file nginx-hgweb.conf /etc/nginx/sites-enabled/hgweb && nginx_changed=true
-
-# No service restart needed — invoked fresh per-SSH-connection via the
-# forced-command authorized_keys entry, not loaded into a long-running process.
-create_repo_changed=false
-if deploy_file create-repo.sh /opt/hgservice/create-repo.sh; then
-  create_repo_changed=true
-  run ssh "$HOST" 'chmod +x /opt/hgservice/create-repo.sh'
-fi
-
-delete_repo_changed=false
-if deploy_file delete-repo.sh /opt/hgservice/delete-repo.sh; then
-  delete_repo_changed=true
-  run ssh "$HOST" 'chmod +x /opt/hgservice/delete-repo.sh'
-fi
-
-if $service_changed; then
-  echo "-- hgweb.service changed: reloading systemd + restarting hgweb --"
-  run ssh "$HOST" 'systemctl daemon-reload && rm -rf /opt/hgservice/__pycache__ && systemctl restart hgweb'
-elif $hg_changed; then
-  echo "-- hgweb config changed: restarting hgweb --"
-  run ssh "$HOST" 'rm -rf /opt/hgservice/__pycache__ && systemctl restart hgweb'
-fi
-
-if { $hg_changed || $service_changed; } && ! $DRY_RUN; then
-  echo "-- verifying hgweb came back up --"
-  if ! ssh "$HOST" 'systemctl is-active --quiet hgweb'; then
-    echo "ERROR: hgweb is not active after restart" >&2
-    exit 1
-  fi
-fi
-
-if $nginx_changed; then
-  echo "-- nginx config changed: testing + reloading --"
-  run ssh "$HOST" 'nginx -t && systemctl reload nginx'
-fi
-
-if ! $hg_changed && ! $service_changed && ! $nginx_changed && ! $create_repo_changed && ! $delete_repo_changed; then
-  echo "Nothing changed — VM already up to date."
+if ! $DRY_RUN; then
+  echo "-- verifying both stacks are up --"
+  for stack in prod test; do
+    if ! ssh "$HOST" "docker compose -p codehub-$stack -f $REMOTE_DIR/vm/docker-compose.$stack.yml --env-file $REMOTE_DIR/vm/.env.$stack ps --status running --quiet | grep -q ."; then
+      echo "ERROR: $stack stack has no running containers after deploy" >&2
+      exit 1
+    fi
+  done
 fi
 
 echo "== done =="
