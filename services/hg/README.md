@@ -10,22 +10,49 @@ edit here and re-deploy, don't hand-edit on the box.
 |-----------------------|---------------------------------------|
 | `hgweb.ini`           | `/etc/hgweb.ini`                     |
 | `hgweb_wsgi.py`       | `/opt/hgservice/hgweb_wsgi.py`       |
+| `hg_hooks.py`         | `/opt/hgservice/hg_hooks.py`         |
 | `hgweb.service`       | `/etc/systemd/system/hgweb.service`  |
 | `nginx-hgweb.conf`    | `/etc/nginx/sites-enabled/hgweb`     |
 | `create-repo.sh`      | `/opt/hgservice/create-repo.sh`      |
 | `delete-repo.sh`      | `/opt/hgservice/delete-repo.sh`      |
+| `land-review.sh`      | `/opt/hgservice/land-review.sh`      |
 
-`create-repo.sh` and `delete-repo.sh` are forced-command targets for two
-*separate* dedicated SSH keys the BFF uses to provision/remove repos on
-demand (see `web/bff/src/repos/provision-on-vm.ts` /
-`web/bff/src/repos/delete-on-vm.ts`) — each installed in `hgservice`'s
-`authorized_keys` with its own `command="..."` entry
-(`HG_VM_DEPLOY_KEY` → `create-repo.sh` only, `HG_VM_DELETE_KEY` →
-`delete-repo.sh` only), so either key can never run anything but its one
+`create-repo.sh`, `delete-repo.sh`, and `land-review.sh` are forced-command
+targets for three *separate* dedicated SSH keys the BFF uses to provision,
+remove, and land into repos on demand (see
+`web/bff/src/repos/provision-on-vm.ts` / `delete-on-vm.ts` / `land-on-vm.ts`)
+— each installed in `hgservice`'s `authorized_keys` with its own
+`command="..."` entry (`HG_VM_DEPLOY_KEY` → `create-repo.sh` only,
+`HG_VM_DELETE_KEY` → `delete-repo.sh` only, `HG_VM_LAND_KEY` →
+`land-review.sh` only), so any one key can never run anything but its one
 script. Deliberately not shared: a leaked create key can only create junk
-repos; a leaked delete key could destroy any repo on the box, so it stays
-on its own key with its own blast radius. Neither is the human deploy key
-used for the commands below.
+repos, a leaked delete key could destroy any repo on the box, and a leaked
+land key could only merge already-pushed, already-reviewed changesets onto
+`master` — each stays on its own key with its own blast radius. None of
+these is the human deploy key used for the commands below.
+
+## Code review / landing
+
+The code-review feature (see the top-level `cli/` Deno tool, `ch`) pins
+reviews to real changeset hashes rather than storing patch snapshots — see
+`web/bff/src/repos/hgweb-client.ts` and `web/bff/src/pothos/schema/review.ts`.
+Two pieces of server-side hg config exist purely to keep that model safe:
+
+- **`[phases] publish = False`** in `hgweb.ini` — keeps every pushed
+  changeset in the `draft` phase so authors can still amend/rebase them
+  locally after `ch submit`. A publishing server (hg's normal default for a
+  server repo) would mark them `public` on arrival, and `public` changesets
+  are meant to be treated as immutable.
+- **`hg_hooks.py`'s `prepushkey` hook** — rejects any pushed bookmark move
+  that isn't a `reviews/<12-hex-node>` bookmark (the shape `ch submit`
+  always uses, one per submitted changeset, never reused/force-moved — see
+  `cli/src/commands/submit.ts`). In particular, `master` — the mainline
+  pointer diffs land onto and releases cut from — can never be moved by an
+  ordinary push, from anyone, with no exception. That's safe specifically
+  *because* `master` only ever moves through `land-review.sh`, which
+  operates directly on the repo on disk and never goes through the push
+  wire protocol at all — there's never a legitimate push to `master` for
+  the hook to have to let through.
 
 ## Stack
 

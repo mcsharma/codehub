@@ -48,6 +48,7 @@ echo "== hgweb service deploy — $HOST $($DRY_RUN && echo '(dry run)') =="
 hg_changed=false
 deploy_file hgweb.ini /etc/hgweb.ini && hg_changed=true
 deploy_file hgweb_wsgi.py /opt/hgservice/hgweb_wsgi.py && hg_changed=true
+deploy_file hg_hooks.py /opt/hgservice/hg_hooks.py && hg_changed=true
 
 service_changed=false
 deploy_file hgweb.service /etc/systemd/system/hgweb.service && service_changed=true
@@ -67,6 +68,12 @@ delete_repo_changed=false
 if deploy_file delete-repo.sh /opt/hgservice/delete-repo.sh; then
   delete_repo_changed=true
   run ssh "$HOST" 'chmod +x /opt/hgservice/delete-repo.sh'
+fi
+
+land_review_changed=false
+if deploy_file land-review.sh /opt/hgservice/land-review.sh; then
+  land_review_changed=true
+  run ssh "$HOST" 'chmod +x /opt/hgservice/land-review.sh'
 fi
 
 if $service_changed; then
@@ -90,7 +97,7 @@ if $nginx_changed; then
   run ssh "$HOST" 'nginx -t && systemctl reload nginx'
 fi
 
-if ! $hg_changed && ! $service_changed && ! $nginx_changed && ! $create_repo_changed && ! $delete_repo_changed; then
+if ! $hg_changed && ! $service_changed && ! $nginx_changed && ! $create_repo_changed && ! $delete_repo_changed && ! $land_review_changed; then
   echo "Nothing changed — VM already up to date."
 fi
 

@@ -21,6 +21,7 @@ services:
     volumes:
       - ../services/hg/hgweb_wsgi.py:/opt/hgservice/hgweb_wsgi.py:ro
       - ../services/hg/hgweb.ini:/etc/hgweb.ini:ro
+      - ../services/hg/hg_hooks.py:/opt/hgservice/hg_hooks.py:ro
       - ../services/hg/local-data/repos:/data/repos
 
   # Local stand-in for the VM's nginx layer — same auth_request check
