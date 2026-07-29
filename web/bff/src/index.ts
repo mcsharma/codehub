@@ -136,6 +136,16 @@ const yoga = createYoga<ExpressServerContext>({
   schema: builder.toSchema(),
   graphqlEndpoint: '/graphql',
   context: async (ctx) => {
+    // The `ch` CLI authenticates as a PAT bearer token, same credential
+    // used for hg wire-protocol pushes over Basic auth (see
+    // /internal/auth-check above) — the web UI keeps using the session
+    // cookie, PATs were never accepted on /graphql before this.
+    const authHeader = ctx.req.header('authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      const user = await resolvePersonalAccessToken(authHeader.slice('Bearer '.length))
+      return { prisma, req: ctx.req, res: ctx.res, user, session: null }
+    }
+
     const rawToken = ctx.req.cookies?.[SESSION_COOKIE]
     const { user, session } = rawToken
       ? await resolveSession(rawToken)
