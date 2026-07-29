@@ -31,6 +31,7 @@ model ModelUser {
   authIdentities       AuthIdentity[]
   sessions             Session[]
   personalAccessTokens PersonalAccessToken[]
+  authoredReviews      Review[]
   @@map("users")
 }
 
@@ -109,8 +110,77 @@ model Repository {
 
   admins              ModelUser[]  @relation("RepositoryAdmins")
 
+  // Per-repo review numbering (D1, D2, ... scoped to this repo, not
+  // global) — incremented atomically via `{ increment: 1 }` in
+  // create_review, so the returned value is race-safe under concurrent
+  // submits without a separate transaction.
+  nextReviewNumber    Int          @default(0) @map("next_review_number")
+  reviews             Review[]
+
   @@unique([ownerUserId, name])
   @@unique([ownerOrganizationId, name])
   @@map("repositories")
+}
+
+enum ReviewStatus {
+  OPEN
+  LANDING
+  LANDED
+  LAND_FAILED
+  ABANDONED
+}
+
+// A code review ("diff"). Pins real hg changesets rather than storing patch
+// content — see ReviewVersion and web/bff/src/repos/hgweb-client.ts. Diff
+// content itself is always fetched live from hgweb by node, never stored
+// here.
+model Review {
+  id            BigInt       @id @default(autoincrement())
+  createdTime   DateTime     @default(now()) @map("created_time")
+  updatedTime   DateTime     @updatedAt      @map("updated_time")
+  number        Int          @map("number")
+  title         String       @map("title")
+  status        ReviewStatus @default(OPEN) @map("status")
+  // Set by the landing worker once status is LANDED — the resulting node on
+  // `master` (may differ from the latest version's headNode: landing grafts
+  // rather than fast-forwards when master has moved since the last submit).
+  landedNode    String?      @map("landed_node")
+  // Set by the landing worker on LAND_FAILED (e.g. a graft conflict).
+  landError     String?      @map("land_error")
+
+  repositoryId  BigInt       @map("repository_id")
+  repository    Repository   @relation(fields: [repositoryId], references: [id])
+
+  authorId      BigInt       @map("author_id")
+  author        ModelUser    @relation(fields: [authorId], references: [id])
+
+  versions      ReviewVersion[]
+
+  @@unique([repositoryId, number])
+  @@map("reviews")
+}
+
+// One row per `ch submit` — created fresh on first submit and again on
+// every resubmit (amend/rebase), since the node hash changes each time.
+// headNode/baseNode/bookmark describe the actual pushed hg changeset;
+// nothing about its diff/file content is duplicated here.
+model ReviewVersion {
+  id          BigInt   @id @default(autoincrement())
+  createdTime DateTime @default(now()) @map("created_time")
+  version     Int      @map("version")
+  headNode    String   @map("head_node")
+  // Null only for a repo's very first-ever commit (no parent to pin).
+  baseNode    String?  @map("base_node")
+  // "reviews/<12-hex-node>" — see hg_hooks.py's prepushkey hook and
+  // cli/src/commands/submit.ts. Kept for reference/debugging; the review
+  // page and landing worker both address the changeset by headNode, not by
+  // this bookmark (which may already be gone by the time either runs).
+  bookmark    String   @map("bookmark")
+
+  reviewId    BigInt   @map("review_id")
+  review      Review   @relation(fields: [reviewId], references: [id])
+
+  @@unique([reviewId, version])
+  @@map("review_versions")
 }
 
