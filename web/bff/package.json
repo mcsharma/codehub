@@ -31,6 +31,7 @@
     "graphql-yoga": "^5.18.0",
     "helmet": "^8.1.0",
     "pg": "^8.19.0",
+    "pg-boss": "^12.26.3",
     "ssh2": "^1.17.0"
   },
   "devDependencies": {

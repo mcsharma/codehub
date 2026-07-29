@@ -12,6 +12,8 @@ import { googleAuthRouter } from './auth/google.js'
 import { SESSION_COOKIE, resolveSession } from './auth/session.js'
 import { resolvePersonalAccessToken } from './auth/personal-access-token.js'
 import { canAccessRepo } from './auth/repo-access.js'
+import { startBoss } from './jobs/boss.js'
+import { registerLandReviewWorker } from './jobs/land-review.js'
 import { writeFileSync } from 'node:fs'
 import { printSchema, lexicographicSortSchema } from 'graphql'
 import path from 'node:path'
@@ -168,6 +170,12 @@ app.get('*any', (req, res) => {
     }
   })
 })
+
+// Job queue: must be started before anything can enqueue/process a
+// land-review job, so it's awaited before the server starts accepting
+// requests rather than fired-and-forgotten in the background.
+await startBoss()
+await registerLandReviewWorker()
 
 app.listen(port, () => {
   console.log(`
