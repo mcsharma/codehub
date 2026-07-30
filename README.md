@@ -97,6 +97,78 @@ version — currently pnpm 11.x via corepack), [Deno](https://deno.com),
 6. `ch login http://localhost:4000` (create a PAT first at
    `http://localhost:4000/settings/tokens`).
 
+## Operational gotchas (learned the hard way)
+
+A few non-obvious things about this stack that caused real bugs/outages
+before being understood — worth knowing before touching the VM, `deploy.sh`,
+or Repository-related GraphQL resolvers.
+
+- **`docker compose up -d --build` recreating one service but not its
+  dependent silently breaks routing.** nginx resolves an upstream hostname
+  (e.g. `hgweb-app`) to an IP once and caches it — it does not re-resolve on
+  its own. If a deploy recreates `hgweb-app` (new container, new IP on the
+  Docker network) without also recreating `hgweb-proxy`, the proxy keeps
+  sending requests to the old, now-dead IP — every request 502/500s even
+  though `docker ps` shows everything healthy. Symptom looked like "repo
+  metadata loads but all repo content is empty." Fix in the moment:
+  `docker restart <stack>-hgweb-proxy-1`. Structural fix: `deploy.sh` now
+  rsyncs to a stack-specific directory (`/opt/codehub-hg-<stack>/`), which
+  changes the bind-mount source path and makes Compose recreate *all three*
+  containers together on every deploy, not just the ones it thinks changed.
+
+- **`deploy.sh` takes an explicit `<prod|test>` argument and never deploys
+  both at once, on purpose** — not just for container-level isolation, but
+  because config files (`hgweb.ini`, `hg_hooks.py`, nginx confs) are
+  bind-mounted into *already-running* containers and take effect live,
+  without a restart. A shared rsync target between the two stacks would let
+  a `test`-only deploy silently change prod's behavior before prod was ever
+  explicitly deployed — so each stack gets its own directory on the VM
+  (`/opt/codehub-hg-prod/`, `/opt/codehub-hg-test/`), fully isolating one
+  stack's files from the other's running containers.
+
+- **A key repeated in a `.env` file silently uses the *last* occurrence**,
+  not the first, and `dotenv` won't warn you. A stale duplicate block left
+  over from an earlier local-hgweb setup quietly overrode a correct
+  `HG_WEB_BASE` with `http://localhost:8000` further down the same file —
+  the fetch calls failed with `ECONNREFUSED` in a way that looked like a
+  code bug. If an env var seems to have the "wrong" value despite the top
+  of the file looking right, grep the whole file for that key.
+
+- **Two different `${...}` substitution mechanisms exist around
+  `vm/nginx-test.conf.template`, and they're easy to conflate.** Docker
+  Compose interpolates `${BFF_TEST_DOMAIN}` in `docker-compose.test.yml`
+  itself, client-side, before the container exists (from `.env.test`).
+  Separately, the `nginx:alpine` image's entrypoint runs `envsubst` over
+  `*.template` files *inside* the container at startup, substituting only
+  variable names that exist in that container's own environment — which is
+  why nginx's own built-in variables (`$host`, `$request_uri`, ...) pass
+  through untouched even though the file goes through `envsubst`: they were
+  never set as container env vars, so they're not in `envsubst`'s
+  substitution list.
+
+- **Mercurial's `[auth]` config only applies a section when its username
+  matches the destination URL's own embedded username, if the URL has
+  one.** A repo cloned via `hg clone http://x:<token>@host/...` persists
+  `x` into `.hg/hgrc`'s `paths.default` (Mercurial strips the password on
+  save but keeps the username) — if `ch`'s own push-auth config then
+  assumes a different, hardcoded username, Mercurial silently discards the
+  whole `[auth]` section rather than erroring, surfacing as `http
+  authorization required` with no credentials even attempted. `ch` (and the
+  Clone dropdown) now keep a fixed placeholder username in sync between
+  both sides instead of assuming one — see `code_review_design.md`'s "A
+  clone/auth subtlety."
+
+- **Every new GraphQL field that returns a `Repository` (or anything nested
+  under one) needs its own access check — nothing enforces this
+  automatically.** `repository_by_owner_and_name` had a `canAccessRepo`
+  check; `repository(id:)` didn't, and leaked private repos' name/
+  description/visibility to unauthenticated callers (nested content fields
+  like `directory`/`commits` were independently protected, so no file/commit
+  content leaked — just metadata). When adding a new top-level query that
+  can resolve to a `Repository`, deliberately copy the existing
+  `canAccessRepo`/`requireRepoReadAccess` pattern rather than assuming
+  Prisma/Pothos enforces visibility for you.
+
 ## Further reading
 
 - `services/hg/README.md` — Mercurial hosting architecture, the review
