@@ -7,10 +7,12 @@ import { Input } from './ui/input'
 
 // The hg host every repo is served from — see services/hg/ and
 // web/bff/src/repos/hgweb-client.ts on the backend side. Overridden in
-// local dev (VITE_HG_HOST=localhost:8000, see .env.local) to point at the
-// local hgweb-proxy instead of prod's VM.
+// local dev (VITE_HG_HOST=<vm-ip>:8001, see .env.local) to point at the
+// VM's test hgweb-proxy instead of prod's. The VM's proxies aren't behind
+// TLS on a bare IP:port — only the real domain terminates TLS — so a host
+// with an explicit port is treated as plain http.
 const HG_HOST = import.meta.env.VITE_HG_HOST ?? 'hg.greensnippet.com'
-const HG_PROTOCOL = HG_HOST.startsWith('localhost') ? 'http' : 'https'
+const HG_PROTOCOL = HG_HOST.includes(':') ? 'http' : 'https'
 
 interface CloneButtonProps {
   ownerUsername: string
