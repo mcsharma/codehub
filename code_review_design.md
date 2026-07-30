@@ -67,8 +67,8 @@ local-only code path to drift out of sync.
 - `vm/docker-compose.{prod,test}.yml`: two independent stacks on one
   DigitalOcean VM, each with `hgweb-app` (hgweb over HTTP),
   `hgweb-proxy` (nginx, `auth_request`-gated via that stack's BFF), and
-  `worker`. `deploy.sh` rsyncs this directory to the VM and brings both
-  stacks up together — there's no way to redeploy just one.
+  `worker`. `deploy.sh <prod|test>` rsyncs this directory to the VM and
+  brings up just the named stack — deploy `test`, verify, then `prod`.
 
 **`web/bff/`** — data model, GraphQL API, job queue
 - Prisma models `Review` / `ReviewVersion` (+ `ReviewStatus` enum:
@@ -238,5 +238,4 @@ pushed head under a `reviews/*` bookmark (a bare fast-forward push can
 still deposit draft changesets server-side — harmless, since `master` only
 moves via landing, and this is now load-bearing rather than incidental —
 see "A provisioning subtlety" above); no server-side GC of stale
-`reviews/*` bookmarks; `deploy.sh` always redeploys both the `prod` and
-`test` VM stacks together, with no way to target just one.
+`reviews/*` bookmarks.

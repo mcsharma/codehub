@@ -84,16 +84,20 @@ nginx ever proxies through to hgweb.
 ## Redeploying a change
 
 ```bash
-./deploy.sh          # or ./deploy.sh --dry-run to preview first
+./deploy.sh test          # or ./deploy.sh test --dry-run to preview first
+./deploy.sh prod          # deploy prod separately, once test looks good
 ```
 
-Rsyncs this directory to the VM and runs `docker compose build && up -d`
-for both stacks. Bind-mounted config (`hgweb.ini`/`hg_hooks.py`/nginx
-configs) takes effect on container restart without a rebuild; changes to
-`Dockerfile` or `worker/` do need the rebuild `deploy.sh` already
-does unconditionally (both images build fast enough that change-detection
-isn't worth the complexity it used to have when this was scp'd file-by-file
-to a native systemd setup).
+One stack per invocation, deliberately — deploy `test`, verify it, then
+`prod`, rather than always shipping both together sight-unseen. Rsyncs
+this directory to the VM (harmless to do for either stack — both build
+from the same synced source) and runs `docker compose build && up -d` for
+just the stack you named. Bind-mounted config (`hgweb.ini`/`hg_hooks.py`/
+nginx configs) takes effect on container restart without a rebuild;
+changes to `Dockerfile` or `worker/` do need the rebuild `deploy.sh`
+already does unconditionally (the image builds fast enough that change-
+detection isn't worth the complexity it used to have when this was scp'd
+file-by-file to a native systemd setup).
 
 One-time VM setup (already done, documented for reference): Docker +
 Compose plugin installed, `/data/repos-prod` and `/data/repos-test`

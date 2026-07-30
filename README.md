@@ -65,8 +65,9 @@ in prod, so there's one deployable unit per environment, not two.
   `web/bff/.env`) and `VITE_HG_HOST` (in `web/frontend/.env.local`) to the
   test stack's `hgweb-proxy` address (currently the VM's IP on port `8001`;
   see the `.env.example` files for both).
-- **Prod** deploys via `services/hg/deploy.sh`, which rebuilds and restarts
-  _both_ stacks together (there's no way to target just one).
+- **Prod** deploys via `services/hg/deploy.sh prod` (and `deploy.sh test`
+  separately for the test stack) — deploy and verify `test` first, then
+  `prod`.
 
 ### CLI (`ch`)
 
