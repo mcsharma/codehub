@@ -448,10 +448,23 @@ builder.queryField('repository', (t) =>
     type: 'Repository',
     nullable: true,
     args: { id: t.arg.id({ required: true }) },
-    resolve: async (_query, _root, args, ctx) =>
-      ctx.prisma.repository.findUnique({
+    resolve: async (_query, _root, args, ctx) => {
+      const repo = await ctx.prisma.repository.findUnique({
         where: { id: BigInt(args.id) },
-      }),
+      })
+      if (!repo) {
+        return null
+      }
+      // Same NOT_FOUND-vs-unauthorized masking as
+      // repository_by_owner_and_name below — without this, a repo's
+      // name/description/visibility were readable by ID by anyone,
+      // unauthenticated, regardless of visibility (the nested content
+      // fields like `directory`/`commits` each already check access
+      // independently, so this was a metadata-only leak, but a real one).
+      const ownerName = await resolveOwnerName(repo, ctx.prisma)
+      const allowed = await canAccessRepo(ctx.user, ownerName, repo.name, 'read')
+      return allowed ? repo : null
+    },
   }),
 )
 
