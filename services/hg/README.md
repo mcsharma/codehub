@@ -15,7 +15,7 @@ running anything hg-related on the laptop — see `web/docker-compose.yml`
 
 | Directory                  | Purpose                                            |
 |-----------------------------|-----------------------------------------------------|
-| `hgweb.ini`/`hgweb_wsgi.py`/`hg_hooks.py`/`Dockerfile.local` | The hgweb image — same one built for both stacks. |
+| `hgweb.ini`/`hgweb_wsgi.py`/`hg_hooks.py`/`Dockerfile` | The hgweb image — same one built for both stacks. |
 | `worker/`                   | The job worker image — same one built for both stacks. |
 | `vm/docker-compose.prod.yml` / `docker-compose.test.yml` | Per-stack compose files (ports, volumes, env). |
 | `vm/nginx-prod.conf` / `nginx-test.conf.template`         | Per-stack nginx config. |
@@ -90,7 +90,7 @@ nginx ever proxies through to hgweb.
 Rsyncs this directory to the VM and runs `docker compose build && up -d`
 for both stacks. Bind-mounted config (`hgweb.ini`/`hg_hooks.py`/nginx
 configs) takes effect on container restart without a rebuild; changes to
-`Dockerfile.local` or `worker/` do need the rebuild `deploy.sh` already
+`Dockerfile` or `worker/` do need the rebuild `deploy.sh` already
 does unconditionally (both images build fast enough that change-detection
 isn't worth the complexity it used to have when this was scp'd file-by-file
 to a native systemd setup).

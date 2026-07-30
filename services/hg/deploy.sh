@@ -32,7 +32,6 @@ echo "== hg stack deploy — $HOST $($DRY_RUN && echo '(dry run)') =="
 
 echo "-- syncing services/hg/ to $REMOTE_DIR --"
 run rsync -az --delete \
-  --exclude 'local-data' \
   --exclude 'vm/.env.*' \
   --exclude '.git' \
   "$DIR/" "$HOST:$REMOTE_DIR/"

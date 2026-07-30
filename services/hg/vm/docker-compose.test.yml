@@ -5,7 +5,7 @@ services:
   hgweb-app:
     build:
       context: ..
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
     volumes:
       - ../hgweb_wsgi.py:/opt/hgservice/hgweb_wsgi.py:ro
       - ../hgweb.ini:/etc/hgweb.ini:ro

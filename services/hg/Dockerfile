@@ -1,9 +1,7 @@
-# Local-dev-only image for hgweb-app (see docker-compose.yml at the repo
-# root and README.md's "Local dev" section). Mirrors the prod VM's
-# venv+gunicorn setup (see README.md's Stack section) as a container
-# instead, since there's no VM to SSH into locally. hgweb.ini and
-# hgweb_wsgi.py are bind-mounted in at runtime rather than baked into the
-# image, so local always runs the exact files prod deploys.
+# hgweb-app image — the same one built for both the prod and test VM
+# stacks (see ../vm/docker-compose.{prod,test}.yml and README.md). hgweb.ini
+# and hgweb_wsgi.py are bind-mounted in at runtime rather than baked into
+# the image, so both stacks always run the exact files checked in here.
 FROM python:3.11-slim
 
 # mercurial's C extensions (mpatch, bdiff, etc.) need a compiler + libc
