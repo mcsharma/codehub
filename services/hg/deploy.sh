@@ -39,7 +39,12 @@ done
 
 HOST="root@143.110.207.184"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REMOTE_DIR="/opt/codehub-hg"
+# Separate per-stack, deliberately — a shared directory would mean a
+# test-only deploy's rsync still overwrites the config files prod's
+# already-running containers have bind-mounted (hgweb.ini/hg_hooks.py/nginx
+# confs take effect on a live container without a restart), silently
+# leaking config changes into prod before prod is ever explicitly deployed.
+REMOTE_DIR="/opt/codehub-hg-$STACK"
 
 run() {
   if $DRY_RUN; then
