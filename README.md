@@ -26,10 +26,23 @@ in prod, so there's one deployable unit per environment, not two.
   `web/` — see Quick start below) runs Vite on `localhost:5173`, with
   `/graphql` and `/auth` proxied to the local BFF on `localhost:4000` (see
   `web/frontend/vite.config.js`). A `relay-compiler --watch` process runs
-  alongside to keep generated GraphQL artifacts in sync.
+  alongside to keep generated GraphQL artifacts in sync. Vite serves the
+  **raw source** `frontend/index.html` directly here — no build step; it
+  finds it via its default `root` (wherever `vite` is invoked from, i.e.
+  `web/frontend/`, since no `root` override exists in `vite.config.js`),
+  and transforms/serves `index.html`'s `<script type="module"
+  src="/src/main.tsx">` target on the fly as native ES modules (with HMR),
+  rather than bundling anything upfront. `main.tsx` renders `router.tsx`'s
+  route tree into the DOM — same entry component in dev and prod, only how
+  it's *served* differs (see Prod, below).
 - **Prod**: `tsc && relay-compiler && vite build` produces static assets in
   `frontend/dist/`, which the BFF serves directly (see `bff/src/index.ts`) —
-  no separate frontend server or CDN.
+  no separate frontend server or CDN. Prod never serves the raw source
+  `frontend/index.html` — `vite build` processes that template (swapping the
+  dev-mode `/src/main.tsx` script tag for the real hashed bundle references)
+  into `frontend/dist/index.html`, and the BFF's wildcard route
+  (`app.get('*any', ...)`) sends *that* built file for every unmatched path,
+  as the SPA client-side-routing fallback.
 
 ### BFF
 
@@ -49,7 +62,39 @@ in prod, so there's one deployable unit per environment, not two.
 - Postgres, one instance per Railway environment (own volume, own
   credentials) — no local Postgres for dev.
 - To get local dev credentials: `railway variables --kv --service codehub-web --environment test` (requires Railway project access). `DATABASE_URL` from that command uses Railway's private `*.railway.internal` hostname, which isn't reachable from a laptop — swap the host:port for the public tcp-proxy address instead, keeping the same credentials (see `web/bff/.env.example` for the exact shape). The same command also gives you `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` and `HG_INTERNAL_TOKEN` for the rest of `web/bff/.env`.
-- Schema changes go through Prisma migrations (`web/bff/prisma/`); `pnpm db:migrate` for a new migration locally, `migrate:deploy` (automatic via Railway's pre-deploy step) to apply them in an environment.
+- Schema changes go through Prisma migrations (`web/bff/prisma/`) — full
+  workflow:
+  1. Edit `web/bff/prisma/schema.prisma`.
+  2. `pnpm run db:migrate` (from `web/`) — generates and names a new
+     `prisma/migrations/<timestamp>_<name>/` folder, and **applies it
+     immediately** to whatever `DATABASE_URL` your `.env` points at. There's
+     no personal/local DB — this is the same Railway `test` Postgres the
+     `test` environment itself uses, so this step isn't an isolated trial
+     run, it's a real, immediate change to shared team infrastructure. If
+     `migrate dev` ever detects drift, it can offer to **reset** the
+     database — think twice before confirming that prompt, since it'd wipe
+     everyone's test data, not just yours.
+  3. `pnpm run db:generate` (from `web/`) — **do this even though
+     `db:migrate` already reran the Prisma/Pothos generators.** Those
+     generators alone leave `bff/src/__generated__/pothos-prisma-types.ts`
+     with an unfixed relative import
+     (`clientOutput = "../../node_modules/@prisma/client"` in
+     `schema.prisma`); `db:generate` additionally runs
+     `bff/scripts/postgenerate.mjs`, which rewrites that import and adds
+     the `@generated` header — a step Prisma's own generator trigger has
+     no knowledge of and never runs on its own.
+  4. Update resolvers (`web/bff/src/pothos/schema/*.ts`) to expose whatever
+     changed; if the GraphQL schema itself changed, regenerate Relay
+     artifacts (`pnpm --filter @codehub/frontend relay`, or automatic if
+     `pnpm run dev`'s watcher is already running).
+  5. Commit `schema.prisma`, the new migration folder, both regenerated
+     `bff/src/__generated__/` files, and any touched frontend Relay
+     artifacts together.
+  6. Push to `main` — both `test` and `production` Railway environments
+     track it and redeploy. Each runs `migrate:deploy` (`prisma migrate
+     deploy`) as a pre-deploy step before the new code starts; for `test`
+     this is usually a no-op (already applied in step 2, same DB), for
+     `production` it's the first time the migration actually runs there.
 
 ### Mercurial hosting (hgweb + worker)
 
