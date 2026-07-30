@@ -43,12 +43,21 @@ export async function currentRepo(): Promise<{ owner: string; repo: string }> {
 // that side effect.
 export async function hgNetwork(args: string[]): Promise<string> {
   const { token } = await loadConfig()
-  const { host } = await remoteUrl()
+  const { host, username } = await remoteUrl()
   return exec([
     '--config',
     `auth.codehub.prefix=${host}`,
+    // Mercurial's [auth] matching only applies a section when its username
+    // matches the destination URL's own embedded username, if any (the
+    // Clone dropdown's suggested `hg clone http://x:<token>@host/...`
+    // persists `x` into `paths.default` — Mercurial strips the password on
+    // save but keeps the username) — a mismatched hardcoded username here
+    // makes the whole section silently ignored, surfacing as "http
+    // authorization required" with no credentials even attempted. Falling
+    // back to a fixed placeholder covers the (unlikely but valid) case of a
+    // `default` path with no embedded username at all.
     '--config',
-    'auth.codehub.username=internal',
+    `auth.codehub.username=${username || 'codehub'}`,
     '--config',
     `auth.codehub.password=${token}`,
     // hg's [auth] entries only match https by default (confirmed against a

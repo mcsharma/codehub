@@ -36,6 +36,21 @@ export async function provisionRepo(reposDir: string, owner: string, repo: strin
 
   mkdirSync(ownerDir, { recursive: true })
   await execFileAsync('hg', ['init', target])
+
+  // Seed a public root commit so a user's own first pushed commit is never
+  // itself the repo's parentless rev 0. `ch submit` (cli/src/commands/
+  // submit.ts) metaedits every *draft* commit in the working copy's stack to
+  // stamp a Review-Id trailer — rewriting a commit with no parent produces a
+  // brand-new, unrelated root rather than a linked descendant, which the
+  // remote then refuses ("repository is unrelated"). Marking this commit
+  // public excludes it from that draft-only stack, so it's never a
+  // candidate for rewriting in the first place — same reasoning as
+  // landReview's local phase change below, this is a local, non-wire-
+  // protocol operation, so hg_hooks.py's push-time restrictions don't apply.
+  await execFileAsync('hg', ['commit', '--config', 'ui.allowemptycommit=true', '-u', 'CodeHub <noreply@codehub>', '-m', 'Initial commit'], {
+    cwd: target,
+  })
+  await execFileAsync('hg', ['phase', '--public', '-r', '0'], { cwd: target })
 }
 
 // Idempotent: deleting something already gone is success, not an error, so

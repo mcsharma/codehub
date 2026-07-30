@@ -23,7 +23,16 @@ const CloneButton = ({ ownerUsername, repoName }: CloneButtonProps) => {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const cloneUrl = `${HG_PROTOCOL}://${HG_HOST}/${ownerUsername}/${repoName}`
+  // A fixed placeholder, not the viewer's real username — the server
+  // ignores Basic auth's username entirely (see web/bff/src/index.ts's
+  // /internal/auth-check: only what's after the first colon, the token,
+  // is checked), so any value works identically. Embedding one here just
+  // saves a round trip: Mercurial only prompts interactively for whatever
+  // credential piece is missing, so a URL with a username but no password
+  // goes straight to "password:" instead of asking for both. Must match
+  // cli/src/hg.ts's hgNetwork() fallback so `ch submit` and a clone from
+  // this URL resolve to the same Mercurial [auth] section.
+  const cloneUrl = `${HG_PROTOCOL}://codehub@${HG_HOST}/${ownerUsername}/${repoName}`
   const cloneCommand = `hg clone ${cloneUrl}`
 
   const handleCopy = () => {
