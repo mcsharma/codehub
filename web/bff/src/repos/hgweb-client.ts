@@ -1,4 +1,7 @@
-const HG_WEB_BASE = process.env.HG_WEB_BASE ?? 'https://hg.greensnippet.com'
+const HG_WEB_BASE = process.env.HG_WEB_BASE
+if (!HG_WEB_BASE) {
+  throw new Error('HG_WEB_BASE is not configured')
+}
 
 export interface HgChangeset {
   node: string
