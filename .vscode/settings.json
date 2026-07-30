@@ -1,0 +1,5 @@
+{
+  "deno.enablePaths": ["cli"],
+  "deno.lint": true,
+  "deno.config": "cli/deno.json"
+}
