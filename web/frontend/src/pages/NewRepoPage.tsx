@@ -27,6 +27,19 @@ const VISIBILITY_OPTIONS = [
   },
 ] as const
 
+const VCS_OPTIONS = [
+  {
+    value: 'GIT',
+    label: 'Git',
+    helper: 'Use plain git or Sapling — no CodeHub-specific CLI needed.',
+  },
+  {
+    value: 'HG',
+    label: 'Mercurial',
+    helper: 'Review-gated commits via the ch CLI.',
+  },
+] as const
+
 const NewRepoPage = () => {
   const navigate = useNavigate()
   const { newRepoQueryRef } = useLoaderData() as {
@@ -47,6 +60,7 @@ const NewRepoPage = () => {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PUBLIC')
+  const [kind, setKind] = useState<'HG' | 'GIT'>('GIT')
   const [error, setError] = useState<string | null>(null)
 
   const [commitCreate, isCreating] = useMutation<NewRepoPageCreateMutation>(
@@ -55,11 +69,13 @@ const NewRepoPage = () => {
         $name: String!
         $description: String
         $visibility: RepositoryVisibility!
+        $kind: VcsKind!
       ) {
         create_repository(
           name: $name
           description: $description
           visibility: $visibility
+          kind: $kind
         ) {
           name
         }
@@ -84,7 +100,7 @@ const NewRepoPage = () => {
     e.preventDefault()
     setError(null)
     commitCreate({
-      variables: { name, description: description || null, visibility },
+      variables: { name, description: description || null, visibility, kind },
       onCompleted: (response) => {
         if (response.create_repository) {
           navigate(`/${username}/${response.create_repository.name}`)
@@ -147,6 +163,35 @@ const NewRepoPage = () => {
           </div>
 
           <div className="border-t border-border pt-6">
+            <p className="mb-4 font-bold">Version control</p>
+            <RadioGroup
+              value={kind}
+              onValueChange={(value) => setKind(value as 'HG' | 'GIT')}
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+            >
+              {VCS_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className={cn(
+                    'flex cursor-pointer items-start gap-2 rounded-[4px] border-2 p-4',
+                    kind === option.value
+                      ? 'border-primary bg-[#eff6ff]'
+                      : 'border-border bg-transparent',
+                  )}
+                >
+                  <RadioGroupItem value={option.value} className="mt-0.5" />
+                  <div>
+                    <p className="font-bold">{option.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {option.helper}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </RadioGroup>
+          </div>
+
+          <div className="border-t border-border pt-6">
             <p className="mb-4 font-bold">Visibility</p>
             <RadioGroup
               value={visibility}
@@ -195,8 +240,9 @@ const NewRepoPage = () => {
         <div>
           <p className="font-bold">Pro Tip</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            You can initialize this repository with a README or an .hgignore
-            file later using our CLI once it&apos;s created.
+            {kind === 'GIT'
+              ? "You can initialize this repository with a README or .gitignore file later using git or Sapling once it's created."
+              : "You can initialize this repository with a README or an .hgignore file later using our CLI once it's created."}
           </p>
         </div>
       </div>

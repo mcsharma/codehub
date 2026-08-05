@@ -94,8 +94,10 @@ enum RepositoryVisibility {
 }
 
 // Which VCS actually hosts this repo's data — hg on the DigitalOcean VM's hg
-// stack, or git on its git stack (see services/git/README.md). Defaults to
-// HG so every existing row backfills correctly with no data migration.
+// stack, or git on its git stack (see services/git/README.md). Originally
+// defaulted to HG (backfilling every pre-existing row correctly with no
+// data migration, since git support didn't exist yet); now defaults to GIT
+// — hg is being phased out, see docs/plans/zesty-zooming-cupcake.md.
 enum VcsKind {
   HG
   GIT
@@ -109,7 +111,7 @@ model Repository {
   name                String             @map("name")
   description         String?            @map("description")
   visibility          RepositoryVisibility @default(PUBLIC) @map("visibility")
-  vcsKind             VcsKind            @default(HG)     @map("vcs_kind")
+  vcsKind             VcsKind            @default(GIT)    @map("vcs_kind")
 
   ownerUserId         BigInt?            @map("owner_user_id")
   ownerUser           ModelUser?         @relation("RepositoryOwner", fields: [ownerUserId], references: [id])

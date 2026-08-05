@@ -531,16 +531,17 @@ builder.mutationField('create_repository', (t) =>
       name: t.arg.string({ required: true }),
       description: t.arg.string({ required: false }),
       visibility: t.arg({ type: RepositoryVisibility, required: true }),
-      // Defaults to HG so existing callers (frontend, ch) that don't send
-      // this arg at all keep behaving exactly as before.
-      kind: t.arg({ type: VcsKind, required: false, defaultValue: 'HG' }),
+      // Git is the default going forward — hg is being phased out (see
+      // docs/plans/zesty-zooming-cupcake.md). A caller that omits this arg
+      // entirely gets GIT, not HG.
+      kind: t.arg({ type: VcsKind, required: false, defaultValue: 'GIT' }),
     },
     resolve: async (_query, _root, args, ctx) => {
       const user = requireUser(ctx.user)
       if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$/.test(args.name)) {
         throw new GraphQLError('Invalid repository name')
       }
-      const kind = args.kind ?? 'HG'
+      const kind = args.kind ?? 'GIT'
 
       let repo
       try {

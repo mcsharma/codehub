@@ -65,7 +65,7 @@ type Mutation {
   complete_git_job(job_id: ID!, landed_sha: String, queue: String!): Boolean
   complete_hg_job(job_id: ID!, landed_node: String, queue: String!): Boolean
   create_personal_access_token(label: String!): CreatePersonalAccessTokenResult
-  create_repository(description: String, kind: VcsKind = HG, name: String!, visibility: RepositoryVisibility!): Repository
+  create_repository(description: String, kind: VcsKind = GIT, name: String!, visibility: RepositoryVisibility!): Repository
   create_review(owner: String!, repo: String!, title: String!): Review
   delete_repository(id: ID!): Boolean
   fail_git_job(error: String!, job_id: ID!, queue: String!): Boolean

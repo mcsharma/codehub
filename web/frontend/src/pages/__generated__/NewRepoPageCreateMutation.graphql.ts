@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<64626f7ee2b0e189b1f684ede690bb19>>
+ * @generated SignedSource<<ba8fa1530ff455e81a42a6c82490ae6e>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,8 +10,10 @@
 
 import { ConcreteRequest } from 'relay-runtime';
 export type RepositoryVisibility = "PRIVATE" | "PUBLIC" | "%future added value";
+export type VcsKind = "GIT" | "HG" | "%future added value";
 export type NewRepoPageCreateMutation$variables = {
   description?: string | null | undefined;
+  kind: VcsKind;
   name: string;
   visibility: RepositoryVisibility;
 };
@@ -34,18 +36,28 @@ var v0 = {
 v1 = {
   "defaultValue": null,
   "kind": "LocalArgument",
-  "name": "name"
+  "name": "kind"
 },
 v2 = {
   "defaultValue": null,
   "kind": "LocalArgument",
+  "name": "name"
+},
+v3 = {
+  "defaultValue": null,
+  "kind": "LocalArgument",
   "name": "visibility"
 },
-v3 = [
+v4 = [
   {
     "kind": "Variable",
     "name": "description",
     "variableName": "description"
+  },
+  {
+    "kind": "Variable",
+    "name": "kind",
+    "variableName": "kind"
   },
   {
     "kind": "Variable",
@@ -58,7 +70,7 @@ v3 = [
     "variableName": "visibility"
   }
 ],
-v4 = {
+v5 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
@@ -70,7 +82,8 @@ return {
     "argumentDefinitions": [
       (v0/*: any*/),
       (v1/*: any*/),
-      (v2/*: any*/)
+      (v2/*: any*/),
+      (v3/*: any*/)
     ],
     "kind": "Fragment",
     "metadata": null,
@@ -78,13 +91,13 @@ return {
     "selections": [
       {
         "alias": null,
-        "args": (v3/*: any*/),
+        "args": (v4/*: any*/),
         "concreteType": "Repository",
         "kind": "LinkedField",
         "name": "create_repository",
         "plural": false,
         "selections": [
-          (v4/*: any*/)
+          (v5/*: any*/)
         ],
         "storageKey": null
       }
@@ -95,22 +108,23 @@ return {
   "kind": "Request",
   "operation": {
     "argumentDefinitions": [
-      (v1/*: any*/),
+      (v2/*: any*/),
       (v0/*: any*/),
-      (v2/*: any*/)
+      (v3/*: any*/),
+      (v1/*: any*/)
     ],
     "kind": "Operation",
     "name": "NewRepoPageCreateMutation",
     "selections": [
       {
         "alias": null,
-        "args": (v3/*: any*/),
+        "args": (v4/*: any*/),
         "concreteType": "Repository",
         "kind": "LinkedField",
         "name": "create_repository",
         "plural": false,
         "selections": [
-          (v4/*: any*/),
+          (v5/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -124,16 +138,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "55132ace31b7a27ebf197a169cc5817c",
+    "cacheID": "1d2324b8a0713f61334b535ca9915abd",
     "id": null,
     "metadata": {},
     "name": "NewRepoPageCreateMutation",
     "operationKind": "mutation",
-    "text": "mutation NewRepoPageCreateMutation(\n  $name: String!\n  $description: String\n  $visibility: RepositoryVisibility!\n) {\n  create_repository(name: $name, description: $description, visibility: $visibility) {\n    name\n    id\n  }\n}\n"
+    "text": "mutation NewRepoPageCreateMutation(\n  $name: String!\n  $description: String\n  $visibility: RepositoryVisibility!\n  $kind: VcsKind!\n) {\n  create_repository(name: $name, description: $description, visibility: $visibility, kind: $kind) {\n    name\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "afbe5afe17abc2211bfe4a385b4acee0";
+(node as any).hash = "c22fd2b03dda341d31f927d38793a918";
 
 export default node;
