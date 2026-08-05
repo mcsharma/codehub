@@ -96,6 +96,13 @@ validates over port 80, which this server doesn't listen on. Not automated
 here; a manual one-time setup step, same as pointing DNS at the VM in the
 first place.
 
+**Renewal is manual, not automatic.** Issued via
+`certbot certonly --manual --preferred-challenges dns -d git.greensnippet.com`
+(no `--manual-auth-hook`, since that'd need a DNS-provider-specific script) —
+Certbot explicitly warns this cert won't auto-renew. Current cert expires
+**2026-11-02**; re-run the same command before then (prints a new
+`_acme-challenge` TXT record to add, same as the first time).
+
 ## Redeploying a change
 
 ```bash
