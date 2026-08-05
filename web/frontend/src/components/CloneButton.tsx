@@ -8,18 +8,31 @@ import { Input } from './ui/input'
 // The hg host every repo is served from — see services/hg/ and
 // web/bff/src/repos/hgweb-client.ts on the backend side. Overridden in
 // local dev (VITE_HG_HOST=<vm-ip>:8001, see .env.local) to point at the
-// VM's test hgweb-proxy instead of prod's. The VM's proxies aren't behind
-// TLS on a bare IP:port — only the real domain terminates TLS — so a host
-// with an explicit port is treated as plain http.
+// VM's test hgweb-proxy instead of prod's.
 const HG_HOST = import.meta.env.VITE_HG_HOST ?? 'hg.greensnippet.com'
-const HG_PROTOCOL = HG_HOST.includes(':') ? 'http' : 'https'
+// The git host every git-kind repo is served from — see services/git/.
+// Prod's default deliberately includes a port (git.greensnippet.com:8443,
+// not a bare domain like hg's) — see docs/plans/zesty-zooming-cupcake.md's
+// "Key design decisions" #3 for why git prod isn't on 443.
+const GIT_HOST = import.meta.env.VITE_GIT_HOST ?? 'git.greensnippet.com:8443'
+
+// Whether a host needs plain http (the VM's test-stack proxies, reached
+// directly by IP:port, have no TLS cert to terminate with) or https (any
+// real domain, prod or otherwise — including git's prod host, which has a
+// port *and* still needs TLS, unlike hg's "a port means no TLS" case). A
+// bare IP is the actual signal, not "has a port" — git's non-standard prod
+// port would otherwise be misread as the local/test case.
+const isBareIpHost = (host: string) => /^\d{1,3}(\.\d{1,3}){3}(:\d+)?$/.test(host)
+const HG_PROTOCOL = isBareIpHost(HG_HOST) ? 'http' : 'https'
+const GIT_PROTOCOL = isBareIpHost(GIT_HOST) ? 'http' : 'https'
 
 interface CloneButtonProps {
   ownerUsername: string
   repoName: string
+  vcsKind: 'HG' | 'GIT'
 }
 
-const CloneButton = ({ ownerUsername, repoName }: CloneButtonProps) => {
+const CloneButton = ({ ownerUsername, repoName, vcsKind }: CloneButtonProps) => {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -27,13 +40,17 @@ const CloneButton = ({ ownerUsername, repoName }: CloneButtonProps) => {
   // ignores Basic auth's username entirely (see web/bff/src/index.ts's
   // /internal/auth-check: only what's after the first colon, the token,
   // is checked), so any value works identically. Embedding one here just
-  // saves a round trip: Mercurial only prompts interactively for whatever
-  // credential piece is missing, so a URL with a username but no password
-  // goes straight to "password:" instead of asking for both. Must match
-  // cli/src/hg.ts's hgNetwork() fallback so `ch submit` and a clone from
-  // this URL resolve to the same Mercurial [auth] section.
-  const cloneUrl = `${HG_PROTOCOL}://codehub@${HG_HOST}/${ownerUsername}/${repoName}`
-  const cloneCommand = `hg clone ${cloneUrl}`
+  // saves a round trip: both hg and git only prompt interactively for
+  // whatever credential piece is missing, so a URL with a username but no
+  // password goes straight to "password:" instead of asking for both. Must
+  // match cli/src/hg.ts's hgNetwork() fallback so `ch submit` and a clone
+  // from this URL resolve to the same Mercurial [auth] section (git has no
+  // equivalent client-side config to keep in sync with, since there's no
+  // custom CLI for git repos — see services/git/README.md).
+  const cloneCommand =
+    vcsKind === 'GIT'
+      ? `git clone ${GIT_PROTOCOL}://codehub@${GIT_HOST}/${ownerUsername}/${repoName}`
+      : `hg clone ${HG_PROTOCOL}://codehub@${HG_HOST}/${ownerUsername}/${repoName}`
 
   const handleCopy = () => {
     navigator.clipboard.writeText(cloneCommand).then(() => setCopied(true))

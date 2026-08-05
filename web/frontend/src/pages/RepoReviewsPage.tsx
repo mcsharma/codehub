@@ -43,6 +43,7 @@ const RepoReviewsPage = () => {
         repository_by_owner_and_name(owner_username: $owner_username, name: $name) {
           name
           visibility
+          vcs_kind
           owner {
             __typename
             ... on User {
@@ -84,6 +85,7 @@ const RepoReviewsPage = () => {
         ownerUsername={ownerName}
         repoName={repository.name ?? repoName}
         visibility={repository.visibility === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE'}
+        vcsKind={repository.vcs_kind === 'GIT' ? 'GIT' : 'HG'}
         isOwner={isOwner}
       />
       <div className="bg-background">

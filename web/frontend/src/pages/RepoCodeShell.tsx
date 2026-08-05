@@ -36,6 +36,7 @@ const RepoCodeShell = () => {
         ) {
           name
           visibility
+          vcs_kind
           owner {
             __typename
             ... on User {
@@ -79,6 +80,7 @@ const RepoCodeShell = () => {
         ownerUsername={ownerName}
         repoName={repoName}
         visibility={repository.visibility === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE'}
+        vcsKind={repository.vcs_kind === 'GIT' ? 'GIT' : 'HG'}
         isOwner={isOwner}
       />
       <CollapsibleSidebarPane

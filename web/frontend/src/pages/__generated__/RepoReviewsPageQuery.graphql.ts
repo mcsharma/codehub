@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<0c5c8ac31ab60a328096406060d0abb4>>
+ * @generated SignedSource<<8c949fb76fa48b2a382ac8bf5ff4d480>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -11,6 +11,7 @@
 import { ConcreteRequest } from 'relay-runtime';
 export type RepositoryVisibility = "PRIVATE" | "PUBLIC" | "%future added value";
 export type ReviewStatus = "ABANDONED" | "LANDED" | "LANDING" | "LAND_FAILED" | "OPEN" | "%future added value";
+export type VcsKind = "GIT" | "HG" | "%future added value";
 export type RepoReviewsPageQuery$variables = {
   name: string;
   owner_username: string;
@@ -41,6 +42,7 @@ export type RepoReviewsPageQuery$data = {
       readonly status: ReviewStatus | null | undefined;
       readonly title: string | null | undefined;
     }> | null | undefined;
+    readonly vcs_kind: VcsKind | null | undefined;
     readonly visibility: RepositoryVisibility | null | undefined;
   } | null | undefined;
 };
@@ -100,47 +102,54 @@ v7 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "__typename",
+  "name": "vcs_kind",
   "storageKey": null
 },
 v8 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "number",
+  "name": "__typename",
   "storageKey": null
 },
 v9 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "title",
+  "name": "number",
   "storageKey": null
 },
 v10 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "status",
+  "name": "title",
   "storageKey": null
 },
 v11 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "created_time",
+  "name": "status",
   "storageKey": null
 },
 v12 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
+  "name": "created_time",
+  "storageKey": null
+},
+v13 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
   "name": "id",
   "storageKey": null
 },
-v13 = [
+v14 = [
   (v2/*: any*/),
-  (v12/*: any*/)
+  (v13/*: any*/)
 ];
 return {
   "fragment": {
@@ -172,6 +181,7 @@ return {
         "selections": [
           (v5/*: any*/),
           (v6/*: any*/),
+          (v7/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -180,7 +190,7 @@ return {
             "name": "owner",
             "plural": false,
             "selections": [
-              (v7/*: any*/),
+              (v8/*: any*/),
               {
                 "kind": "InlineFragment",
                 "selections": (v3/*: any*/),
@@ -206,10 +216,10 @@ return {
             "name": "reviews",
             "plural": true,
             "selections": [
-              (v8/*: any*/),
               (v9/*: any*/),
               (v10/*: any*/),
               (v11/*: any*/),
+              (v12/*: any*/),
               {
                 "alias": null,
                 "args": null,
@@ -246,7 +256,7 @@ return {
         "kind": "LinkedField",
         "name": "current_user",
         "plural": false,
-        "selections": (v13/*: any*/),
+        "selections": (v14/*: any*/),
         "storageKey": null
       },
       {
@@ -259,6 +269,7 @@ return {
         "selections": [
           (v5/*: any*/),
           (v6/*: any*/),
+          (v7/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -267,10 +278,10 @@ return {
             "name": "owner",
             "plural": false,
             "selections": [
-              (v7/*: any*/),
+              (v8/*: any*/),
               {
                 "kind": "InlineFragment",
-                "selections": (v13/*: any*/),
+                "selections": (v14/*: any*/),
                 "type": "User",
                 "abstractKey": null
               },
@@ -278,7 +289,7 @@ return {
                 "kind": "InlineFragment",
                 "selections": [
                   (v5/*: any*/),
-                  (v12/*: any*/)
+                  (v13/*: any*/)
                 ],
                 "type": "Organization",
                 "abstractKey": null
@@ -294,10 +305,10 @@ return {
             "name": "reviews",
             "plural": true,
             "selections": [
-              (v8/*: any*/),
               (v9/*: any*/),
               (v10/*: any*/),
               (v11/*: any*/),
+              (v12/*: any*/),
               {
                 "alias": null,
                 "args": null,
@@ -305,30 +316,30 @@ return {
                 "kind": "LinkedField",
                 "name": "author",
                 "plural": false,
-                "selections": (v13/*: any*/),
+                "selections": (v14/*: any*/),
                 "storageKey": null
               },
-              (v12/*: any*/)
+              (v13/*: any*/)
             ],
             "storageKey": null
           },
-          (v12/*: any*/)
+          (v13/*: any*/)
         ],
         "storageKey": null
       }
     ]
   },
   "params": {
-    "cacheID": "5f728ea8a06035be9a611dbded455e20",
+    "cacheID": "517888c8ea0ff6a3e44a781a6f64dd58",
     "id": null,
     "metadata": {},
     "name": "RepoReviewsPageQuery",
     "operationKind": "query",
-    "text": "query RepoReviewsPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    reviews {\n      number\n      title\n      status\n      created_time\n      author {\n        username\n        id\n      }\n      id\n    }\n    id\n  }\n}\n"
+    "text": "query RepoReviewsPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    visibility\n    vcs_kind\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    reviews {\n      number\n      title\n      status\n      created_time\n      author {\n        username\n        id\n      }\n      id\n    }\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "464c24e9471d3507d7f37fc837dc3f43";
+(node as any).hash = "e87acd68e6a82085a2a0f1dfaea69a52";
 
 export default node;

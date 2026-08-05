@@ -25,6 +25,7 @@ const RepoPage = () => {
         ) {
           name
           visibility
+          vcs_kind
           owner {
             __typename
             ... on User {
@@ -57,6 +58,7 @@ const RepoPage = () => {
         ownerUsername={ownerName}
         repoName={repository.name ?? repoName}
         visibility={repository.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
+        vcsKind={repository.vcs_kind === "GIT" ? "GIT" : "HG"}
         isOwner={isOwner}
       />
       <div className="bg-background">

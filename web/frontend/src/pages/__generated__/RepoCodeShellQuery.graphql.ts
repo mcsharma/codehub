@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<5146fc09d5af0a6c5c19abc787b7e660>>
+ * @generated SignedSource<<4cf57b22a3f723007ff2dfecb018dade>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,6 +10,7 @@
 
 import { ConcreteRequest } from 'relay-runtime';
 export type RepositoryVisibility = "PRIVATE" | "PUBLIC" | "%future added value";
+export type VcsKind = "GIT" | "HG" | "%future added value";
 export type RepoCodeShellQuery$variables = {
   name: string;
   owner_username: string;
@@ -31,6 +32,7 @@ export type RepoCodeShellQuery$data = {
       // value in case none of the concrete values match.
       readonly __typename: "%other";
     } | null | undefined;
+    readonly vcs_kind: VcsKind | null | undefined;
     readonly visibility: RepositoryVisibility | null | undefined;
   } | null | undefined;
 };
@@ -90,19 +92,26 @@ v7 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "__typename",
+  "name": "vcs_kind",
   "storageKey": null
 },
 v8 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
+  "name": "__typename",
+  "storageKey": null
+},
+v9 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
   "name": "id",
   "storageKey": null
 },
-v9 = [
+v10 = [
   (v2/*: any*/),
-  (v8/*: any*/)
+  (v9/*: any*/)
 ];
 return {
   "fragment": {
@@ -134,6 +143,7 @@ return {
         "selections": [
           (v5/*: any*/),
           (v6/*: any*/),
+          (v7/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -142,7 +152,7 @@ return {
             "name": "owner",
             "plural": false,
             "selections": [
-              (v7/*: any*/),
+              (v8/*: any*/),
               {
                 "kind": "InlineFragment",
                 "selections": (v3/*: any*/),
@@ -183,7 +193,7 @@ return {
         "kind": "LinkedField",
         "name": "current_user",
         "plural": false,
-        "selections": (v9/*: any*/),
+        "selections": (v10/*: any*/),
         "storageKey": null
       },
       {
@@ -196,6 +206,7 @@ return {
         "selections": [
           (v5/*: any*/),
           (v6/*: any*/),
+          (v7/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -204,10 +215,10 @@ return {
             "name": "owner",
             "plural": false,
             "selections": [
-              (v7/*: any*/),
+              (v8/*: any*/),
               {
                 "kind": "InlineFragment",
-                "selections": (v9/*: any*/),
+                "selections": (v10/*: any*/),
                 "type": "User",
                 "abstractKey": null
               },
@@ -215,7 +226,7 @@ return {
                 "kind": "InlineFragment",
                 "selections": [
                   (v5/*: any*/),
-                  (v8/*: any*/)
+                  (v9/*: any*/)
                 ],
                 "type": "Organization",
                 "abstractKey": null
@@ -223,23 +234,23 @@ return {
             ],
             "storageKey": null
           },
-          (v8/*: any*/)
+          (v9/*: any*/)
         ],
         "storageKey": null
       }
     ]
   },
   "params": {
-    "cacheID": "a3317f64a19ee4ed824463424a13c9d1",
+    "cacheID": "7fd3508e89fda7637cc5fa40b6201ad2",
     "id": null,
     "metadata": {},
     "name": "RepoCodeShellQuery",
     "operationKind": "query",
-    "text": "query RepoCodeShellQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    id\n  }\n}\n"
+    "text": "query RepoCodeShellQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    name\n    visibility\n    vcs_kind\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "309a1a8ddb51a8ae9ae3358d2d9e1147";
+(node as any).hash = "40eb985b95f17aeb742d9e366c14ce03";
 
 export default node;

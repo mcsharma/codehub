@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<9987fa38106d6a406d7f39750857061c>>
+ * @generated SignedSource<<fba379cbb08edfac42620e147e17d887>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -234,6 +234,13 @@ return {
                             "alias": null,
                             "args": null,
                             "kind": "ScalarField",
+                            "name": "vcs_kind",
+                            "storageKey": null
+                          },
+                          {
+                            "alias": null,
+                            "args": null,
+                            "kind": "ScalarField",
                             "name": "updated_time",
                             "storageKey": null
                           }
@@ -387,12 +394,12 @@ return {
     ]
   },
   "params": {
-    "cacheID": "2ad677ae6556fb9bd7a5a67ea4afd8ca",
+    "cacheID": "aedb3ce1eb7e995e9621309e3ac5f275",
     "id": null,
     "metadata": {},
     "name": "OwnerPageQuery",
     "operationKind": "query",
-    "text": "query OwnerPageQuery(\n  $name: String!\n) {\n  current_user {\n    username\n    id\n  }\n  owner_by_name(name: $name) {\n    __typename\n    ... on User {\n      ...UserPage_user\n      id\n    }\n    ... on Organization {\n      ...OrgPage_org\n      id\n    }\n  }\n}\n\nfragment OrgPage_org on Organization {\n  id\n  name\n  data\n  repositories(first: 20) {\n    edges {\n      node {\n        id\n        name\n        visibility\n      }\n    }\n  }\n  admins(first: 20) {\n    edges {\n      node {\n        id\n        username\n        first_name\n        last_name\n      }\n    }\n  }\n}\n\nfragment UserPage_user on User {\n  username\n  first_name\n  owned_repositories(first: 50) {\n    edges {\n      node {\n        id\n        name\n        description\n        visibility\n        updated_time\n      }\n    }\n  }\n  admin_of_organizations(first: 20) {\n    edges {\n      node {\n        id\n        name\n      }\n    }\n  }\n}\n"
+    "text": "query OwnerPageQuery(\n  $name: String!\n) {\n  current_user {\n    username\n    id\n  }\n  owner_by_name(name: $name) {\n    __typename\n    ... on User {\n      ...UserPage_user\n      id\n    }\n    ... on Organization {\n      ...OrgPage_org\n      id\n    }\n  }\n}\n\nfragment OrgPage_org on Organization {\n  id\n  name\n  data\n  repositories(first: 20) {\n    edges {\n      node {\n        id\n        name\n        visibility\n      }\n    }\n  }\n  admins(first: 20) {\n    edges {\n      node {\n        id\n        username\n        first_name\n        last_name\n      }\n    }\n  }\n}\n\nfragment UserPage_user on User {\n  username\n  first_name\n  owned_repositories(first: 50) {\n    edges {\n      node {\n        id\n        name\n        description\n        visibility\n        vcs_kind\n        updated_time\n      }\n    }\n  }\n  admin_of_organizations(first: 20) {\n    edges {\n      node {\n        id\n        name\n      }\n    }\n  }\n}\n"
   }
 };
 })();

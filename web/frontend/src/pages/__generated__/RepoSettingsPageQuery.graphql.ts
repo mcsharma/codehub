@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<355dc863571e6e96047ed6f12fb115d8>>
+ * @generated SignedSource<<8c0ec7d8ef7726c3dc2bf6765b326a4e>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,6 +10,7 @@
 
 import { ConcreteRequest } from 'relay-runtime';
 export type RepositoryVisibility = "PRIVATE" | "PUBLIC" | "%future added value";
+export type VcsKind = "GIT" | "HG" | "%future added value";
 export type RepoSettingsPageQuery$variables = {
   name: string;
   owner_username: string;
@@ -32,6 +33,7 @@ export type RepoSettingsPageQuery$data = {
       // value in case none of the concrete values match.
       readonly __typename: "%other";
     } | null | undefined;
+    readonly vcs_kind: VcsKind | null | undefined;
     readonly visibility: RepositoryVisibility | null | undefined;
   } | null | undefined;
 };
@@ -98,10 +100,17 @@ v8 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
+  "name": "vcs_kind",
+  "storageKey": null
+},
+v9 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
   "name": "__typename",
   "storageKey": null
 },
-v9 = [
+v10 = [
   (v2/*: any*/),
   (v5/*: any*/)
 ];
@@ -136,6 +145,7 @@ return {
           (v5/*: any*/),
           (v6/*: any*/),
           (v7/*: any*/),
+          (v8/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -144,7 +154,7 @@ return {
             "name": "owner",
             "plural": false,
             "selections": [
-              (v8/*: any*/),
+              (v9/*: any*/),
               {
                 "kind": "InlineFragment",
                 "selections": (v3/*: any*/),
@@ -185,7 +195,7 @@ return {
         "kind": "LinkedField",
         "name": "current_user",
         "plural": false,
-        "selections": (v9/*: any*/),
+        "selections": (v10/*: any*/),
         "storageKey": null
       },
       {
@@ -199,6 +209,7 @@ return {
           (v5/*: any*/),
           (v6/*: any*/),
           (v7/*: any*/),
+          (v8/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -207,10 +218,10 @@ return {
             "name": "owner",
             "plural": false,
             "selections": [
-              (v8/*: any*/),
+              (v9/*: any*/),
               {
                 "kind": "InlineFragment",
-                "selections": (v9/*: any*/),
+                "selections": (v10/*: any*/),
                 "type": "User",
                 "abstractKey": null
               },
@@ -232,16 +243,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "7ce591c87633f34793ff06fb1b272704",
+    "cacheID": "be6866d74b8e08811051fdbc1aec2ac2",
     "id": null,
     "metadata": {},
     "name": "RepoSettingsPageQuery",
     "operationKind": "query",
-    "text": "query RepoSettingsPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    id\n    name\n    visibility\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n  }\n}\n"
+    "text": "query RepoSettingsPageQuery(\n  $owner_username: String!\n  $name: String!\n) {\n  current_user {\n    username\n    id\n  }\n  repository_by_owner_and_name(owner_username: $owner_username, name: $name) {\n    id\n    name\n    visibility\n    vcs_kind\n    owner {\n      __typename\n      ... on User {\n        username\n        id\n      }\n      ... on Organization {\n        name\n        id\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "f2dbc42ba74add7a3ee1d46e910524e7";
+(node as any).hash = "c7bdaf37b1647bfefd4a618f0d741574";
 
 export default node;

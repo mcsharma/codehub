@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<ddd0c6e73680a720659cc27768acc111>>
+ * @generated SignedSource<<8c2afc8cae94a0dc2bd6b9001cdd8467>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,6 +9,7 @@
 // @ts-nocheck
 
 import { ConcreteRequest } from 'relay-runtime';
+export type VcsKind = "GIT" | "HG" | "%future added value";
 export type RepoSwitcherQuery$variables = {
   ownerUsername: string;
 };
@@ -19,6 +20,7 @@ export type RepoSwitcherQuery$data = {
       readonly edges: ReadonlyArray<{
         readonly node: {
           readonly name: string | null | undefined;
+          readonly vcs_kind: VcsKind | null | undefined;
         } | null | undefined;
       } | null | undefined> | null | undefined;
     } | null | undefined;
@@ -28,6 +30,7 @@ export type RepoSwitcherQuery$data = {
       readonly edges: ReadonlyArray<{
         readonly node: {
           readonly name: string | null | undefined;
+          readonly vcs_kind: VcsKind | null | undefined;
         } | null | undefined;
       } | null | undefined> | null | undefined;
     } | null | undefined;
@@ -78,28 +81,14 @@ v4 = {
   "name": "name",
   "storageKey": null
 },
-v5 = [
-  {
-    "alias": null,
-    "args": null,
-    "concreteType": "Repository",
-    "kind": "LinkedField",
-    "name": "node",
-    "plural": false,
-    "selections": [
-      (v4/*: any*/)
-    ],
-    "storageKey": null
-  }
-],
-v6 = {
+v5 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "id",
+  "name": "vcs_kind",
   "storageKey": null
 },
-v7 = [
+v6 = [
   {
     "alias": null,
     "args": null,
@@ -109,7 +98,30 @@ v7 = [
     "plural": false,
     "selections": [
       (v4/*: any*/),
-      (v6/*: any*/)
+      (v5/*: any*/)
+    ],
+    "storageKey": null
+  }
+],
+v7 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "id",
+  "storageKey": null
+},
+v8 = [
+  {
+    "alias": null,
+    "args": null,
+    "concreteType": "Repository",
+    "kind": "LinkedField",
+    "name": "node",
+    "plural": false,
+    "selections": [
+      (v4/*: any*/),
+      (v5/*: any*/),
+      (v7/*: any*/)
     ],
     "storageKey": null
   }
@@ -148,7 +160,7 @@ return {
                     "kind": "LinkedField",
                     "name": "edges",
                     "plural": true,
-                    "selections": (v5/*: any*/),
+                    "selections": (v6/*: any*/),
                     "storageKey": null
                   }
                 ],
@@ -176,7 +188,7 @@ return {
                     "kind": "LinkedField",
                     "name": "edges",
                     "plural": true,
-                    "selections": (v5/*: any*/),
+                    "selections": (v6/*: any*/),
                     "storageKey": null
                   }
                 ],
@@ -226,13 +238,13 @@ return {
                     "kind": "LinkedField",
                     "name": "edges",
                     "plural": true,
-                    "selections": (v7/*: any*/),
+                    "selections": (v8/*: any*/),
                     "storageKey": null
                   }
                 ],
                 "storageKey": "owned_repositories(first:50)"
               },
-              (v6/*: any*/)
+              (v7/*: any*/)
             ],
             "type": "User",
             "abstractKey": null
@@ -255,13 +267,13 @@ return {
                     "kind": "LinkedField",
                     "name": "edges",
                     "plural": true,
-                    "selections": (v7/*: any*/),
+                    "selections": (v8/*: any*/),
                     "storageKey": null
                   }
                 ],
                 "storageKey": "repositories(first:50)"
               },
-              (v6/*: any*/)
+              (v7/*: any*/)
             ],
             "type": "Organization",
             "abstractKey": null
@@ -272,16 +284,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "e15a9f18dc8ef5759d9e9e98ba47ecd9",
+    "cacheID": "6cb6e198477eab376c81122cefb28b07",
     "id": null,
     "metadata": {},
     "name": "RepoSwitcherQuery",
     "operationKind": "query",
-    "text": "query RepoSwitcherQuery(\n  $ownerUsername: String!\n) {\n  owner_by_name(name: $ownerUsername) {\n    __typename\n    ... on User {\n      owned_repositories(first: 50) {\n        edges {\n          node {\n            name\n            id\n          }\n        }\n      }\n      id\n    }\n    ... on Organization {\n      repositories(first: 50) {\n        edges {\n          node {\n            name\n            id\n          }\n        }\n      }\n      id\n    }\n  }\n}\n"
+    "text": "query RepoSwitcherQuery(\n  $ownerUsername: String!\n) {\n  owner_by_name(name: $ownerUsername) {\n    __typename\n    ... on User {\n      owned_repositories(first: 50) {\n        edges {\n          node {\n            name\n            vcs_kind\n            id\n          }\n        }\n      }\n      id\n    }\n    ... on Organization {\n      repositories(first: 50) {\n        edges {\n          node {\n            name\n            vcs_kind\n            id\n          }\n        }\n      }\n      id\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "dcd31da891deba376aedc118457c01de";
+(node as any).hash = "67d64f34134276fd8f86fe93ad8d86a5";
 
 export default node;

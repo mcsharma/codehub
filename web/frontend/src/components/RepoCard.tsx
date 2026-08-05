@@ -7,10 +7,11 @@ interface RepoCardProps {
   name: string
   description: string | null
   visibility: 'PUBLIC' | 'PRIVATE'
+  vcsKind: 'HG' | 'GIT'
   updatedTime: number
 }
 
-const RepoCard = ({ ownerUsername, name, description, visibility, updatedTime }: RepoCardProps) => {
+const RepoCard = ({ ownerUsername, name, description, visibility, vcsKind, updatedTime }: RepoCardProps) => {
   return (
     <Link
       to={`/${ownerUsername}/${name}`}
@@ -20,10 +21,13 @@ const RepoCard = ({ ownerUsername, name, description, visibility, updatedTime }:
         <div className="flex size-11 items-center justify-center rounded-full bg-[#eff6ff] text-base font-bold text-primary">
           {name.slice(0, 2).toUpperCase()}
         </div>
-        <StatusBadge
-          label={visibility === 'PUBLIC' ? 'Public' : 'Private'}
-          tone={visibility === 'PUBLIC' ? 'neutral' : 'primary'}
-        />
+        <div className="flex items-center gap-2">
+          <StatusBadge label={vcsKind === 'GIT' ? 'Git' : 'Mercurial'} tone="neutral" />
+          <StatusBadge
+            label={visibility === 'PUBLIC' ? 'Public' : 'Private'}
+            tone={visibility === 'PUBLIC' ? 'neutral' : 'primary'}
+          />
+        </div>
       </div>
       <h3 className="mb-2 text-xl font-bold">{name}</h3>
       <p className="mb-4 flex-1 text-sm text-muted-foreground">

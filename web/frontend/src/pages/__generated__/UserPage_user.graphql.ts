@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<f0bd310903ab4c951aef235d74c1e62e>>
+ * @generated SignedSource<<175c51dd6a086198d9431d44f0e75cf6>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,6 +10,7 @@
 
 import { ReaderFragment } from 'relay-runtime';
 export type RepositoryVisibility = "PRIVATE" | "PUBLIC" | "%future added value";
+export type VcsKind = "GIT" | "HG" | "%future added value";
 import { FragmentRefs } from "relay-runtime";
 export type UserPage_user$data = {
   readonly admin_of_organizations: {
@@ -28,6 +29,7 @@ export type UserPage_user$data = {
         readonly id: string | null | undefined;
         readonly name: string | null | undefined;
         readonly updated_time: number | null | undefined;
+        readonly vcs_kind: VcsKind | null | undefined;
         readonly visibility: RepositoryVisibility | null | undefined;
       } | null | undefined;
     } | null | undefined> | null | undefined;
@@ -125,6 +127,13 @@ return {
                   "alias": null,
                   "args": null,
                   "kind": "ScalarField",
+                  "name": "vcs_kind",
+                  "storageKey": null
+                },
+                {
+                  "alias": null,
+                  "args": null,
+                  "kind": "ScalarField",
                   "name": "updated_time",
                   "storageKey": null
                 }
@@ -184,6 +193,6 @@ return {
 };
 })();
 
-(node as any).hash = "cc5048bdd52cf4862e6454c9569001e3";
+(node as any).hash = "5663abf3832b3923c2fd978d30ebbb85";
 
 export default node;

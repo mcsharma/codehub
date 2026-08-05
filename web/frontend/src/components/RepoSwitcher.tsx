@@ -14,6 +14,7 @@ import { RelayEnv } from '../RelayEnvironment'
 
 interface RepoOption {
   name: string
+  vcsKind: 'HG' | 'GIT'
 }
 
 interface RepoSwitcherProps {
@@ -60,6 +61,7 @@ const RepoSwitcher = ({ ownerUsername, repoName }: RepoSwitcherProps) => {
                 edges {
                   node {
                     name
+                    vcs_kind
                   }
                 }
               }
@@ -69,6 +71,7 @@ const RepoSwitcher = ({ ownerUsername, repoName }: RepoSwitcherProps) => {
                 edges {
                   node {
                     name
+                    vcs_kind
                   }
                 }
               }
@@ -87,9 +90,9 @@ const RepoSwitcher = ({ ownerUsername, repoName }: RepoSwitcherProps) => {
               ? owner.repositories?.edges
               : []
         const list: RepoOption[] = (edges ?? [])
-          .map((edge) => edge?.node?.name)
-          .filter((name): name is string => !!name)
-          .map((name) => ({ name }))
+          .map((edge) => edge?.node)
+          .filter((node): node is { name: string; vcs_kind: 'HG' | 'GIT' | null } => !!node?.name)
+          .map((node) => ({ name: node.name, vcsKind: node.vcs_kind === 'GIT' ? 'GIT' : 'HG' }) as const)
         setRepos(list)
         setLoading(false)
       },
@@ -125,8 +128,12 @@ const RepoSwitcher = ({ ownerUsername, repoName }: RepoSwitcherProps) => {
           <DropdownMenuItem
             key={repo.name}
             onClick={() => handleSelect(repo.name)}
+            className="flex items-center justify-between gap-3"
           >
             {repo.name}
+            <span className="text-xs text-muted-foreground">
+              {repo.vcsKind === 'GIT' ? 'Git' : 'Mercurial'}
+            </span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

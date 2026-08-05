@@ -10,6 +10,7 @@ interface RepoHeaderProps {
   ownerUsername: string
   repoName: string
   visibility: 'PUBLIC' | 'PRIVATE'
+  vcsKind: 'HG' | 'GIT'
   isOwner: boolean
 }
 
@@ -22,6 +23,7 @@ const RepoHeader = ({
   ownerUsername,
   repoName,
   visibility,
+  vcsKind,
   isOwner,
 }: RepoHeaderProps) => {
   const location = useLocation()
@@ -55,7 +57,7 @@ const RepoHeader = ({
               tone={visibility === 'PUBLIC' ? 'neutral' : 'primary'}
             />
           </div>
-          <CloneButton ownerUsername={ownerUsername} repoName={repoName} />
+          <CloneButton ownerUsername={ownerUsername} repoName={repoName} vcsKind={vcsKind} />
         </div>
 
         {/* Drives navigation via the URL, not panel-switching — `value`

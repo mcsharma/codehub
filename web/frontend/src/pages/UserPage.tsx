@@ -24,6 +24,7 @@ const UserPage = ({ user: userRef, isOwnProfile }: Props) => {
               name
               description
               visibility
+              vcs_kind
               updated_time
             }
           }
@@ -78,6 +79,7 @@ const UserPage = ({ user: userRef, isOwnProfile }: Props) => {
                 name={edge.node.name ?? ""}
                 description={edge.node.description ?? null}
                 visibility={edge.node.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
+                vcsKind={edge.node.vcs_kind === "GIT" ? "GIT" : "HG"}
                 updatedTime={edge.node.updated_time ?? 0}
               />
             );
