@@ -8,6 +8,7 @@ import { CommitObject, RepositoryObject, resolveOwnerName, requireRepoReadAccess
 import { fetchChangeset } from '../../repos/hgweb-client.js'
 import { canAccessRepo } from '../../auth/repo-access.js'
 import { enqueueLandReview } from '../../jobs/land-review.js'
+import { enqueueLandGitReview } from '../../jobs/land-git-review.js'
 import type { prisma } from '../../prisma/db.js'
 
 // --- Shared helpers ---
@@ -313,7 +314,11 @@ builder.mutationField('land_review', (t) =>
       }
 
       const updated = await ctx.prisma.review.update({ where: { id: review.id }, data: { status: 'LANDING' } })
-      await enqueueLandReview(review.id)
+      if (repo.vcsKind === 'GIT') {
+        await enqueueLandGitReview(review.id)
+      } else {
+        await enqueueLandReview(review.id)
+      }
       return updated
     },
   }),

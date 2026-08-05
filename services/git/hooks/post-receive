@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# On a push to refs/reviews/<sha> (pre-receive already rejected anything
+# else), calls the BFF's report_git_review_push mutation to create/update
+# the Review/ReviewVersion rows — this hook *is* the review-creation step
+# for git repos, since there's no client-side `ch submit` equivalent (see
+# pothos/schema/git-review.ts and docs/plans/zesty-zooming-cupcake.md).
+# Echoes "D<n>: <url>" back to the pusher on success, same free UX `ch
+# submit` gives today for hg.
+#
+# Never exits non-zero — the objects are already accepted by the time
+# post-receive runs, so there's nothing left to reject; failures here are
+# reported to stderr only.
+set -uo pipefail
+
+# Bind-mounted per-stack, not inherited container env — see
+# vm/docker-compose.{prod,test}.yml. Provides BFF_GRAPHQL_URL,
+# GIT_HOOKS_TOKEN, CODEHUB_WEB_URL.
+# shellcheck source=/dev/null
+source /opt/gitservice/hook-config.env
+
+# Hooks for a bare repo run with cwd = GIT_DIR = the repo directory itself —
+# matches provisionGitRepo's reposDir/owner/repo layout (worker/src/ops.ts).
+repo_name="$(basename "$PWD")"
+owner_name="$(basename "$(dirname "$PWD")")"
+
+while read -r old_sha new_sha ref; do
+  [[ "$ref" =~ ^refs/reviews/([0-9a-f]{40})$ ]] || continue
+  sha="${BASH_REMATCH[1]}"
+
+  parent_sha="$(git rev-parse -q --verify "${sha}^" 2>/dev/null || true)"
+  title="$(git log -1 --format=%s "$sha")"
+  description="$(git log -1 --format=%B "$sha")"
+  pusher="${REMOTE_USER:-}"
+
+  if [[ -z "$pusher" ]]; then
+    echo "remote: warning: could not determine pusher identity (REMOTE_USER unset) — review not recorded for ${ref}" >&2
+    continue
+  fi
+
+  payload=$(jq -n \
+    --arg owner "$owner_name" \
+    --arg repo "$repo_name" \
+    --arg sha "$sha" \
+    --arg parent_sha "$parent_sha" \
+    --arg title "$title" \
+    --arg description "$description" \
+    --arg pusher "$pusher" \
+    '{
+      query: "mutation($owner:String!,$repo:String!,$sha:String!,$parent_sha:String,$title:String!,$description:String!,$pusher:String!){report_git_review_push(owner:$owner,repo:$repo,sha:$sha,parent_sha:$parent_sha,title:$title,description:$description,pusher_username:$pusher){number}}",
+      variables: {
+        owner: $owner, repo: $repo, sha: $sha,
+        parent_sha: ($parent_sha | select(. != "") // null),
+        title: $title, description: $description, pusher: $pusher
+      }
+    }')
+
+  response="$(curl -sS -X POST "$BFF_GRAPHQL_URL" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $GIT_HOOKS_TOKEN" \
+    -d "$payload" || true)"
+
+  number="$(echo "$response" | jq -r '.data.report_git_review_push.number // empty' 2>/dev/null)"
+  if [[ -n "$number" ]]; then
+    echo "remote: D${number}: ${CODEHUB_WEB_URL}/${owner_name}/${repo_name}/reviews/${number}"
+  else
+    echo "remote: warning: failed to record review for ${ref}: $(echo "$response" | jq -c '.errors // .' 2>/dev/null)" >&2
+  fi
+done
+
+exit 0

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Git-native equivalent of services/hg/hg_hooks.py's
+# reject_unsafe_bookmark_push: refs/heads/master may only move via the
+# landing worker's own direct on-disk landGitReview op (worker/src/ops.ts),
+# never over the push wire protocol, with no exception for anyone. The only
+# other ref shape a push may touch is refs/reviews/<40-hex-sha> — the ref
+# `sl push`/`git push` name after the pushed commit's own sha, never reused
+# or force-moved (same convention `ch submit` uses for hg's
+# reviews/<12-hex-node> bookmarks).
+#
+# Unlike hg's prepushkey hook (which rejects one bad pushkey at a time,
+# letting the rest of a multi-bookmark push through), a git pre-receive
+# rejects the *entire* push transaction on any bad ref — acceptable here
+# since a review-submitting client only ever pushes one refs/reviews/<sha>
+# ref per invocation anyway.
+set -euo pipefail
+
+while read -r old_sha new_sha ref; do
+  if [[ "$ref" == "refs/heads/master" ]]; then
+    echo "remote: rejected $ref: master can only move via review landing, not push" >&2
+    exit 1
+  fi
+  if [[ ! "$ref" =~ ^refs/reviews/[0-9a-f]{40}$ ]]; then
+    echo "remote: rejected $ref: ref must match refs/reviews/<40-hex-sha>" >&2
+    exit 1
+  fi
+done

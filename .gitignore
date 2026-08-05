@@ -14,6 +14,14 @@ build/
 !.env.example
 !services/hg/vm/.env.prod.example
 !services/hg/vm/.env.test.example
+!services/git/vm/.env.prod.example
+!services/git/vm/.env.test.example
+
+# hooks/post-receive's own secrets file — doesn't match the .env.* pattern
+# above (see services/git/vm/hook-config.*.env.example for the templates,
+# which also don't match this pattern since they end in .env.example, not
+# .env — no negation exception needed for them).
+services/git/vm/hook-config.*.env
 
 # ─── Logs ────────────────────────────────────────────────────────
 *.log

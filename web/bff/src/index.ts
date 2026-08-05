@@ -12,7 +12,7 @@ import { googleAuthRouter } from './auth/google.js'
 import { SESSION_COOKIE, resolveSession } from './auth/session.js'
 import { resolvePersonalAccessToken } from './auth/personal-access-token.js'
 import { canAccessRepo } from './auth/repo-access.js'
-import { startBoss, ensureHgQueues } from './jobs/boss.js'
+import { startBoss, ensureHgQueues, ensureGitQueues } from './jobs/boss.js'
 import { writeFileSync } from 'node:fs'
 import { printSchema, lexicographicSortSchema } from 'graphql'
 import path from 'node:path'
@@ -117,9 +117,26 @@ app.get('/internal/auth-check', async (req, res) => {
   // header limits — so GET-vs-POST alone would wrongly deny big pulls/clones to
   // read-only users. `cmd` stays in the query string even when the rest of the
   // arguments move into the POST body.
-  const cmd = new URLSearchParams(query ?? '').get('cmd')
-  const action = cmd === 'unbundle' ? 'write' : 'read'
+  //
+  // Git repos have no `cmd` param at all — its smart-HTTP protocol signals
+  // read vs write via the request path/`service` query param instead:
+  // `git-upload-pack` (clone/fetch/pull) is read, `git-receive-pack` (push)
+  // is write, surfaced either as the POST target path itself or as
+  // `?service=git-receive-pack` on the initial `GET .../info/refs` probe.
+  const params = new URLSearchParams(query ?? '')
+  const cmd = params.get('cmd')
+  const isGitPush = path.endsWith('/git-receive-pack') || params.get('service') === 'git-receive-pack'
+  const action = cmd === 'unbundle' || isGitPush ? 'write' : 'read'
   const allowed = await canAccessRepo(user, ownerName, repoName, action)
+  if (allowed && user) {
+    // Lets git's post-receive hook attribute a review to the actual pushing
+    // human rather than the service account that authenticates the git-app
+    // container's own hgweb-style calls — see services/git/hooks/post-receive
+    // and pothos/schema/git-review.ts's report_git_review_push. nginx's
+    // git-proxy captures this via auth_request_set and forwards it as
+    // REMOTE_USER through git-http-backend to the hook's environment.
+    res.set('X-CodeHub-User', user.username)
+  }
   res.sendStatus(allowed ? 200 : 401)
 })
 
@@ -188,6 +205,7 @@ app.get('*any', (req, res) => {
 // claim_hg_job (see pothos/schema/hg-worker.ts).
 await startBoss()
 await ensureHgQueues()
+await ensureGitQueues()
 
 app.listen(port, () => {
   console.log(`

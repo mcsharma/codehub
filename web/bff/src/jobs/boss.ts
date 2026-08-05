@@ -1,5 +1,5 @@
 import { PgBoss } from 'pg-boss'
-import { HG_JOB_QUEUES } from './queues.js'
+import { HG_JOB_QUEUES, GIT_JOB_QUEUES } from './queues.js'
 
 // First background-job infrastructure in this codebase — everything else
 // privileged (repo provisioning/deletion) runs synchronously inside a
@@ -32,6 +32,15 @@ export function startBoss(): Promise<void> {
 // from index.ts at boot, after startBoss().
 export async function ensureHgQueues(): Promise<void> {
   for (const queue of HG_JOB_QUEUES) {
+    await boss.createQueue(queue)
+  }
+}
+
+// Same as ensureHgQueues, for the git-kind job queues (see
+// pothos/schema/git-worker.ts). Called once from index.ts at boot, after
+// startBoss(), alongside the existing ensureHgQueues() call.
+export async function ensureGitQueues(): Promise<void> {
+  for (const queue of GIT_JOB_QUEUES) {
     await boss.createQueue(queue)
   }
 }

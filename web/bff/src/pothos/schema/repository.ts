@@ -1,13 +1,15 @@
 import { builder } from '../builder.js'
 import { exposeID, exposeTime } from '../field-exposers.js'
 import { requireUser } from '../require-user.js'
-import { RepositoryVisibility, Prisma } from '@prisma/client'
+import { RepositoryVisibility, VcsKind, Prisma } from '@prisma/client'
 import type { ModelUser } from '@prisma/client'
 import { GraphQLError } from 'graphql'
 import { UserObject } from './user.js'
 import { OrganizationObject } from './organization.js'
 import { enqueueProvisionRepo } from '../../jobs/provision-repo.js'
 import { enqueueDeleteRepo } from '../../jobs/delete-repo.js'
+import { enqueueProvisionGitRepo } from '../../jobs/provision-git-repo.js'
+import { enqueueDeleteGitRepo } from '../../jobs/delete-git-repo.js'
 import {
   fetchBookmarks,
   fetchChangeset,
@@ -81,6 +83,10 @@ async function requireOwnedRepo(user: ModelUser | null, db: typeof prisma, repoI
 
 builder.enumType(RepositoryVisibility, {
   name: 'RepositoryVisibility',
+})
+
+builder.enumType(VcsKind, {
+  name: 'VcsKind',
 })
 
 // --- RepositoryOwner union ---
@@ -308,6 +314,7 @@ export const RepositoryObject = builder.prismaObject('Repository', {
     name: t.exposeString('name'),
     description: t.exposeString('description', { nullable: true }),
     visibility: t.expose('visibility', { type: RepositoryVisibility }),
+    vcs_kind: t.expose('vcsKind', { type: VcsKind }),
     owner: t.field({
       type: RepositoryOwner,
       resolve: async (repository, _args, ctx) => {
@@ -524,12 +531,16 @@ builder.mutationField('create_repository', (t) =>
       name: t.arg.string({ required: true }),
       description: t.arg.string({ required: false }),
       visibility: t.arg({ type: RepositoryVisibility, required: true }),
+      // Defaults to HG so existing callers (frontend, ch) that don't send
+      // this arg at all keep behaving exactly as before.
+      kind: t.arg({ type: VcsKind, required: false, defaultValue: 'HG' }),
     },
     resolve: async (_query, _root, args, ctx) => {
       const user = requireUser(ctx.user)
       if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$/.test(args.name)) {
         throw new GraphQLError('Invalid repository name')
       }
+      const kind = args.kind ?? 'HG'
 
       let repo
       try {
@@ -538,6 +549,7 @@ builder.mutationField('create_repository', (t) =>
             name: args.name,
             description: args.description,
             visibility: args.visibility,
+            vcsKind: kind,
             ownerUserId: user.id,
           },
         })
@@ -551,11 +563,16 @@ builder.mutationField('create_repository', (t) =>
       try {
         // Enqueues a provision-repo job, claimed and executed by whichever
         // environment's VM worker stack polls this BFF (see
-        // jobs/provision-repo.ts and pothos/schema/hg-worker.ts) — the same
-        // job path for both local dev and prod now, no more
-        // HG_LOCAL_REPOS_DIR branch. Waits for completion so this mutation
-        // still only returns once the repo actually exists on disk.
-        await enqueueProvisionRepo(user.username, args.name)
+        // jobs/provision-repo.ts and pothos/schema/hg-worker.ts, or the
+        // git-kind counterparts) — the same job path for both local dev and
+        // prod now, no more HG_LOCAL_REPOS_DIR branch. Waits for completion
+        // so this mutation still only returns once the repo actually exists
+        // on disk.
+        if (kind === 'GIT') {
+          await enqueueProvisionGitRepo(user.username, args.name)
+        } else {
+          await enqueueProvisionRepo(user.username, args.name)
+        }
       } catch (err) {
         // Compensating rollback — don't leave a Repository row with no
         // matching on-disk repo.
@@ -602,8 +619,12 @@ builder.mutationField('delete_repository', (t) =>
       // Postgres row is left untouched, so a failure leaves a repo that's
       // still visible and retryable rather than a row silently vanishing
       // while its data survives, unreachable, on disk. Same job-queue path
-      // as create_repository — see jobs/delete-repo.ts.
-      await enqueueDeleteRepo(ownerName, repo.name)
+      // as create_repository — see jobs/delete-repo.ts / delete-git-repo.ts.
+      if (repo.vcsKind === 'GIT') {
+        await enqueueDeleteGitRepo(ownerName, repo.name)
+      } else {
+        await enqueueDeleteRepo(ownerName, repo.name)
+      }
 
       await ctx.prisma.repository.delete({ where: { id: repo.id } })
       return true

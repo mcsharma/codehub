@@ -93,6 +93,14 @@ enum RepositoryVisibility {
   PRIVATE
 }
 
+// Which VCS actually hosts this repo's data — hg on the DigitalOcean VM's hg
+// stack, or git on its git stack (see services/git/README.md). Defaults to
+// HG so every existing row backfills correctly with no data migration.
+enum VcsKind {
+  HG
+  GIT
+}
+
 model Repository {
   id                  BigInt             @id @default(autoincrement())
   createdTime         DateTime           @default(now()) @map("created_time")
@@ -101,6 +109,7 @@ model Repository {
   name                String             @map("name")
   description         String?            @map("description")
   visibility          RepositoryVisibility @default(PUBLIC) @map("visibility")
+  vcsKind             VcsKind            @default(HG)     @map("vcs_kind")
 
   ownerUserId         BigInt?            @map("owner_user_id")
   ownerUser           ModelUser?         @relation("RepositoryOwner", fields: [ownerUserId], references: [id])
