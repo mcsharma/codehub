@@ -4,8 +4,10 @@ import { requireUser } from '../require-user.js'
 import { ReviewStatus } from '@prisma/client'
 import type { Review as ReviewRow, Repository as RepositoryRow } from '@prisma/client'
 import { GraphQLError } from 'graphql'
+import { VcsKind } from '@prisma/client'
 import { CommitObject, RepositoryObject, resolveOwnerName, requireRepoReadAccess, toCommitShape } from './repository.js'
 import { fetchChangeset } from '../../repos/hgweb-client.js'
+import { fetchChangeset as fetchGitChangeset } from '../../repos/git-browse-client.js'
 import { canAccessRepo } from '../../auth/repo-access.js'
 import { enqueueLandReview } from '../../jobs/land-review.js'
 import { enqueueLandGitReview } from '../../jobs/land-git-review.js'
@@ -82,9 +84,10 @@ interface ReviewVersionShape {
   createdTime: Date
   _ownerName: string
   _repoName: string
+  _vcsKind: VcsKind
 }
 
-function toReviewVersionShape(ownerName: string, repoName: string, v: {
+function toReviewVersionShape(ownerName: string, repoName: string, vcsKind: VcsKind, v: {
   id: bigint
   version: number
   headNode: string
@@ -92,7 +95,7 @@ function toReviewVersionShape(ownerName: string, repoName: string, v: {
   bookmark: string
   createdTime: Date
 }): ReviewVersionShape {
-  return { ...v, _ownerName: ownerName, _repoName: repoName }
+  return { ...v, _ownerName: ownerName, _repoName: repoName, _vcsKind: vcsKind }
 }
 
 const ReviewVersionObject = builder.objectRef<ReviewVersionShape>('ReviewVersion').implement({
@@ -108,8 +111,11 @@ const ReviewVersionObject = builder.objectRef<ReviewVersionShape>('ReviewVersion
       nullable: true,
       resolve: async (v) => {
         try {
-          const changeset = await fetchChangeset(v._ownerName, v._repoName, v.headNode)
-          return toCommitShape(v._ownerName, v._repoName, changeset)
+          const changeset =
+            v._vcsKind === 'GIT'
+              ? await fetchGitChangeset(v._ownerName, v._repoName, v.headNode)
+              : await fetchChangeset(v._ownerName, v._repoName, v.headNode)
+          return toCommitShape(v._ownerName, v._repoName, changeset, v._vcsKind)
         } catch (err) {
           console.error('Failed to fetch review version commit:', err)
           return null
@@ -142,7 +148,7 @@ const ReviewObject = builder.prismaObject('Review', {
           where: { reviewId: review.id },
           orderBy: { version: 'asc' },
         })
-        return versions.map((v) => toReviewVersionShape(ownerName, repo.name, v))
+        return versions.map((v) => toReviewVersionShape(ownerName, repo.name, repo.vcsKind, v))
       },
     }),
     latest_version: t.field({
@@ -155,7 +161,7 @@ const ReviewObject = builder.prismaObject('Review', {
           where: { reviewId: review.id },
           orderBy: { version: 'desc' },
         })
-        return v ? toReviewVersionShape(ownerName, repo.name, v) : null
+        return v ? toReviewVersionShape(ownerName, repo.name, repo.vcsKind, v) : null
       },
     }),
   }),

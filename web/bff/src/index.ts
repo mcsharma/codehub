@@ -89,21 +89,21 @@ app.get('/internal/auth-check', async (req, res) => {
     // everything after the first colon is treated as the token.
     const token = decoded.slice(decoded.indexOf(':') + 1)
 
-    // The BFF itself is also an hgweb caller (browsing commits/bookmarks via
-    // hgweb's JSON style — see repos/hgweb-client.ts) and authenticates with
-    // this shared secret instead of a PAT. It's safe to bypass canAccessRepo
-    // entirely here because the GraphQL resolver making that call has
-    // already done its own canAccessRepo check for the specific user/repo in
-    // question before ever reaching hgweb — this token just proves the
-    // caller *is* the BFF, not that any particular request is authorized.
-    const internalToken = process.env.HG_INTERNAL_TOKEN
-    const tokenBuf = Buffer.from(token)
-    const internalTokenBuf = Buffer.from(internalToken ?? '')
-    if (
-      internalToken &&
-      tokenBuf.length === internalTokenBuf.length &&
-      crypto.timingSafeEqual(tokenBuf, internalTokenBuf)
-    ) {
+    // The BFF itself is also an hgweb/git-browse caller (browsing commits
+    // via hgweb's JSON style or the git-browse service — see
+    // repos/hgweb-client.ts and repos/git-browse-client.ts) and
+    // authenticates with one of these shared secrets instead of a PAT. It's
+    // safe to bypass canAccessRepo entirely here because the GraphQL
+    // resolver making that call has already done its own canAccessRepo
+    // check for the specific user/repo in question before ever reaching
+    // hgweb/git-browse — a matching token just proves the caller *is* the
+    // BFF, not that any particular request is authorized.
+    const isInternalToken = (envVar: string | undefined): boolean => {
+      const tokenBuf = Buffer.from(token)
+      const envBuf = Buffer.from(envVar ?? '')
+      return !!envVar && tokenBuf.length === envBuf.length && crypto.timingSafeEqual(tokenBuf, envBuf)
+    }
+    if (isInternalToken(process.env.HG_INTERNAL_TOKEN) || isInternalToken(process.env.GIT_INTERNAL_TOKEN)) {
       res.sendStatus(200)
       return
     }

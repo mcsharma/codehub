@@ -16,6 +16,19 @@ server {
     # git's smart-HTTP protocol, under a two-segment /owner/repo prefix
     # (unlike a typical single-$repo git server) — clone/fetch hits
     # HEAD/info/refs/objects/*/git-upload-pack, push hits git-receive-pack.
+    # Commit/diff/directory browsing for git repos — see
+    # docs/plans/zesty-zooming-cupcake.md. A real HTTP server (proxy_pass),
+    # not fastcgi like git-http-backend below. Ordered first since it's the
+    # more specific prefix; matched before falling through to the
+    # smart-HTTP location for the same /owner/repo namespace.
+    location ~ ^/[^/]+/[^/]+/_browse/ {
+        auth_request /internal/auth-check;
+        error_page 401 = @auth_denied;
+
+        proxy_pass http://git-browse:9100;
+        proxy_set_header Host $host;
+    }
+
     location ~ ^/[^/]+/[^/]+/(HEAD|info/refs|objects/.*|git-upload-pack|git-receive-pack)$ {
         auth_request /internal/auth-check;
         error_page 401 = @auth_denied;

@@ -12,10 +12,21 @@ services:
       - /data/git-repos-prod:/data/repos
     restart: unless-stopped
 
+  git-browse:
+    build:
+      context: ../browse
+    environment:
+      GIT_BROWSE_REPOS_DIR: /data/repos
+    volumes:
+      # Read-only — browsing should never mutate, unlike git-app/worker.
+      - /data/git-repos-prod:/data/repos:ro
+    restart: unless-stopped
+
   git-proxy:
     image: nginx:alpine
     depends_on:
       - git-app
+      - git-browse
     # Non-standard port, deliberately — hgweb-proxy already owns host
     # 80/443 on this VM. Git access is always CLI-driven, never browsed, so
     # a port in the remote URL costs nothing the way it would for a website.

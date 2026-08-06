@@ -21,6 +21,14 @@ import {
   type HgChangeset,
   type HgLogEntry,
 } from '../../repos/hgweb-client.js'
+import {
+  fetchChangeset as fetchGitChangeset,
+  fetchDirectory as fetchGitDirectory,
+  fetchFileLog as fetchGitFileLog,
+  fetchRawDiff as fetchGitRawDiff,
+  fetchRawFile as fetchGitRawFile,
+  fetchShortlog as fetchGitShortlog,
+} from '../../repos/git-browse-client.js'
 import { canAccessRepo } from '../../auth/repo-access.js'
 import { resolveCursorConnection } from '@pothos/plugin-relay'
 import type { prisma } from '../../prisma/db.js'
@@ -131,13 +139,15 @@ export interface CommitShape {
   parents: string[]
   files: CommitFileShape[]
   // Not exposed via GraphQL — carried so the `diff` field's resolver (a
-  // second, separate hgweb fetch, only paid for when a query actually asks
-  // for it) doesn't need the repository row or a second permission check.
+  // second, separate hgweb/git-browse fetch, only paid for when a query
+  // actually asks for it) doesn't need the repository row or a second
+  // permission check.
   _owner: string
   _repoName: string
+  _vcsKind: VcsKind
 }
 
-export function toCommitShape(owner: string, repoName: string, c: HgChangeset): CommitShape {
+export function toCommitShape(owner: string, repoName: string, c: HgChangeset, vcsKind: VcsKind): CommitShape {
   return {
     node: c.node,
     short_node: c.node.slice(0, 12),
@@ -151,6 +161,7 @@ export function toCommitShape(owner: string, repoName: string, c: HgChangeset): 
     files: (c.files ?? []).map((f) => ({ path: f.file, status: f.status })),
     _owner: owner,
     _repoName: repoName,
+    _vcsKind: vcsKind,
   }
 }
 
@@ -171,7 +182,9 @@ export const CommitObject = builder.objectRef<CommitShape>('Commit').implement({
       nullable: true,
       resolve: async (c) => {
         try {
-          return await fetchRawDiff(c._owner, c._repoName, c.node)
+          return c._vcsKind === 'GIT'
+            ? await fetchGitRawDiff(c._owner, c._repoName, c.node)
+            : await fetchRawDiff(c._owner, c._repoName, c.node)
         } catch (err) {
           console.error('Failed to fetch commit diff:', err)
           return null
@@ -212,16 +225,20 @@ interface RepoFileEntryShape {
   _ownerName: string
   _repoName: string
   _rev: string
+  _vcsKind: VcsKind
   // Memoizes the (at most one) fetchFileLog call across both fields, in
   // case a query selects both `last_commit_message` and
   // `last_commit_date` — they'd otherwise each trigger their own
-  // redundant hgweb round-trip for the same file.
+  // redundant hgweb/git-browse round-trip for the same file.
   _logPromise?: Promise<HgLogEntry | null>
 }
 
 function getFileLog(file: RepoFileEntryShape): Promise<HgLogEntry | null> {
   if (!file._logPromise) {
-    file._logPromise = fetchFileLog(file._ownerName, file._repoName, file._rev, file.path)
+    file._logPromise =
+      file._vcsKind === 'GIT'
+        ? fetchGitFileLog(file._ownerName, file._repoName, file._rev, file.path)
+        : fetchFileLog(file._ownerName, file._repoName, file._rev, file.path)
   }
   return file._logPromise
 }
@@ -342,11 +359,16 @@ export const RepositoryObject = builder.prismaObject('Repository', {
       totalCount: true,
       query: () => ({ orderBy: [{ username: 'asc' }, { id: 'asc' }] }),
     }),
+    // Git has no bookmark/branch equivalent exposed yet — these repos
+    // structurally have only one ref (`master`) today, so there's nothing
+    // meaningful to list. See docs/plans/zesty-zooming-cupcake.md's
+    // Non-goals.
     bookmarks: t.field({
       type: [BookmarkObject],
       resolve: async (repository, _args, ctx) => {
         const ownerName = await resolveOwnerName(repository, ctx.prisma)
         await requireRepoReadAccess(ctx.user, ownerName, repository.name)
+        if (repository.vcsKind === 'GIT') return []
         const bookmarks = await fetchBookmarks(ownerName, repository.name)
         return bookmarks.map((b) => ({ name: b.bookmark, node: b.node, short_node: b.node.slice(0, 12) }))
       },
@@ -363,8 +385,11 @@ export const RepositoryObject = builder.prismaObject('Repository', {
               if (inverted) {
                 throw new GraphQLError('Paginating commits with `last`/`before` is not supported')
               }
-              const changesets = await fetchShortlog(ownerName, repository.name, { after, count: limit })
-              return changesets.map((c) => toCommitShape(ownerName, repository.name, c))
+              const changesets =
+                repository.vcsKind === 'GIT'
+                  ? await fetchGitShortlog(ownerName, repository.name, { after, count: limit })
+                  : await fetchShortlog(ownerName, repository.name, { after, count: limit })
+              return changesets.map((c) => toCommitShape(ownerName, repository.name, c, repository.vcsKind))
             },
           )
         },
@@ -378,8 +403,11 @@ export const RepositoryObject = builder.prismaObject('Repository', {
       resolve: async (repository, args, ctx) => {
         const ownerName = await resolveOwnerName(repository, ctx.prisma)
         await requireRepoReadAccess(ctx.user, ownerName, repository.name)
-        const changeset = await fetchChangeset(ownerName, repository.name, args.node)
-        return toCommitShape(ownerName, repository.name, changeset)
+        const changeset =
+          repository.vcsKind === 'GIT'
+            ? await fetchGitChangeset(ownerName, repository.name, args.node)
+            : await fetchChangeset(ownerName, repository.name, args.node)
+        return toCommitShape(ownerName, repository.name, changeset, repository.vcsKind)
       },
     }),
     directory: t.field({
@@ -392,10 +420,16 @@ export const RepositoryObject = builder.prismaObject('Repository', {
       resolve: async (repository, args, ctx) => {
         const ownerName = await resolveOwnerName(repository, ctx.prisma)
         await requireRepoReadAccess(ctx.user, ownerName, repository.name)
-        const rev = args.rev ?? 'tip'
+        const requestedRev = args.rev ?? 'tip'
+        // hgweb's "tip" sentinel has no git equivalent — these repos only
+        // ever have one ref, so "tip" just means "master" for git.
+        const rev = repository.vcsKind === 'GIT' && requestedRev === 'tip' ? 'master' : requestedRev
         const path = args.path ?? ''
         try {
-          const listing = await fetchDirectory(ownerName, repository.name, rev, path)
+          const listing =
+            repository.vcsKind === 'GIT'
+              ? await fetchGitDirectory(ownerName, repository.name, rev, path)
+              : await fetchDirectory(ownerName, repository.name, rev, path)
           return {
             path,
             directories: listing.directories.map((d) => ({
@@ -409,6 +443,7 @@ export const RepositoryObject = builder.prismaObject('Repository', {
               _ownerName: ownerName,
               _repoName: repository.name,
               _rev: rev,
+              _vcsKind: repository.vcsKind,
             })),
           }
         } catch {
@@ -428,9 +463,13 @@ export const RepositoryObject = builder.prismaObject('Repository', {
       resolve: async (repository, args, ctx) => {
         const ownerName = await resolveOwnerName(repository, ctx.prisma)
         await requireRepoReadAccess(ctx.user, ownerName, repository.name)
-        const rev = args.rev ?? 'tip'
+        const requestedRev = args.rev ?? 'tip'
+        const rev = repository.vcsKind === 'GIT' && requestedRev === 'tip' ? 'master' : requestedRev
         try {
-          const buffer = await fetchRawFile(ownerName, repository.name, rev, args.path)
+          const buffer =
+            repository.vcsKind === 'GIT'
+              ? await fetchGitRawFile(ownerName, repository.name, rev, args.path)
+              : await fetchRawFile(ownerName, repository.name, rev, args.path)
           const isBinary = buffer.subarray(0, BINARY_SNIFF_BYTES).includes(0)
           const isTooLarge = buffer.byteLength > MAX_FILE_SIZE_BYTES
           return {

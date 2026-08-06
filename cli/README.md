@@ -1,14 +1,28 @@
 # `ch` — CodeHub code review CLI
 
-A Deno-based command-line tool for CodeHub's Mercurial code-review workflow
-(submit a commit stack for review, land a review onto `master`, sync/restack
-after landings). See `services/hg/README.md` for how the review protocol
+A Deno-based command-line tool for CodeHub's code-review workflow (submit a
+commit stack for review, land a review onto `master`, sync/restack after
+landings), for both Mercurial and git repos. `ch` detects which VCS the
+current repo uses (`hg root` vs. `sl root`) and dispatches accordingly — see
+`src/vcs.ts`.
+
+For **hg repos**, see `services/hg/README.md` for how the review protocol
 (`Review-Id` trailers, `reviews/<node>` bookmarks, the `master` bookmark)
 works on the server side.
 
+For **git repos**, commits are made with [Sapling](https://sapling-scm.com/)
+(`sl`) rather than plain `git` — `ch submit` relies on Sapling's automatic
+restacking after amending a commit, which plain git doesn't do on its own.
+`ch submit` pushes to `refs/reviews/<sha>` exactly like a manual `git push`
+would; a server-side `post-receive` hook does the actual review-creation
+work and is what `ch` gets its review numbers from (see
+`services/git/hooks/post-receive`, `web/bff/src/pothos/schema/
+git-review.ts`) — `ch` has no direct GraphQL review-mutation calls on the
+git path, unlike the hg path.
+
 ## Prerequisites
 
-- [Deno](https://deno.com) (developed against 2.x)
+**For hg repos:**
 - [Mercurial](https://www.mercurial-scm.org/) (`hg`) on your `PATH`
 - The [`evolve`](https://www.mercurial-scm.org/doc/evolution/) extension
   enabled in your `~/.hgrc` — `ch submit` uses it to restack the rest of
@@ -17,6 +31,12 @@ works on the server side.
   [extensions]
   evolve =
   ```
+
+**For git repos:**
+- [Sapling](https://sapling-scm.com/) (`sl`) and `git` both on your `PATH`.
+
+**Either way:**
+- [Deno](https://deno.com) (developed against 2.x)
 
 ## Build
 
@@ -70,7 +90,8 @@ ch status                Show the local stack and each commit's review status
 ```
 
 Run any of these from inside a clone of a CodeHub repo (`ch` derives
-owner/repo from `hg paths default`, not from any config).
+owner/repo from `hg paths default` or `sl paths default` depending on which
+VCS the repo uses, not from any config).
 
 ## Developing the CLI itself
 

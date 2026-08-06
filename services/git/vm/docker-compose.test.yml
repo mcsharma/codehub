@@ -11,10 +11,21 @@ services:
       - /data/git-repos-test:/data/repos
     restart: unless-stopped
 
+  git-browse:
+    build:
+      context: ../browse
+    environment:
+      GIT_BROWSE_REPOS_DIR: /data/repos
+    volumes:
+      # Read-only — browsing should never mutate, unlike git-app/worker.
+      - /data/git-repos-test:/data/repos:ro
+    restart: unless-stopped
+
   git-proxy:
     image: nginx:alpine
     depends_on:
       - git-app
+      - git-browse
     # Bare port, no TLS — same reasoning as the hg test stack's
     # hgweb-proxy (8001): no domain to issue a cert for. 8002 is the next
     # free port after hg-test's 8001.

@@ -19,6 +19,7 @@ on-disk repos directory (`/data/git-repos-prod` / `/data/git-repos-test`).
 |-----------|---------|
 | `Dockerfile`/`etc/gitconfig`/`hooks/` | The git-app image — same one built for both stacks. |
 | `worker/` | The job worker image — same one built for both stacks. |
+| `browse/` | The commit/diff/directory browsing service — see "Browsing" below. |
 | `vm/docker-compose.prod.yml` / `docker-compose.test.yml` | Per-stack compose files. |
 | `vm/nginx-prod.conf` / `nginx-test.conf.template` | Per-stack nginx config. |
 
@@ -61,6 +62,32 @@ refuses), `provisionGitRepo` doesn't need one — nothing auto-rewrites a
 user's commits server-side here, and `git push` has no "unrelated
 histories" push-time rejection. See `docs/plans/zesty-zooming-cupcake.md`'s
 "Key design decisions" #4 for the full reasoning.
+
+## Browsing
+
+Unlike hgweb (Mercurial's bundled JSON web server — see
+`services/hg/hgweb_wsgi.py`, which is two lines, no custom code), git's
+`git-http-backend` is smart-HTTP dumb-protocol only: clone/push, no
+commit/diff/directory browsing API. `browse/` is a small custom HTTP
+service (Node, `execFile('git', ...)`, mirrors `worker/`'s stack) that
+gives git repos the same browsing capability hgweb gives hg repos for
+free — shells out to `git log`/`show`/`ls-tree`/`diff`/`cat-file` against
+the same read-only-mounted bare-repos volume `git-app`/`worker` use.
+
+Reached via `git-proxy`'s existing public port (8443 prod / 8002 test), not
+a new one — a new nginx `location ~ ^/[^/]+/[^/]+/_browse/` block
+`proxy_pass`es to the internal-only `git-browse` container, behind the same
+`auth_request /internal/auth-check` gate as everything else on that port.
+The BFF authenticates its own calls with `GIT_INTERNAL_TOKEN` (a new shared
+secret, separate from `HG_INTERNAL_TOKEN`, checked by the same
+`/internal/auth-check` route) — see `web/bff/src/repos/
+git-browse-client.ts`, and `web/bff/.env.example` for `GIT_BROWSE_BASE`/
+`GIT_INTERNAL_TOKEN`. Full design in
+`docs/plans/zesty-zooming-cupcake.md`.
+
+Deliberately out of scope: git branches/tags as a `bookmarks` equivalent —
+these repos structurally have only one ref (`master`) today, so there's
+nothing meaningful to list yet.
 
 ## Auth
 
