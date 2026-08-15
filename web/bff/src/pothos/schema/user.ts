@@ -40,17 +40,10 @@ export const UserObject = builder.prismaObject('ModelUser', {
         )
       },
     }),
-    admin_of_organizations: t.relatedConnection('adminOfOrganizations', {
-      cursor: 'id',
-      totalCount: true,
-      query: () => ({ orderBy: [{ name: 'asc' }, { id: 'asc' }] }),
-    }),
-    owned_repositories: t.relatedConnection('ownedRepositories', {
-      cursor: 'id',
-      totalCount: true,
-      query: () => ({ orderBy: [{ createdTime: 'desc' }, { id: 'desc' }] }),
-    }),
-    admin_of_repositories: t.relatedConnection('adminOfRepositories', {
+    // The books this user has favorited, most-recently-favorited first —
+    // returns Favorite (not Book) so `created_time` ("favorited at") is
+    // available; each edge's `book` field has the actual Book.
+    favorites: t.relatedConnection('favorites', {
       cursor: 'id',
       totalCount: true,
       query: () => ({ orderBy: [{ createdTime: 'desc' }, { id: 'desc' }] }),

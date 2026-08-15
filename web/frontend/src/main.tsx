@@ -15,7 +15,7 @@ import './index.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <RelayEnvironmentProvider environment={RelayEnv}>
-      <Suspense fallback={<div>Loading CodeHub...</div>}>
+      <Suspense fallback={<div>Loading...</div>}>
         <RouterProvider router={router} />
       </Suspense>
     </RelayEnvironmentProvider>

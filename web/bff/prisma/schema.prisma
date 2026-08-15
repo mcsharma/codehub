@@ -23,15 +23,10 @@ model ModelUser {
   primaryEmail      String?      @unique         @map("primary_email")
   data              Json         @map("data")
 
-  adminOfOrganizations ModelOrganization[] @relation("OrganizationAdmins")
-
-  ownedRepositories    Repository[] @relation("RepositoryOwner")
-  adminOfRepositories  Repository[] @relation("RepositoryAdmins")
-
   authIdentities       AuthIdentity[]
   sessions             Session[]
   personalAccessTokens PersonalAccessToken[]
-  authoredReviews      Review[]
+  favorites            Favorite[]
   @@map("users")
 }
 
@@ -75,123 +70,65 @@ model PersonalAccessToken {
   @@map("personal_access_tokens")
 }
 
-model ModelOrganization {
-  id                BigInt       @id @default(autoincrement())
-  createdTime       DateTime     @default(now()) @map("created_time")
-  updatedTime       DateTime     @updatedAt      @map("updated_time")
-  isDeleted         Boolean      @default(false)  @map("is_deleted")
-  name              String       @unique         @map("name")
-  data              Json         @map("data")
-
-  repositories      Repository[] @relation("OrganizationRepositories")
-  admins            ModelUser[]  @relation("OrganizationAdmins")
-  @@map("organizations")
-}
-
-enum RepositoryVisibility {
-  PUBLIC
-  PRIVATE
-}
-
-// Which VCS actually hosts this repo's data — hg on the DigitalOcean VM's hg
-// stack, or git on its git stack (see services/git/README.md). Originally
-// defaulted to HG (backfilling every pre-existing row correctly with no
-// data migration, since git support didn't exist yet); now defaults to GIT
-// — hg is being phased out, see docs/plans/zesty-zooming-cupcake.md.
-enum VcsKind {
-  HG
-  GIT
-}
-
-model Repository {
-  id                  BigInt             @id @default(autoincrement())
-  createdTime         DateTime           @default(now()) @map("created_time")
-  updatedTime         DateTime           @updatedAt      @map("updated_time")
-  isDeleted           Boolean            @default(false)  @map("is_deleted")
-  name                String             @map("name")
-  description         String?            @map("description")
-  visibility          RepositoryVisibility @default(PUBLIC) @map("visibility")
-  vcsKind             VcsKind            @default(GIT)    @map("vcs_kind")
-
-  ownerUserId         BigInt?            @map("owner_user_id")
-  ownerUser           ModelUser?         @relation("RepositoryOwner", fields: [ownerUserId], references: [id])
-
-  ownerOrganizationId BigInt?            @map("owner_organization_id")
-  ownerOrganization   ModelOrganization? @relation("OrganizationRepositories", fields: [ownerOrganizationId], references: [id])
-
-  admins              ModelUser[]  @relation("RepositoryAdmins")
-
-  // Per-repo review numbering (D1, D2, ... scoped to this repo, not
-  // global) — incremented atomically via `{ increment: 1 }` in
-  // create_review, so the returned value is race-safe under concurrent
-  // submits without a separate transaction.
-  nextReviewNumber    Int          @default(0) @map("next_review_number")
-  reviews             Review[]
-
-  @@unique([ownerUserId, name])
-  @@unique([ownerOrganizationId, name])
-  @@map("repositories")
-}
-
-enum ReviewStatus {
-  OPEN
-  LANDING
-  LANDED
-  LAND_FAILED
-  ABANDONED
-}
-
-// A code review ("diff"). Pins real hg changesets rather than storing patch
-// content — see ReviewVersion and web/bff/src/repos/hgweb-client.ts. Diff
-// content itself is always fetched live from hgweb by node, never stored
-// here.
-model Review {
-  id            BigInt       @id @default(autoincrement())
-  createdTime   DateTime     @default(now()) @map("created_time")
-  updatedTime   DateTime     @updatedAt      @map("updated_time")
-  number        Int          @map("number")
-  title         String       @map("title")
-  status        ReviewStatus @default(OPEN) @map("status")
-  // Set by the landing worker once status is LANDED — the resulting node on
-  // `master` (may differ from the latest version's headNode: landing grafts
-  // rather than fast-forwards when master has moved since the last submit).
-  landedNode    String?      @map("landed_node")
-  // Set by the landing worker on LAND_FAILED (e.g. a graft conflict).
-  landError     String?      @map("land_error")
-
-  repositoryId  BigInt       @map("repository_id")
-  repository    Repository   @relation(fields: [repositoryId], references: [id])
-
-  authorId      BigInt       @map("author_id")
-  author        ModelUser    @relation(fields: [authorId], references: [id])
-
-  versions      ReviewVersion[]
-
-  @@unique([repositoryId, number])
-  @@map("reviews")
-}
-
-// One row per `ch submit` — created fresh on first submit and again on
-// every resubmit (amend/rebase), since the node hash changes each time.
-// headNode/baseNode/bookmark describe the actual pushed hg changeset;
-// nothing about its diff/file content is duplicated here.
-model ReviewVersion {
+model Publisher {
   id          BigInt   @id @default(autoincrement())
   createdTime DateTime @default(now()) @map("created_time")
-  version     Int      @map("version")
-  headNode    String   @map("head_node")
-  // Null only for a repo's very first-ever commit (no parent to pin).
-  baseNode    String?  @map("base_node")
-  // "reviews/<12-hex-node>" — see hg_hooks.py's prepushkey hook and
-  // cli/src/commands/submit.ts. Kept for reference/debugging; the review
-  // page and landing worker both address the changeset by headNode, not by
-  // this bookmark (which may already be gone by the time either runs).
-  bookmark    String   @map("bookmark")
+  updatedTime DateTime @updatedAt      @map("updated_time")
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  name        String   @map("name")
 
-  reviewId    BigInt   @map("review_id")
-  review      Review   @relation(fields: [reviewId], references: [id])
+  books       Book[]
 
-  @@unique([reviewId, version])
-  @@map("review_versions")
+  @@map("publishers")
 }
 
+model Author {
+  id          BigInt   @id @default(autoincrement())
+  createdTime DateTime @default(now()) @map("created_time")
+  updatedTime DateTime @updatedAt      @map("updated_time")
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  name        String   @map("name")
+  bio         String?  @map("bio")
+
+  // Implicit many-to-many — Prisma manages the join table itself, no
+  // explicit join model needed since there's no extra data to carry per
+  // (book, author) pair. Contrast with Favorite below.
+  books       Book[]
+
+  @@map("authors")
+}
+
+model Book {
+  id              BigInt    @id @default(autoincrement())
+  createdTime     DateTime  @default(now()) @map("created_time")
+  updatedTime     DateTime  @updatedAt      @map("updated_time")
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  title           String    @map("title")
+  publicationYear Int?      @map("publication_year")
+
+  publisherId     BigInt    @map("publisher_id")
+  publisher       Publisher @relation(fields: [publisherId], references: [id])
+
+  authors         Author[]
+  favoritedBy     Favorite[]
+
+  @@map("books")
+}
+
+// Explicit join model (not an implicit relation list) specifically because
+// it carries its own data (`createdTime`, i.e. "favorited at") — the other
+// idiom Prisma supports for many-to-many, alongside Book<->Author's plain
+// implicit form above.
+model Favorite {
+  id          BigInt    @id @default(autoincrement())
+  createdTime DateTime  @default(now()) @map("created_time")
+
+  userId      BigInt    @map("user_id")
+  user        ModelUser @relation(fields: [userId], references: [id])
+
+  bookId      BigInt    @map("book_id")
+  book        Book      @relation(fields: [bookId], references: [id])
+
+  @@unique([userId, bookId])
+  @@map("favorites")
+}

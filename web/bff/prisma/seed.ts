@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import 'dotenv/config'
-import { PrismaClient, RepositoryVisibility } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
 const connectionString = process.env.DATABASE_URL
@@ -12,115 +12,97 @@ const prisma = new PrismaClient({ adapter })
 async function main() {
   await prisma.$transaction(async (tx) => {
     // Clean slate (order matters for FK constraints)
-    await tx.repository.deleteMany()
+    await tx.favorite.deleteMany()
+    await tx.book.deleteMany()
+    await tx.author.deleteMany()
+    await tx.publisher.deleteMany()
     await tx.modelUser.deleteMany()
-    await tx.modelOrganization.deleteMany()
-
-    // ── Organizations ──────────────────────────────────────────────
-    const coderCo = await tx.modelOrganization.create({
-      data: {
-        name: 'coder-co',
-        data: { description: 'The developer company', website: 'https://coder.co' },
-      },
-    })
-
-    const openSourceCollective = await tx.modelOrganization.create({
-      data: {
-        name: 'open-source-collective',
-        data: { description: 'Community-driven open source projects', website: 'https://osc.dev' },
-      },
-    })
 
     // ── Users ──────────────────────────────────────────────────────
     const alice = await tx.modelUser.create({
-      data: {
-        username: 'alice',
-        data: { email: 'alice@codehub.dev', first_name: 'Alice', last_name: 'Chen', bio: 'Full-stack engineer' },
-        adminOfOrganizations: { connect: [{ id: coderCo.id }] },
-      },
+      data: { username: 'alice', data: { email: 'alice@example.com', first_name: 'Alice' } },
     })
-
     const bob = await tx.modelUser.create({
+      data: { username: 'bob', data: { email: 'bob@example.com', first_name: 'Bob' } },
+    })
+
+    // ── Publishers ─────────────────────────────────────────────────
+    const fernPress = await tx.publisher.create({ data: { name: 'Fern Press' } })
+    const northwind = await tx.publisher.create({ data: { name: 'Northwind Books' } })
+    const cobalt = await tx.publisher.create({ data: { name: 'Cobalt & Co.' } })
+
+    // ── Authors ────────────────────────────────────────────────────
+    const ursula = await tx.author.create({
+      data: { name: 'Ursula Vance', bio: 'Writes about distributed systems and the people who build them.' },
+    })
+    const miles = await tx.author.create({
+      data: { name: 'Miles Okafor', bio: 'Historian turned novelist.' },
+    })
+    const priya = await tx.author.create({
+      data: { name: 'Priya Ramanathan', bio: 'Essayist and short-story writer.' },
+    })
+    const tobias = await tx.author.create({
+      data: { name: 'Tobias Lund', bio: 'Debut novelist, previously a woodworker.' },
+    })
+
+    // ── Books (some multi-author, to exercise the Book<->Author
+    // many-to-many; publisher is a plain many-to-one) ────────────────
+    const distributedDreams = await tx.book.create({
       data: {
-        username: 'bob',
-        data: { email: 'bob@codehub.dev', first_name: 'Bob', last_name: 'Martinez', bio: 'Backend specialist' },
-        adminOfOrganizations: { connect: [{ id: coderCo.id }, { id: openSourceCollective.id }] },
+        title: 'Distributed Dreams',
+        publicationYear: 2021,
+        publisher: { connect: { id: fernPress.id } },
+        authors: { connect: [{ id: ursula.id }] },
+      },
+    })
+    const theLongCommit = await tx.book.create({
+      data: {
+        title: 'The Long Commit',
+        publicationYear: 2023,
+        publisher: { connect: { id: fernPress.id } },
+        authors: { connect: [{ id: ursula.id }, { id: priya.id }] },
+      },
+    })
+    const embersOfEmpire = await tx.book.create({
+      data: {
+        title: 'Embers of Empire',
+        publicationYear: 2019,
+        publisher: { connect: { id: northwind.id } },
+        authors: { connect: [{ id: miles.id }] },
+      },
+    })
+    const quietHarbors = await tx.book.create({
+      data: {
+        title: 'Quiet Harbors',
+        publicationYear: 2022,
+        publisher: { connect: { id: northwind.id } },
+        authors: { connect: [{ id: priya.id }] },
+      },
+    })
+    const theJoiner = await tx.book.create({
+      data: {
+        title: 'The Joiner',
+        publicationYear: 2024,
+        publisher: { connect: { id: cobalt.id } },
+        authors: { connect: [{ id: tobias.id }] },
+      },
+    })
+    const fieldNotes = await tx.book.create({
+      data: {
+        title: 'Field Notes on Everything',
+        publicationYear: 2020,
+        publisher: { connect: { id: cobalt.id } },
+        authors: { connect: [{ id: miles.id }, { id: tobias.id }] },
       },
     })
 
-    const carol = await tx.modelUser.create({
-      data: {
-        username: 'carol',
-        data: { email: 'carol@codehub.dev', first_name: 'Carol', last_name: 'Nguyen', bio: 'DevOps & infra' },
-        adminOfOrganizations: { connect: [{ id: openSourceCollective.id }] },
-      },
-    })
-
-    const dave = await tx.modelUser.create({
-      data: {
-        username: 'dave',
-        data: { email: 'dave@codehub.dev', first_name: 'Dave', last_name: 'Kim', bio: 'Frontend developer' },
-      },
-    })
-
-    // ── User-owned repositories ────────────────────────────────────
-    await tx.repository.create({
-      data: {
-        name: 'my-app',
-        visibility: RepositoryVisibility.PUBLIC,
-        ownerUser: { connect: { id: alice.id } },
-        admins: { connect: [{ id: alice.id }, { id: bob.id }] },
-      },
-    })
-
-    await tx.repository.create({
-      data: {
-        name: 'private-lib',
-        visibility: RepositoryVisibility.PRIVATE,
-        ownerUser: { connect: { id: alice.id } },
-        admins: { connect: [{ id: alice.id }] },
-      },
-    })
-
-    await tx.repository.create({
-      data: {
-        name: 'dotfiles',
-        visibility: RepositoryVisibility.PUBLIC,
-        ownerUser: { connect: { id: bob.id } },
-        admins: { connect: [{ id: bob.id }] },
-      },
-    })
-
-    // ── Org-owned repositories ─────────────────────────────────────
-    await tx.repository.create({
-      data: {
-        name: 'shared-platform',
-        visibility: RepositoryVisibility.PUBLIC,
-        ownerOrganization: { connect: { id: coderCo.id } },
-        admins: { connect: [{ id: alice.id }, { id: bob.id }, { id: carol.id }] },
-      },
-    })
-
-    await tx.repository.create({
-      data: {
-        name: 'design-system',
-        visibility: RepositoryVisibility.PUBLIC,
-        ownerOrganization: { connect: { id: coderCo.id } },
-        admins: { connect: [{ id: alice.id }, { id: dave.id }] },
-      },
-    })
-
-    await tx.repository.create({
-      data: {
-        name: 'community-tools',
-        visibility: RepositoryVisibility.PUBLIC,
-        ownerOrganization: { connect: { id: openSourceCollective.id } },
-        admins: { connect: [{ id: bob.id }, { id: carol.id }] },
-      },
-    })
+    // ── Favorites ──────────────────────────────────────────────────
+    await tx.favorite.create({ data: { user: { connect: { id: alice.id } }, book: { connect: { id: theLongCommit.id } } } })
+    await tx.favorite.create({ data: { user: { connect: { id: alice.id } }, book: { connect: { id: theJoiner.id } } } })
+    await tx.favorite.create({ data: { user: { connect: { id: bob.id } }, book: { connect: { id: distributedDreams.id } } } })
 
     console.log('Seed complete ✓')
-    console.log(`  Organizations: 2  |  Users: 4  |  Repositories: 6`)
+    console.log('  Users: 2  |  Publishers: 3  |  Authors: 4  |  Books: 6  |  Favorites: 3')
   }, { timeout: 20000 })
 }
 
@@ -131,4 +113,3 @@ main()
     prisma.$disconnect()
     process.exit(1)
   })
-

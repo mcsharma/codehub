@@ -1,5 +1,4 @@
 import 'dotenv/config'
-import crypto from 'node:crypto'
 import express from 'express'
 import { createYoga } from 'graphql-yoga'
 import cors from 'cors'
@@ -11,8 +10,6 @@ import { prisma } from './prisma/db.js'
 import { googleAuthRouter } from './auth/google.js'
 import { SESSION_COOKIE, resolveSession } from './auth/session.js'
 import { resolvePersonalAccessToken } from './auth/personal-access-token.js'
-import { canAccessRepo } from './auth/repo-access.js'
-import { startBoss, ensureHgQueues, ensureGitQueues } from './jobs/boss.js'
 import { writeFileSync } from 'node:fs'
 import { printSchema, lexicographicSortSchema } from 'graphql'
 import path from 'node:path'
@@ -63,84 +60,7 @@ app.use(
 // 3. Cookie parser — must come before routes that read cookies.
 app.use(cookieParser())
 
-// 4. Internal auth-check — called by nginx `auth_request` in front of hgweb
-// (see services/hg/README.md). nginx forwards the original request's path/method
-// via X-Original-URI/X-Original-Method (it can't infer them from its own
-// subrequest URI), and the original Authorization header comes through
-// automatically since auth_request subrequests carry the original headers.
-app.get('/internal/auth-check', async (req, res) => {
-  const originalUri = req.header('x-original-uri') ?? ''
-  // handle the request GET /alice/private-lib?cmd=capabilities HTTP/1.1
-  const [path, query] = originalUri.split('?')
-  const [, ownerName, repoName] = path.split('/')
-  if (!ownerName || !repoName) {
-    res.sendStatus(400)
-    return
-  }
-
-  let user = null
-  const authHeader = req.header('authorization')
-  if (authHeader?.startsWith('Basic ')) {
-    const decoded = Buffer.from(
-      authHeader.slice('Basic '.length),
-      'base64',
-    ).toString('utf8')
-    // Username is unchecked (same convention GitHub uses for PAT-over-Basic-Auth) —
-    // everything after the first colon is treated as the token.
-    const token = decoded.slice(decoded.indexOf(':') + 1)
-
-    // The BFF itself is also an hgweb/git-browse caller (browsing commits
-    // via hgweb's JSON style or the git-browse service — see
-    // repos/hgweb-client.ts and repos/git-browse-client.ts) and
-    // authenticates with one of these shared secrets instead of a PAT. It's
-    // safe to bypass canAccessRepo entirely here because the GraphQL
-    // resolver making that call has already done its own canAccessRepo
-    // check for the specific user/repo in question before ever reaching
-    // hgweb/git-browse — a matching token just proves the caller *is* the
-    // BFF, not that any particular request is authorized.
-    const isInternalToken = (envVar: string | undefined): boolean => {
-      const tokenBuf = Buffer.from(token)
-      const envBuf = Buffer.from(envVar ?? '')
-      return !!envVar && tokenBuf.length === envBuf.length && crypto.timingSafeEqual(tokenBuf, envBuf)
-    }
-    if (isInternalToken(process.env.HG_INTERNAL_TOKEN) || isInternalToken(process.env.GIT_INTERNAL_TOKEN)) {
-      res.sendStatus(200)
-      return
-    }
-
-    user = await resolvePersonalAccessToken(token)
-  }
-
-  // Classify by the wire-protocol `cmd`, not HTTP method: `unbundle` (push) is
-  // always POST, but Mercurial's `httppostargs` feature also sends large *read*
-  // commands like `getbundle` as POST once their arguments would overflow HTTP
-  // header limits — so GET-vs-POST alone would wrongly deny big pulls/clones to
-  // read-only users. `cmd` stays in the query string even when the rest of the
-  // arguments move into the POST body.
-  //
-  // Git repos have no `cmd` param at all — its smart-HTTP protocol signals
-  // read vs write via the request path/`service` query param instead:
-  // `git-upload-pack` (clone/fetch/pull) is read, `git-receive-pack` (push)
-  // is write, surfaced either as the POST target path itself or as
-  // `?service=git-receive-pack` on the initial `GET .../info/refs` probe.
-  const params = new URLSearchParams(query ?? '')
-  const cmd = params.get('cmd')
-  const isGitPush = path.endsWith('/git-receive-pack') || params.get('service') === 'git-receive-pack'
-  const action = cmd === 'unbundle' || isGitPush ? 'write' : 'read'
-  const allowed = await canAccessRepo(user, ownerName, repoName, action)
-  if (allowed && user) {
-    // Lets git's post-receive hook attribute a review to the actual pushing
-    // human rather than the service account that authenticates the git-app
-    // container's own hgweb-style calls — see services/git/hooks/post-receive
-    // and pothos/schema/git-review.ts's report_git_review_push. nginx's
-    // git-proxy captures this via auth_request_set and forwards it as
-    // REMOTE_USER through git-http-backend to the hook's environment.
-    res.set('X-CodeHub-User', user.username)
-  }
-  res.sendStatus(allowed ? 200 : 401)
-})
-
-// 4b. Login routes (Google OAuth today, more providers later).
+// 4. Login routes (Google OAuth today, more providers later).
 app.use('/auth', googleAuthRouter)
 
 // 5. GraphQL Yoga Setup
@@ -152,10 +72,8 @@ const yoga = createYoga<ExpressServerContext>({
   schema: builder.toSchema(),
   graphqlEndpoint: '/graphql',
   context: async (ctx) => {
-    // The `ch` CLI authenticates as a PAT bearer token, same credential
-    // used for hg wire-protocol pushes over Basic auth (see
-    // /internal/auth-check above) — the web UI keeps using the session
-    // cookie, PATs were never accepted on /graphql before this.
+    // Bearer token (a PersonalAccessToken) for API clients — the web UI
+    // keeps using the session cookie below.
     const authHeader = ctx.req.header('authorization')
     if (authHeader?.startsWith('Bearer ')) {
       const user = await resolvePersonalAccessToken(authHeader.slice('Bearer '.length))
@@ -197,19 +115,9 @@ app.get('*any', (req, res) => {
   })
 })
 
-// Job queue: must be started (and the hg job queues created) before
-// anything can enqueue a provision-repo/delete-repo/land-review job or the
-// VM worker can claim one — awaited before the server starts accepting
-// requests rather than fired-and-forgotten in the background. Nothing in
-// this process consumes these queues anymore; the VM worker does, via
-// claim_hg_job (see pothos/schema/hg-worker.ts).
-await startBoss()
-await ensureHgQueues()
-await ensureGitQueues()
-
 app.listen(port, () => {
   console.log(`
- CodeHub BFF is running!
+ BFF is running!
  API: http://localhost:${port}/graphql
   `)
 })

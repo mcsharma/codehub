@@ -1,15 +1,15 @@
 {
-  "name": "codehub",
+  "name": "scaffold",
   "private": true,
   "type": "module",
-  "description": "AI-first GitHub competitor",
+  "description": "pnpm + Express/GraphQL-Yoga/Pothos/Prisma + React/Relay starter scaffold",
   "scripts": {
-    "typecheck": "pnpm --filter @codehub/bff typecheck && pnpm --filter @codehub/frontend typecheck",
-    "dev": "concurrently \"pnpm run --filter @codehub/bff dev\" \"wait-on tcp:4000 && pnpm run --filter @codehub/frontend dev\" \"pnpm run --filter @codehub/frontend relay\"",
+    "typecheck": "pnpm --filter @scaffold/bff typecheck && pnpm --filter @scaffold/frontend typecheck",
+    "dev": "concurrently \"pnpm run --filter @scaffold/bff dev\" \"wait-on tcp:4000 && pnpm run --filter @scaffold/frontend dev\" \"pnpm run --filter @scaffold/frontend relay\"",
     "build": "pnpm run -r build",
-    "db:migrate": "pnpm --filter @codehub/bff migrate",
-    "db:generate": "pnpm --filter @codehub/bff generate",
-    "relay": "pnpm --filter @codehub/frontend relay",
+    "db:migrate": "pnpm --filter @scaffold/bff migrate",
+    "db:generate": "pnpm --filter @scaffold/bff generate",
+    "relay": "pnpm --filter @scaffold/frontend relay",
     "lint": "pnpm -r lint",
     "lint:fix": "pnpm -r lint:fix"
   },

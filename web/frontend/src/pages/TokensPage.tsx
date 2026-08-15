@@ -139,7 +139,7 @@ const TokensPage = () => {
             <div>
               <h1 className="text-2xl font-bold">Personal Access Tokens</h1>
               <p className="mt-1 text-muted-foreground">
-                Tokens you can use to authenticate with the CodeHub CLI or API.
+                Tokens you can use to authenticate with the API.
               </p>
             </div>
             <Button
@@ -155,7 +155,7 @@ const TokensPage = () => {
             <div>
               <p className="font-bold text-primary">Security Note</p>
               <p className="mt-1 text-sm text-primary">
-                Treat these tokens like passwords. CodeHub will only show you
+                Treat these tokens like passwords. This app will only show you
                 the full token string once, immediately after generation.
               </p>
             </div>

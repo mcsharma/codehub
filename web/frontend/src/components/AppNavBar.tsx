@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { graphql, useFragment } from "react-relay";
-import { CircleUserRound, FolderOpen, Key, LogOut } from "lucide-react";
+import { CircleUserRound, Heart, Key, LogOut, Plus } from "lucide-react";
 import type { AppNavBar_user$key } from "./__generated__/AppNavBar_user.graphql";
 import { Button } from "./ui/button";
 import {
@@ -16,15 +16,6 @@ interface AppNavBarProps {
   currentUser: AppNavBar_user$key | null;
   onLogout: () => void;
 }
-
-// Nav items with no destination yet — visible so the chrome matches the
-// mocks, but not wired up (no Dashboard/Explore/Documentation surface
-// exists yet).
-const InertNavLink = ({ label }: { label: string }) => (
-  <span className="cursor-default rounded-[24px] px-3 py-1 text-sm font-medium text-muted-foreground">
-    {label}
-  </span>
-);
 
 const AppNavBar = ({ currentUser: currentUserRef, onLogout }: AppNavBarProps) => {
   const currentUser = useFragment(
@@ -55,54 +46,63 @@ const AppNavBar = ({ currentUser: currentUserRef, onLogout }: AppNavBarProps) =>
               />
             </svg>
           </div>
-          CodeHub
+          Bookstore
         </Link>
 
         <nav className="flex flex-1 items-center gap-1">
-          <InertNavLink label="Dashboard" />
+          <Link
+            to="/"
+            className="rounded-[24px] px-3 py-1 text-sm font-medium text-muted-foreground no-underline hover:bg-secondary hover:text-foreground"
+          >
+            Books
+          </Link>
           {currentUser && (
             <Link
-              to={`/${currentUser.username}`}
-              className="rounded-[24px] bg-secondary px-3 py-1 text-sm font-bold text-foreground no-underline hover:bg-[#eeeeee]"
+              to="/favorites"
+              className="rounded-[24px] px-3 py-1 text-sm font-medium text-muted-foreground no-underline hover:bg-secondary hover:text-foreground"
             >
-              Repositories
+              Favorites
             </Link>
           )}
-          <InertNavLink label="Explore" />
-          <InertNavLink label="Documentation" />
         </nav>
 
         {currentUser ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button variant="ghost" size="icon-md" aria-label="Account menu" className="rounded-full">
-                  <CircleUserRound className="size-5 text-muted-foreground" />
-                </Button>
-              }
-            />
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel className="font-normal text-muted-foreground">
-                Signed in as {currentUser.first_name ?? currentUser.username}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem render={<Link to={`/${currentUser.username}`} />}>
-                <FolderOpen className="size-4" />
-                My Repositories
-              </DropdownMenuItem>
-              <DropdownMenuItem render={<Link to="/settings/tokens" />}>
-                <Key className="size-4" />
-                Personal Access Tokens
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogout}>
-                <LogOut className="size-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <>
+            <Button variant="outline" size="sm" render={<Link to="/books/new" />}>
+              <Plus className="size-4" />
+              New Book
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="ghost" size="icon-md" aria-label="Account menu" className="rounded-full">
+                    <CircleUserRound className="size-5 text-muted-foreground" />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel className="font-normal text-muted-foreground">
+                  Signed in as {currentUser.first_name ?? currentUser.username}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem render={<Link to="/favorites" />}>
+                  <Heart className="size-4" />
+                  Favorites
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<Link to="/settings/tokens" />}>
+                  <Key className="size-4" />
+                  Personal Access Tokens
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onLogout}>
+                  <LogOut className="size-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
         ) : (
-          <Button render={<a href="/auth/google" />}>Login with Google</Button>
+          <Button render={<Link to="/login" />}>Login</Button>
         )}
       </div>
     </header>

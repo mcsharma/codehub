@@ -18,9 +18,9 @@ const LoginPage = () => {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold">Welcome back to CodeHub</h1>
+          <h1 className="text-2xl font-bold">Welcome back</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Simple, modern source control.
+            Sign in to favorite books and add new ones.
           </p>
         </div>
 

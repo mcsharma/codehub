@@ -1,38 +1,21 @@
 # @generated - This file is generated, DO NOT modify it directly!
 
-type Bookmark {
+type Author {
+  bio: String
+  books: [Book!]
+  created_time: Int
+  id: ID
   name: String
-  node: String
-  short_node: String
 }
 
-type Commit {
-  author: String
-  bookmarks: [String!]
-  branch: String
-  date: Int
-  description: String
-  diff: String
-  files: [CommitFile!]
-  node: String
-  parents: [String!]
-  short_node: String
-  tags: [String!]
-}
-
-type CommitConnection {
-  edges: [CommitEdge]
-  pageInfo: PageInfo!
-}
-
-type CommitEdge {
-  cursor: ID!
-  node: Commit
-}
-
-type CommitFile {
-  path: String
-  status: String
+type Book {
+  authors: [Author!]
+  created_time: Int
+  id: ID
+  is_favorited: Boolean
+  publication_year: Int
+  publisher: Publisher
+  title: String
 }
 
 type CreatePersonalAccessTokenResult {
@@ -41,76 +24,23 @@ type CreatePersonalAccessTokenResult {
   token: String
 }
 
-type GitJob {
+type Favorite {
+  book: Book
+  created_time: Int
   id: ID
-  owner: String
-  queue: String
-  repo: String
-  sha: String
-}
-
-type HgJob {
-  id: ID
-  node: String
-  owner: String
-  queue: String
-  repo: String
 }
 
 type Mutation {
-  abandon_review(number: Int!, owner: String!, repo: String!): Review
-  add_review_version(head_node: String!, number: Int!, owner: String!, repo: String!): Review
-  claim_git_job(queues: [String!]!): GitJob
-  claim_hg_job(queues: [String!]!): HgJob
-  complete_git_job(job_id: ID!, landed_sha: String, queue: String!): Boolean
-  complete_hg_job(job_id: ID!, landed_node: String, queue: String!): Boolean
+  create_author(bio: String, name: String!): Author
+  create_book(author_ids: [ID!]!, publication_year: Int, publisher_id: ID!, title: String!): Book
   create_personal_access_token(label: String!): CreatePersonalAccessTokenResult
-  create_repository(description: String, kind: VcsKind = GIT, name: String!, visibility: RepositoryVisibility!): Repository
-  create_review(owner: String!, repo: String!, title: String!): Review
-  delete_repository(id: ID!): Boolean
-  fail_git_job(error: String!, job_id: ID!, queue: String!): Boolean
-  fail_hg_job(error: String!, job_id: ID!, queue: String!): Boolean
-  land_review(number: Int!, owner: String!, repo: String!): Review
+  create_publisher(name: String!): Publisher
   logout: Boolean
 
   """No-op mutation for schema compatibility (e.g. Relay)."""
   noop: Boolean
-  report_git_review_push(description: String!, owner: String!, parent_sha: String, pusher_username: String!, repo: String!, sha: String!, title: String!): Review
   revoke_personal_access_token(id: ID!): Boolean
-  update_repository_visibility(id: ID!, visibility: RepositoryVisibility!): Repository
-}
-
-type Organization {
-  admins(after: ID, before: ID, first: Int, last: Int): OrganizationAdminsConnection
-  created_time: Int
-  data: String
-  id: ID
-  is_deleted: Boolean
-  name: String
-  repositories(after: ID, before: ID, first: Int, last: Int): OrganizationRepositoriesConnection
-  updated_time: Int
-}
-
-type OrganizationAdminsConnection {
-  edges: [OrganizationAdminsConnectionEdge]
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-type OrganizationAdminsConnectionEdge {
-  cursor: ID!
-  node: User
-}
-
-type OrganizationRepositoriesConnection {
-  edges: [OrganizationRepositoriesConnectionEdge]
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-type OrganizationRepositoriesConnectionEdge {
-  cursor: ID!
-  node: Repository
+  toggle_favorite_book(book_id: ID!): Book
 }
 
 type PageInfo {
@@ -127,166 +57,58 @@ type PersonalAccessToken {
   last_used_time: Int
 }
 
+type Publisher {
+  books: [Book!]
+  created_time: Int
+  id: ID
+  name: String
+}
+
 type Query {
+  author(id: ID!): Author
+  authors: [Author!]
+  book(id: ID!): Book
+  books(after: ID, before: ID, first: Int, last: Int): QueryBooksConnection
   current_user: User
   my_personal_access_tokens: [PersonalAccessToken!]
 
   """No-op query for schema compatibility (e.g. Relay)."""
   noop: Boolean
-  organization(id: ID!): Organization
-  organization_by_name(name: String!): Organization
-  owner_by_name(name: String!): RepositoryOwner
-  repository(id: ID!): Repository
-  repository_by_owner_and_name(name: String!, owner_username: String!): Repository
+  publisher(id: ID!): Publisher
+  publishers: [Publisher!]
   user(id: ID!): User
   user_by_username(username: String!): User
 }
 
-type RepoDirectory {
-  directories: [RepoDirectoryEntry!]
-  files: [RepoFileEntry!]
-  path: String
-}
-
-type RepoDirectoryEntry {
-  name: String
-  path: String
-}
-
-type RepoFile {
-  content: String
-  isBinary: Boolean
-  isTooLarge: Boolean
-  path: String
-  size: Int
-}
-
-type RepoFileEntry {
-  last_commit_date: Int
-  last_commit_message: String
-  name: String
-  path: String
-  size: Int
-}
-
-type Repository {
-  admins(after: ID, before: ID, first: Int, last: Int): RepositoryAdminsConnection
-  bookmarks: [Bookmark!]
-  commit(node: String!): Commit
-  commits(after: ID, before: ID, first: Int, last: Int): CommitConnection
-  created_time: Int
-  description: String
-  directory(path: String = "", rev: String = "tip"): RepoDirectory
-  file(path: String!, rev: String = "tip"): RepoFile
-  id: ID
-  is_deleted: Boolean
-  name: String
-  owner: RepositoryOwner
-  review(number: Int!): Review
-  reviews: [Review!]
-  updated_time: Int
-  vcs_kind: VcsKind
-  visibility: RepositoryVisibility
-}
-
-type RepositoryAdminsConnection {
-  edges: [RepositoryAdminsConnectionEdge]
+type QueryBooksConnection {
+  edges: [QueryBooksConnectionEdge]
   pageInfo: PageInfo!
-  totalCount: Int!
 }
 
-type RepositoryAdminsConnectionEdge {
+type QueryBooksConnectionEdge {
   cursor: ID!
-  node: User
-}
-
-union RepositoryOwner = Organization | User
-
-enum RepositoryVisibility {
-  PRIVATE
-  PUBLIC
-}
-
-type Review {
-  author: User
-  created_time: Int
-  id: ID
-  land_error: String
-  landed_node: String
-  latest_version: ReviewVersion
-  number: Int
-  status: ReviewStatus
-  title: String
-  updated_time: Int
-  versions: [ReviewVersion!]
-}
-
-enum ReviewStatus {
-  ABANDONED
-  LANDED
-  LANDING
-  LAND_FAILED
-  OPEN
-}
-
-type ReviewVersion {
-  base_node: String
-  bookmark: String
-  commit: Commit
-  created_time: Int
-  head_node: String
-  id: ID
-  version: Int
+  node: Book
 }
 
 type User {
-  admin_of_organizations(after: ID, before: ID, first: Int, last: Int): UserAdmin_of_organizationsConnection
-  admin_of_repositories(after: ID, before: ID, first: Int, last: Int): UserAdmin_of_repositoriesConnection
   created_time: Int
+  favorites(after: ID, before: ID, first: Int, last: Int): UserFavoritesConnection
   first_name: String
   id: ID
   is_deleted: Boolean
   last_name: String
-  owned_repositories(after: ID, before: ID, first: Int, last: Int): UserOwned_repositoriesConnection
   primary_email: String
   updated_time: Int
   username: String
 }
 
-type UserAdmin_of_organizationsConnection {
-  edges: [UserAdmin_of_organizationsConnectionEdge]
+type UserFavoritesConnection {
+  edges: [UserFavoritesConnectionEdge]
   pageInfo: PageInfo!
   totalCount: Int!
 }
 
-type UserAdmin_of_organizationsConnectionEdge {
+type UserFavoritesConnectionEdge {
   cursor: ID!
-  node: Organization
-}
-
-type UserAdmin_of_repositoriesConnection {
-  edges: [UserAdmin_of_repositoriesConnectionEdge]
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-type UserAdmin_of_repositoriesConnectionEdge {
-  cursor: ID!
-  node: Repository
-}
-
-type UserOwned_repositoriesConnection {
-  edges: [UserOwned_repositoriesConnectionEdge]
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-type UserOwned_repositoriesConnectionEdge {
-  cursor: ID!
-  node: Repository
-}
-
-enum VcsKind {
-  GIT
-  HG
+  node: Favorite
 }
