@@ -1,6 +1,14 @@
 import { builder } from '../builder.js'
 import { exposeID, exposeTime } from '../field-exposers.js'
 import { requireUser } from '../require-user.js'
+import { GraphQLError } from 'graphql'
+
+// Anti-spam cap for public deployments — not a product decision about how
+// many books someone "should" own, just a ceiling so an open, unauthed-signup
+// instance can't get its catalog flooded. Seeded books are exempt (they have
+// no `addedByUserId` at all, see schema.prisma), only mutation-added
+// ones count.
+const MAX_BOOKS_PER_USER = 3
 
 // --- Favorite object type ---
 // Exposes the join row itself (not just the Book) so `created_time` — i.e.
@@ -27,6 +35,7 @@ export const BookObject = builder.prismaObject('Book', {
     publication_year: t.exposeInt('publicationYear', { nullable: true }),
     publisher: t.relation('publisher'),
     authors: t.relation('authors'),
+    added_by: t.relation('addedBy', { nullable: true }),
     is_favorited: t.boolean({
       resolve: async (book, _args, ctx) => {
         if (!ctx.user) return false
@@ -74,15 +83,26 @@ builder.mutationField('create_book', (t) =>
       publisher_id: t.arg.id({ required: true }),
       author_ids: t.arg.idList({ required: true }),
     },
-    resolve: (_query, _root, args, ctx) =>
-      ctx.prisma.book.create({
+    resolve: async (_query, _root, args, ctx) => {
+      const user = requireUser(ctx.user)
+
+      const addedCount = await ctx.prisma.book.count({ where: { addedByUserId: user.id } })
+      if (addedCount >= MAX_BOOKS_PER_USER) {
+        throw new GraphQLError(`You can only add up to ${MAX_BOOKS_PER_USER} books`, {
+          extensions: { code: 'LIMIT_REACHED' },
+        })
+      }
+
+      return ctx.prisma.book.create({
         data: {
           title: args.title,
           publicationYear: args.publication_year ?? null,
           publisher: { connect: { id: BigInt(args.publisher_id) } },
           authors: { connect: args.author_ids.map((id) => ({ id: BigInt(id) })) },
+          addedBy: { connect: { id: user.id } },
         },
-      }),
+      })
+    },
   }),
 )
 

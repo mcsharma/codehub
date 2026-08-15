@@ -1,5 +1,6 @@
 import { builder } from '../builder.js'
 import { exposeID, exposeTime } from '../field-exposers.js'
+import { requireUser } from '../require-user.js'
 
 // --- Publisher object type ---
 
@@ -42,7 +43,9 @@ builder.mutationField('create_publisher', (t) =>
   t.prismaField({
     type: 'Publisher',
     args: { name: t.arg.string({ required: true }) },
-    resolve: (_query, _root, args, ctx) =>
-      ctx.prisma.publisher.create({ data: { name: args.name } }),
+    resolve: (_query, _root, args, ctx) => {
+      requireUser(ctx.user)
+      return ctx.prisma.publisher.create({ data: { name: args.name } })
+    },
   }),
 )

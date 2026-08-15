@@ -9,6 +9,7 @@ type Author {
 }
 
 type Book {
+  added_by: User
   authors: [Author!]
   created_time: Int
   id: ID

@@ -1,5 +1,6 @@
 import { builder } from '../builder.js'
 import { exposeID, exposeTime } from '../field-exposers.js'
+import { requireUser } from '../require-user.js'
 
 // --- Author object type ---
 
@@ -43,7 +44,9 @@ builder.mutationField('create_author', (t) =>
       name: t.arg.string({ required: true }),
       bio: t.arg.string({ required: false }),
     },
-    resolve: (_query, _root, args, ctx) =>
-      ctx.prisma.author.create({ data: { name: args.name, bio: args.bio ?? null } }),
+    resolve: (_query, _root, args, ctx) => {
+      requireUser(ctx.user)
+      return ctx.prisma.author.create({ data: { name: args.name, bio: args.bio ?? null } })
+    },
   }),
 )

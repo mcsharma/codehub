@@ -27,6 +27,7 @@ model ModelUser {
   sessions             Session[]
   personalAccessTokens PersonalAccessToken[]
   favorites            Favorite[]
+  addedBooks           Book[]
   @@map("users")
 }
 
@@ -108,6 +109,13 @@ model Book {
 
   publisherId     BigInt    @map("publisher_id")
   publisher       Publisher @relation(fields: [publisherId], references: [id])
+
+  // Null for seeded/pre-existing books — only mutation-added books get an
+  // adder, which is what create_book's per-user limit counts against
+  // (see pothos/schema/book.ts). Nullable rather than backfilling seed
+  // data with a fake owner.
+  addedByUserId   BigInt?   @map("added_by_user_id")
+  addedBy         ModelUser? @relation(fields: [addedByUserId], references: [id])
 
   authors         Author[]
   favoritedBy     Favorite[]
