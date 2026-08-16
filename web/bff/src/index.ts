@@ -22,14 +22,18 @@ try {
   await prisma.$queryRaw`SELECT 1`
 } catch {
   const maskedUrl = (process.env.DATABASE_URL ?? '(not set)').replace(/:[^:@/]*@/, ':****@')
+  // "docker compose up -d" is only meaningful advice locally — there's no
+  // docker-compose Postgres to start in prod, so that hint would be
+  // actively wrong there. Same NODE_ENV branch this file already uses for
+  // the GraphiQL CSP relaxation.
+  const fix =
+    process.env.NODE_ENV === 'production'
+      ? 'Check DATABASE_URL and that the database is reachable from this environment.'
+      : `If local Postgres isn't running yet, start it from the repo root:\n\n  docker compose up -d\n\nThen restart this server.`
   console.error(`
 Could not connect to the database (DATABASE_URL: ${maskedUrl}).
 
-If local Postgres isn't running yet, start it from the repo root:
-
-  docker compose up -d
-
-Then restart this server.
+${fix}
 `)
   process.exit(1)
 }
