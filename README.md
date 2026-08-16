@@ -51,8 +51,12 @@ infra, workers, etc.) — empty in this scaffold.
 
 ### Database
 
-- Any Postgres instance — a local install, `docker run -p 5432:5432
-  postgres:16`, or a hosted free tier all work (see `web/bff/.env.example`).
+- `docker compose up -d` (from the repo root) starts a local Postgres
+  matching `web/bff/.env.example`'s default `DATABASE_URL` exactly — no
+  editing needed. See `docker-compose.yml`; data persists in a named volume
+  across `down`/`up` cycles (`docker compose down -v` to wipe it). Any other
+  Postgres instance works too (a local install, a hosted free tier) — just
+  point `DATABASE_URL` at it instead.
 - Schema changes go through Prisma migrations (`web/bff/prisma/`) — full
   workflow:
   1. Edit `web/bff/prisma/schema.prisma`.
@@ -89,18 +93,21 @@ least one user in the database (e.g. via `prisma/seed.ts`).
 ## Quick start (new laptop)
 
 Prerequisites: Node (see `web/package.json`'s `packageManager` for the pnpm
-version — currently pnpm 11.x via corepack) and a Postgres instance.
+version — currently pnpm 11.x via corepack) and Docker (or any Postgres
+instance).
 
-1. `cp web/bff/.env.example web/bff/.env` and fill in `DATABASE_URL` (and
-   Google OAuth credentials if you want login to work) — **before**
-   installing. `pnpm install`'s `postinstall` hook runs `prisma generate`
+1. `docker compose up -d` (repo root) — starts local Postgres.
+2. `cp web/bff/.env.example web/bff/.env` — the default `DATABASE_URL`
+   already matches step 1's Postgres, so no editing needed there; add
+   Google OAuth credentials if you want login to work. Do this **before**
+   installing — `pnpm install`'s `postinstall` hook runs `prisma generate`
    immediately, and `prisma.config.ts` needs `DATABASE_URL` resolvable at
    that point, so `.env` has to exist first or install itself fails with
    `PrismaConfigEnvError: Cannot resolve environment variable: DATABASE_URL`.
-2. `cd web && pnpm install` — installs the `frontend`+`bff` workspace.
-3. `pnpm run db:migrate` then `pnpm run db:generate` (from `web/`).
-4. `cd bff && pnpm run seed` — loads the sample bookstore fixtures.
-5. From `web/`, run `pnpm run dev` — starts the BFF, frontend, and Relay
+3. `cd web && pnpm install` — installs the `frontend`+`bff` workspace.
+4. `pnpm run db:migrate` then `pnpm run db:generate` (from `web/`).
+5. `cd bff && pnpm run seed` — loads the sample bookstore fixtures.
+6. From `web/`, run `pnpm run dev` — starts the BFF, frontend, and Relay
    watcher together (waits for the BFF to be listening before starting
    Vite).
 

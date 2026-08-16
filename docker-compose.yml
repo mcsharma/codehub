@@ -1,0 +1,17 @@
+# Local dev Postgres — `docker compose up -d` from the repo root, then
+# `web/bff/.env.example`'s default DATABASE_URL points at this exact
+# instance, so a fresh clone needs no editing to get a working DB.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: scaffold
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
