@@ -91,10 +91,13 @@ least one user in the database (e.g. via `prisma/seed.ts`).
 Prerequisites: Node (see `web/package.json`'s `packageManager` for the pnpm
 version — currently pnpm 11.x via corepack) and a Postgres instance.
 
-1. `cd web && pnpm install` — installs the `frontend`+`bff` workspace
-   (`postinstall` also runs `prisma generate`).
-2. `cp web/bff/.env.example web/bff/.env` and fill in `DATABASE_URL` (and
-   Google OAuth credentials if you want login to work).
+1. `cp web/bff/.env.example web/bff/.env` and fill in `DATABASE_URL` (and
+   Google OAuth credentials if you want login to work) — **before**
+   installing. `pnpm install`'s `postinstall` hook runs `prisma generate`
+   immediately, and `prisma.config.ts` needs `DATABASE_URL` resolvable at
+   that point, so `.env` has to exist first or install itself fails with
+   `PrismaConfigEnvError: Cannot resolve environment variable: DATABASE_URL`.
+2. `cd web && pnpm install` — installs the `frontend`+`bff` workspace.
 3. `pnpm run db:migrate` then `pnpm run db:generate` (from `web/`).
 4. `cd bff && pnpm run seed` — loads the sample bookstore fixtures.
 5. From `web/`, run `pnpm run dev` — starts the BFF, frontend, and Relay
