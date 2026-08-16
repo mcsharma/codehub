@@ -15,6 +15,25 @@ import { printSchema, lexicographicSortSchema } from 'graphql'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+// Fail fast with a clear, actionable message if Postgres isn't reachable —
+// much more useful than the raw ECONNREFUSED that'd otherwise surface deep
+// inside the first GraphQL request a client happens to make.
+try {
+  await prisma.$queryRaw`SELECT 1`
+} catch {
+  const maskedUrl = (process.env.DATABASE_URL ?? '(not set)').replace(/:[^:@/]*@/, ':****@')
+  console.error(`
+Could not connect to the database (DATABASE_URL: ${maskedUrl}).
+
+If local Postgres isn't running yet, start it from the repo root:
+
+  docker compose up -d
+
+Then restart this server.
+`)
+  process.exit(1)
+}
+
 const app = express()
 const port = process.env.PORT || 4000
 
