@@ -22,7 +22,11 @@ try {
   await prisma.$queryRaw`SELECT 1`
 } catch {
   const maskedUrl = (process.env.DATABASE_URL ?? '(not set)').replace(/:[^:@/]*@/, ':****@')
-  console.error(`
+  // Raw ANSI codes rather than a color-library dependency — this is the
+  // only place in the scaffold that wants one.
+  const red = (s: string) => `\x1b[31m${s}\x1b[0m`
+  console.error(
+    red(`
 Could not connect to the database (DATABASE_URL: ${maskedUrl}).
 
 If local Postgres isn't running yet, start it from the repo root:
@@ -30,7 +34,8 @@ If local Postgres isn't running yet, start it from the repo root:
   docker compose up -d
 
 Then restart this server.
-`)
+`),
+  )
   process.exit(1)
 }
 
