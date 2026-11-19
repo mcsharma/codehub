@@ -23,45 +23,24 @@ on-disk repos directory (`/data/git-repos-prod` / `/data/git-repos-test`).
 | `vm/docker-compose.prod.yml` / `docker-compose.test.yml` | Per-stack compose files. |
 | `vm/nginx-prod.conf` / `nginx-test.conf.template` | Per-stack nginx config. |
 
-## No client tooling — review creation is server-side
+## Push rules
 
-Unlike hg's `ch submit`, there is no custom CLI for git repos. Users push
-with plain `git`/Sapling (`sl`) to a `refs/reviews/<40-hex-sha>` ref (the
-git-ref analog of hg's `reviews/<12-hex-node>` bookmark). The bare repo's
-`post-receive` hook (`hooks/post-receive`) detects the push and calls the
-BFF's `report_git_review_push` mutation itself
-(`web/bff/src/pothos/schema/git-review.ts`) to create/update the
-`Review`/`ReviewVersion` rows — same Prisma models hg reviews already use.
-`hooks/pre-receive` enforces the same push-time restriction hg's
-`hg_hooks.py` does: `refs/heads/master` can never be pushed to directly
-(it only moves via the worker's `landGitReview` op, on-disk, never over the
-wire protocol), and every other push must be a `refs/reviews/<sha>` ref.
+Users push with plain `git` or Sapling (`sl`); there's no review step or
+custom client. `hooks/pre-receive` allows any ref to be created, updated,
+force-pushed or deleted, except `refs/heads/master`, which can't be deleted
+and can only fast-forward. Same policy as hg's `hg_hooks.py`.
 
-Pusher identity for `report_git_review_push`'s `Review.authorId` is
-plumbed through: `/internal/auth-check` sets an `X-CodeHub-User` response
-header, nginx captures it via `auth_request_set` and forwards it as
-`REMOTE_USER` in the fastcgi params to `git-http-backend`, which passes it
-through to `git-receive-pack`'s hook environment.
+Repos are created with no commits (`git init --bare --initial-branch=master`)
+and the Code tab shows `master`.
 
-## Landing
+`/internal/auth-check` sets an `X-CodeHub-User` response header, and nginx
+forwards it to `git-http-backend` as `REMOTE_USER`. This is load-bearing:
+`git-http-backend` only enables `receive-pack` (push) when `REMOTE_USER` is
+set.
 
-Bare repos have no working tree, so `git cherry-pick` doesn't apply
-directly. `landGitReview` (`worker/src/ops.ts`) uses tree-level plumbing
-instead — `git merge-tree --write-tree` (needs git ≥2.38) for the
-3-way-merge-equivalent of a graft, `git commit-tree` to construct the
-landed commit (preserving the original author, committer set to
-`CodeHub <noreply@codehub>`), and `git update-ref` (with an old-value
-compare-and-swap) to move `refs/heads/master`.
-
-## No seed commit
-
-Unlike `provisionRepo`'s hg equivalent (which seeds a public root commit
-specifically because `ch submit`'s automatic `hg metaedit` can turn a
-parentless draft commit into a disconnected root that hg's push then
-refuses), `provisionGitRepo` doesn't need one — nothing auto-rewrites a
-user's commits server-side here, and `git push` has no "unrelated
-histories" push-time rejection. See `docs/plans/zesty-zooming-cupcake.md`'s
-"Key design decisions" #4 for the full reasoning.
+`cleanup-reviews.sh` is a one-off for removing leftovers from the old code
+review feature (`refs/reviews/*` refs and the commits only they kept alive).
+Dry run by default: `./cleanup-reviews.sh <prod|test> [--apply]`.
 
 ## Browsing
 
@@ -85,9 +64,7 @@ git-browse-client.ts`, and `web/bff/.env.example` for `GIT_BROWSE_BASE`/
 `GIT_INTERNAL_TOKEN`. Full design in
 `docs/plans/zesty-zooming-cupcake.md`.
 
-Deliberately out of scope: git branches/tags as a `bookmarks` equivalent —
-these repos structurally have only one ref (`master`) today, so there's
-nothing meaningful to list yet.
+Not yet supported: browsing branches other than `master`, or tags.
 
 ## Auth
 
@@ -99,12 +76,9 @@ same BFF route hg uses — it classifies git's smart-HTTP read/write by path
 (`git-receive-pack` = write) instead of hg's `cmd=unbundle`, but calls the
 exact same `canAccessRepo`.
 
-Two service accounts, not one — least-privilege: `codehub-git-worker`
-(claims/completes/fails provision/delete/land jobs, seeded via
-`web/bff/scripts/seed-git-worker.mjs`) and `codehub-git-hook` (only calls
-`report_git_review_push`, seeded via `web/bff/scripts/seed-git-hook.mjs`).
-The hook container is directly internet-facing (it's what `git push` hits),
-so a leaked hook token shouldn't be able to touch the job queues.
+The worker authenticates as the `codehub-git-worker` service account
+(claims/completes/fails provision/delete jobs, seeded via
+`web/bff/scripts/seed-git-worker.mjs`).
 
 ## Prod port
 
@@ -155,8 +129,7 @@ directory, not shared — see `deploy.sh`'s own comments) and runs
 `docker compose build && up -d` for just the named stack.
 
 One-time VM setup (do before the first deploy): `/data/git-repos-prod` and
-`/data/git-repos-test` created, `.env.prod`/`.env.test` and
-`vm/hook-config.prod.env`/`hook-config.test.env` populated from the
+`/data/git-repos-test` created, `.env.prod`/`.env.test` populated from the
 `.example` files in `vm/` (secrets, not committed — see root `.gitignore`),
 `git.greensnippet.com` DNS pointed at the VM and its TLS cert issued (see
 "Prod port" above).

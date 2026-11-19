@@ -1,8 +1,8 @@
 # CodeHub
 
-An AI-first, Mercurial-based code review platform: browse repos, submit
-commit stacks for review, and land them onto `master` through a review-gated
-workflow (see `services/hg/README.md` for the full design).
+An AI-first code hosting platform: create Git or Mercurial repos, push to
+them with plain `git`/`hg`, and browse their files, commits and diffs on the
+web.
 
 ## Components
 
@@ -10,9 +10,9 @@ workflow (see `services/hg/README.md` for the full design).
 | -------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | **frontend**   | React + Vite single-page app                                                                            | `web/frontend/`                           |
 | **bff**        | Node/Express GraphQL API (GraphQL Yoga + Pothos), Prisma ORM                                            | `web/bff/`                                |
-| **db**         | Postgres — repos, users, reviews, PATs, the job queue (`pg-boss`)                                       | Railway-hosted, no local instance         |
-| **hg hosting** | Mercurial repos served over HTTP (hgweb), plus a worker that provisions/deletes repos and lands reviews | `services/hg/`, runs on a DigitalOcean VM |
-| **cli (`ch`)** | Deno CLI for the review workflow (submit/land/sync/status)                                              | `cli/` — see `cli/README.md`              |
+| **db**          | Postgres — repos, users, PATs, the job queue (`pg-boss`)                                        | Railway-hosted, no local instance          |
+| **hg hosting**  | Mercurial repos served over HTTP (hgweb), plus a worker that provisions/deletes repos           | `services/hg/`, runs on a DigitalOcean VM  |
+| **git hosting** | Git repos served over smart HTTP, a browse service, plus a worker that provisions/deletes repos | `services/git/`, runs on a DigitalOcean VM |
 
 `frontend` and `bff` live in one pnpm workspace (`web/`) and deploy as a
 single Railway service — the BFF serves the frontend's built static assets
@@ -100,12 +100,12 @@ in prod, so there's one deployable unit per environment, not two.
 
 - All actual `hg` repo storage lives on a DigitalOcean VM, **not** on
   Railway and **not** on any developer's laptop — see `services/hg/README.md`
-  for the full architecture (why, and how provisioning/deletion/landing work
+  for the full architecture (why, and how provisioning/deletion work
   through a GraphQL job queue rather than SSH).
 - The VM runs two independent Docker Compose stacks, `prod` and `test`, each
   with an `hgweb-app` (serves repos over HTTP), an `hgweb-proxy` (nginx,
   auth-gated via that stack's BFF), and a `worker` (polls its BFF for
-  provision/delete/land jobs and executes them with real `hg` commands).
+  provision/delete jobs and executes them with real `hg` commands).
 - **Dev** always points at the `test` stack — set `HG_WEB_BASE` (in
   `web/bff/.env`) and `VITE_HG_HOST` (in `web/frontend/.env.local`) to the
   test stack's `hgweb-proxy` address (currently the VM's IP on port `8001`;
@@ -114,18 +114,15 @@ in prod, so there's one deployable unit per environment, not two.
   separately for the test stack) — deploy and verify `test` first, then
   `prod`.
 
-### CLI (`ch`)
+### Git hosting
 
-- Not deployed anywhere (yet) — it's a local tool developers/reviewers run against
-  whichever server they've logged into (`ch login <server-url>`), same
-  binary for talking to `test` or `production`.
-- See `cli/README.md` for building, installing onto your `PATH`, and
-  available commands.
+- Same shape as Mercurial hosting, on the same VM — see
+  `services/git/README.md`.
 
 ## Quick start (new laptop)
 
 Prerequisites: Node (see `web/package.json`'s `packageManager` for the pnpm
-version — currently pnpm 11.x via corepack), [Deno](https://deno.com),
+version — currently pnpm 11.x via corepack),
 [Mercurial](https://www.mercurial-scm.org/), and Railway project access.
 
 1. `cd web && pnpm install` — installs the `frontend`+`bff` workspace
@@ -138,9 +135,8 @@ version — currently pnpm 11.x via corepack), [Deno](https://deno.com),
    watcher together (waits for the BFF to be listening before starting
    Vite, so you won't see a burst of proxy `ECONNREFUSED` errors at
    startup).
-5. Build and install the `ch` CLI — see `cli/README.md`.
-6. `ch login http://localhost:4000` (create a PAT first at
-   `http://localhost:4000/settings/tokens`).
+5. To push to a repo, create a PAT at `http://localhost:4000/settings/tokens`
+   and use it as the password when `git`/`hg` prompts.
 
 ## Operational gotchas (learned the hard way)
 
@@ -195,13 +191,12 @@ or Repository-related GraphQL resolvers.
   matches the destination URL's own embedded username, if the URL has
   one.** A repo cloned via `hg clone http://x:<token>@host/...` persists
   `x` into `.hg/hgrc`'s `paths.default` (Mercurial strips the password on
-  save but keeps the username) — if `ch`'s own push-auth config then
-  assumes a different, hardcoded username, Mercurial silently discards the
-  whole `[auth]` section rather than erroring, surfacing as `http
-  authorization required` with no credentials even attempted. `ch` (and the
-  Clone dropdown) now keep a fixed placeholder username in sync between
-  both sides instead of assuming one — see `code_review_design.md`'s "A
-  clone/auth subtlety."
+  save but keeps the username) — if an `[auth]` section in your hgrc then
+  names a different username, Mercurial silently discards the whole
+  section rather than erroring, surfacing as `http authorization required`
+  with no credentials even attempted. The Clone dropdown's URLs use a fixed
+  placeholder username (`codehub@`), so an `[auth]` section for a CodeHub
+  host should use `username = codehub` too.
 
 - **Every new GraphQL field that returns a `Repository` (or anything nested
   under one) needs its own access check — nothing enforces this
@@ -216,7 +211,6 @@ or Repository-related GraphQL resolvers.
 
 ## Further reading
 
-- `services/hg/README.md` — Mercurial hosting architecture, the review
-  protocol (`Review-Id` trailers, `reviews/<node>` bookmarks, why `master`
-  can only move via landing), and the VM deploy process.
-- `cli/README.md` — building, installing, and using `ch`.
+- `services/hg/README.md` — Mercurial hosting architecture, push rules
+  (`master` can't be deleted or moved backwards), and the VM deploy process.
+- `services/git/README.md` — the same for Git hosting.
