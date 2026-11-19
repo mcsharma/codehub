@@ -42,11 +42,7 @@ const CloneButton = ({ ownerUsername, repoName, vcsKind }: CloneButtonProps) => 
   // is checked), so any value works identically. Embedding one here just
   // saves a round trip: both hg and git only prompt interactively for
   // whatever credential piece is missing, so a URL with a username but no
-  // password goes straight to "password:" instead of asking for both. Must
-  // match cli/src/hg.ts's hgNetwork() fallback so `ch submit` and a clone
-  // from this URL resolve to the same Mercurial [auth] section (git has no
-  // equivalent client-side config to keep in sync with, since there's no
-  // custom CLI for git repos — see services/git/README.md).
+  // password goes straight to "password:" instead of asking for both.
   const cloneCommand =
     vcsKind === 'GIT'
       ? `git clone ${GIT_PROTOCOL}://codehub@${GIT_HOST}/${ownerUsername}/${repoName}`

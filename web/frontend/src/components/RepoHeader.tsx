@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router'
-import { Code, History, Disc, GitPullRequest, Settings } from 'lucide-react'
+import { Code, History, Disc, Settings } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs'
 import { Button } from './ui/button'
 import StatusBadge from './StatusBadge'
@@ -32,9 +32,7 @@ const RepoHeader = ({
       ? 'code'
       : location.pathname.endsWith('/settings')
         ? 'settings'
-        : location.pathname.includes('/reviews') || location.pathname.includes('/d/')
-          ? 'reviews'
-          : 'commits'
+        : 'commits'
 
   const repoBase = `/${ownerUsername}/${repoName}`
 
@@ -85,15 +83,6 @@ const RepoHeader = ({
             >
               <History className="size-4" />
               Commits
-            </TabsTrigger>
-            <TabsTrigger
-              value="reviews"
-              render={<Link to={`${repoBase}/reviews`} />}
-              nativeButton={false}
-              className="flex-none gap-1.5 rounded-none px-0.5 py-1.5"
-            >
-              <GitPullRequest className="size-4" />
-              Reviews
             </TabsTrigger>
             <TabsTrigger
               value="issues"

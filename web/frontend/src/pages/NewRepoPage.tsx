@@ -31,12 +31,12 @@ const VCS_OPTIONS = [
   {
     value: 'GIT',
     label: 'Git',
-    helper: 'Use plain git or Sapling — no CodeHub-specific CLI needed.',
+    helper: 'Use plain git or Sapling.',
   },
   {
     value: 'HG',
     label: 'Mercurial',
-    helper: 'Review-gated commits via the ch CLI.',
+    helper: 'Use plain Mercurial (hg).',
   },
 ] as const
 
@@ -242,7 +242,7 @@ const NewRepoPage = () => {
           <p className="mt-1 text-sm text-muted-foreground">
             {kind === 'GIT'
               ? "You can initialize this repository with a README or .gitignore file later using git or Sapling once it's created."
-              : "You can initialize this repository with a README or an .hgignore file later using our CLI once it's created."}
+              : "You can initialize this repository with a README or an .hgignore file later using hg once it's created."}
           </p>
         </div>
       </div>
