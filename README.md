@@ -152,10 +152,17 @@ or Repository-related GraphQL resolvers.
   sending requests to the old, now-dead IP — every request 502/500s even
   though `docker ps` shows everything healthy. Symptom looked like "repo
   metadata loads but all repo content is empty." Fix in the moment:
-  `docker restart <stack>-hgweb-proxy-1`. Structural fix: `deploy.sh` now
-  rsyncs to a stack-specific directory (`/opt/codehub-hg-<stack>/`), which
-  changes the bind-mount source path and makes Compose recreate *all three*
-  containers together on every deploy, not just the ones it thinks changed.
+  `docker restart <stack>-hgweb-proxy-1`. Structural fix: both `deploy.sh`
+  scripts (hg and git) restart the proxy after every `up`. (The per-stack
+  rsync directory alone doesn't prevent it: on 2026-11-19 a git deploy
+  recreated the app containers but not `git-proxy`, and it 502'd until
+  restarted.)
+
+- **`docker compose up --build` builds every image in parallel, and the VM
+  can't take it.** It has 1 GB of RAM and no swap; three parallel builds
+  exhausted memory and pushed the load average to ~78, slowing the prod
+  stacks on the same box. Both `deploy.sh` scripts now build one service at
+  a time, then run `up -d --no-build`.
 
 - **`deploy.sh` takes an explicit `<prod|test>` argument and never deploys
   both at once, on purpose** — not just for container-level isolation, but

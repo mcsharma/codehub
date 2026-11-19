@@ -60,10 +60,22 @@ echo "-- syncing services/hg/ to $REMOTE_DIR --"
 run rsync -az --delete \
   --exclude 'vm/.env.*' \
   --exclude '.git' \
+  --exclude 'node_modules' \
   "$DIR/" "$HOST:$REMOTE_DIR/"
 
-echo "-- $STACK: docker compose up -d --build --"
-run ssh "$HOST" "cd $REMOTE_DIR/vm && docker compose -p codehub-$STACK -f docker-compose.$STACK.yml --env-file .env.$STACK up -d --build"
+# Build images one service at a time, then bring the stack up without
+# rebuilding. A plain `up -d --build` builds every image in parallel, and on
+# this 1 GB, swapless VM that exhausts memory and thrashes every stack on
+# the box, prod included (load average ~78 the one time it happened).
+# Services with no build section (nginx) are skipped by `build`.
+#
+# hgweb-proxy is always restarted afterwards: nginx resolves upstream hostnames
+# once at startup, so if `up` recreates the app containers (new IPs) but
+# leaves the proxy running, every request 502s (see the root README's
+# "Operational gotchas").
+COMPOSE="docker compose -p codehub-$STACK -f docker-compose.$STACK.yml --env-file .env.$STACK"
+echo "-- $STACK: building images sequentially, then docker compose up -d --"
+run ssh "$HOST" "cd $REMOTE_DIR/vm && for svc in \$($COMPOSE config --services); do echo \"   building \$svc\" && $COMPOSE build \$svc || exit 1; done && $COMPOSE up -d --no-build && $COMPOSE restart hgweb-proxy"
 
 if ! $DRY_RUN; then
   echo "-- verifying $STACK is up --"
