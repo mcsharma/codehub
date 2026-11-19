@@ -3,7 +3,7 @@
 // docs/plans/zesty-zooming-cupcake.md. Reuses hgweb-client.ts's
 // HgChangeset/HgDirectoryListing/HgLogEntry types since they're already
 // VCS-neutral shapes (nothing hg-specific about the field names), so
-// repository.ts/review.ts's resolvers can branch on `vcsKind` without
+// repository.ts's resolvers can branch on `vcsKind` without
 // needing separate shape-handling code.
 import type { HgChangeset, HgDirectoryListing, HgLogEntry } from './hgweb-client.js'
 

@@ -5,10 +5,8 @@ import './user.js'
 import './organization.js'
 import './repository.js'
 import './personal_access_token.js'
-import './review.js'
 import './hg-worker.js'
 import './git-worker.js'
-import './git-review.js'
 
 
 // --- Global queries/mutations ---

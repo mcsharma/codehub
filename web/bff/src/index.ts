@@ -129,12 +129,9 @@ app.get('/internal/auth-check', async (req, res) => {
   const action = cmd === 'unbundle' || isGitPush ? 'write' : 'read'
   const allowed = await canAccessRepo(user, ownerName, repoName, action)
   if (allowed && user) {
-    // Lets git's post-receive hook attribute a review to the actual pushing
-    // human rather than the service account that authenticates the git-app
-    // container's own hgweb-style calls — see services/git/hooks/post-receive
-    // and pothos/schema/git-review.ts's report_git_review_push. nginx's
-    // git-proxy captures this via auth_request_set and forwards it as
-    // REMOTE_USER through git-http-backend to the hook's environment.
+    // nginx's git-proxy captures this via auth_request_set and forwards it
+    // as REMOTE_USER to git-http-backend, which only enables receive-pack
+    // (push) when REMOTE_USER is set — see services/git/vm/nginx-*.conf.
     res.set('X-CodeHub-User', user.username)
   }
   res.sendStatus(allowed ? 200 : 401)
@@ -152,10 +149,9 @@ const yoga = createYoga<ExpressServerContext>({
   schema: builder.toSchema(),
   graphqlEndpoint: '/graphql',
   context: async (ctx) => {
-    // The `ch` CLI authenticates as a PAT bearer token, same credential
-    // used for hg wire-protocol pushes over Basic auth (see
-    // /internal/auth-check above) — the web UI keeps using the session
-    // cookie, PATs were never accepted on /graphql before this.
+    // The hg/git VM workers authenticate as a PAT bearer token, same
+    // credential used for wire-protocol pushes over Basic auth (see
+    // /internal/auth-check above) — the web UI uses the session cookie.
     const authHeader = ctx.req.header('authorization')
     if (authHeader?.startsWith('Bearer ')) {
       const user = await resolvePersonalAccessToken(authHeader.slice('Bearer '.length))
@@ -198,7 +194,7 @@ app.get('*any', (req, res) => {
 })
 
 // Job queue: must be started (and the hg job queues created) before
-// anything can enqueue a provision-repo/delete-repo/land-review job or the
+// anything can enqueue a provision-repo/delete-repo job or the
 // VM worker can claim one — awaited before the server starts accepting
 // requests rather than fired-and-forgotten in the background. Nothing in
 // this process consumes these queues anymore; the VM worker does, via

@@ -35,9 +35,7 @@ import type { prisma } from '../../prisma/db.js'
 
 // --- Shared helpers for the hgweb-backed fields below ---
 
-// Exported for review.ts, which needs the same owner-name resolution and
-// read-access masking for hgweb-backed Review/ReviewVersion fields.
-export async function resolveOwnerName(
+async function resolveOwnerName(
   repository: { ownerUserId: bigint | null; ownerOrganizationId: bigint | null },
   db: typeof prisma,
 ): Promise<string> {
@@ -64,7 +62,7 @@ export async function resolveOwnerName(
 // does — same function, same shape, just called from the GraphQL side this
 // time. 404-shaped error (not 403) so unauthorized callers can't tell a
 // private repo apart from one that doesn't exist.
-export async function requireRepoReadAccess(user: ModelUser | null, ownerName: string, repoName: string): Promise<void> {
+async function requireRepoReadAccess(user: ModelUser | null, ownerName: string, repoName: string): Promise<void> {
   const allowed = await canAccessRepo(user, ownerName, repoName, 'read')
   if (!allowed) {
     throw new GraphQLError('Repository not found', { extensions: { code: 'NOT_FOUND' } })
@@ -124,10 +122,7 @@ const CommitFileObject = builder.objectRef<CommitFileShape>('CommitFile').implem
   }),
 })
 
-// Exported for review.ts's ReviewVersion.commit field — a review version
-// points at a real hg node, so it reuses this exact shape/fetch rather than
-// duplicating a second "commit-ish" type.
-export interface CommitShape {
+interface CommitShape {
   node: string
   short_node: string
   author: string
@@ -147,7 +142,7 @@ export interface CommitShape {
   _vcsKind: VcsKind
 }
 
-export function toCommitShape(owner: string, repoName: string, c: HgChangeset, vcsKind: VcsKind): CommitShape {
+function toCommitShape(owner: string, repoName: string, c: HgChangeset, vcsKind: VcsKind): CommitShape {
   return {
     node: c.node,
     short_node: c.node.slice(0, 12),
@@ -165,7 +160,7 @@ export function toCommitShape(owner: string, repoName: string, c: HgChangeset, v
   }
 }
 
-export const CommitObject = builder.objectRef<CommitShape>('Commit').implement({
+const CommitObject = builder.objectRef<CommitShape>('Commit').implement({
   fields: (t) => ({
     node: t.exposeString('node'),
     short_node: t.exposeString('short_node'),
@@ -317,11 +312,7 @@ const BINARY_SNIFF_BYTES = 8_000
 
 // --- Repository object type ---
 
-// Exported so review.ts can add a `review(number)` field onto Repository
-// via builder.objectField without repository.ts needing to import anything
-// from review.ts in return (that would be a real circular import — this
-// keeps the dependency one-directional).
-export const RepositoryObject = builder.prismaObject('Repository', {
+builder.prismaObject('Repository', {
   name: 'Repository',
   fields: (t) => ({
     id: exposeID(t),
