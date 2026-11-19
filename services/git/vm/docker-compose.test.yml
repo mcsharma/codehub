@@ -7,7 +7,6 @@ services:
     volumes:
       - ../etc/gitconfig:/etc/gitconfig:ro
       - ../hooks:/opt/gitservice/hooks:ro
-      - ./hook-config.test.env:/opt/gitservice/hook-config.env:ro
       - /data/git-repos-test:/data/repos
     restart: unless-stopped
 

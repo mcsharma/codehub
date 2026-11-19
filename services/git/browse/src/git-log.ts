@@ -82,10 +82,8 @@ function parseCommits(stdout: string): RawCommit[] {
         date: [Number(atStr), 0] as [number, number],
         parents: parentsStr ? parentsStr.split(' ').filter(Boolean) : [],
         desc: descParts.join(FIELD_SEP),
-        // These repos structurally have only one ref (pre-receive rejects
-        // every push except refs/reviews/<sha>, see services/git/hooks/
-        // pre-receive) and no tag/bookmark concept — see the plan's
-        // Non-goals.
+        // Only refs/heads/master is browsed today (other branches and tags
+        // aren't surfaced in the UI yet), so these are fixed.
         branch: 'master',
         bookmarks: [],
         tags: [],

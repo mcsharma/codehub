@@ -1,5 +1,5 @@
 # Deployed on the DO VM as: docker compose -p codehub-git-prod -f docker-compose.prod.yml --env-file .env.prod up -d
-# See ../README.md for the full picture (prod vs test, deploy.sh, worker/hook auth).
+# See ../README.md for the full picture (prod vs test, deploy.sh, worker auth).
 services:
   git-app:
     build:
@@ -8,7 +8,6 @@ services:
     volumes:
       - ../etc/gitconfig:/etc/gitconfig:ro
       - ../hooks:/opt/gitservice/hooks:ro
-      - ./hook-config.prod.env:/opt/gitservice/hook-config.env:ro
       - /data/git-repos-prod:/data/repos
     restart: unless-stopped
 

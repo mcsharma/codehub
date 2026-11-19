@@ -1,10 +1,10 @@
 import { graphqlRequest } from './graphql-client.js'
-import { provisionRepo, deleteRepo, landReview } from './ops.js'
+import { provisionRepo, deleteRepo } from './ops.js'
 
 const REPOS_DIR = process.env.HG_WORKER_REPOS_DIR
 if (!REPOS_DIR) throw new Error('HG_WORKER_REPOS_DIR is not set')
 
-const QUEUES = ['provision-repo', 'delete-repo', 'land-review']
+const QUEUES = ['provision-repo', 'delete-repo']
 const POLL_INTERVAL_MS = 1000
 
 interface HgJob {
@@ -12,18 +12,17 @@ interface HgJob {
   queue: string
   owner: string
   repo: string
-  node: string | null
 }
 
 const CLAIM_MUTATION = `
   mutation ClaimHgJob($queues: [String!]!) {
-    claim_hg_job(queues: $queues) { id queue owner repo node }
+    claim_hg_job(queues: $queues) { id queue owner repo }
   }
 `
 
 const COMPLETE_MUTATION = `
-  mutation CompleteHgJob($job_id: ID!, $queue: String!, $landed_node: String) {
-    complete_hg_job(job_id: $job_id, queue: $queue, landed_node: $landed_node)
+  mutation CompleteHgJob($job_id: ID!, $queue: String!) {
+    complete_hg_job(job_id: $job_id, queue: $queue)
   }
 `
 
@@ -33,19 +32,12 @@ const FAIL_MUTATION = `
   }
 `
 
-// Returns the landed node for a land-review job (echoed back via
-// complete_hg_job's landed_node), or undefined for provision/delete.
-async function runJob(job: HgJob): Promise<string | undefined> {
+async function runJob(job: HgJob): Promise<void> {
   switch (job.queue) {
     case 'provision-repo':
-      await provisionRepo(REPOS_DIR as string, job.owner, job.repo)
-      return undefined
+      return provisionRepo(REPOS_DIR as string, job.owner, job.repo)
     case 'delete-repo':
-      await deleteRepo(REPOS_DIR as string, job.owner, job.repo)
-      return undefined
-    case 'land-review':
-      if (!job.node) throw new Error('land-review job is missing a node')
-      return landReview(REPOS_DIR as string, job.owner, job.repo, job.node)
+      return deleteRepo(REPOS_DIR as string, job.owner, job.repo)
     default:
       throw new Error(`unknown queue: ${job.queue}`)
   }
@@ -59,8 +51,8 @@ async function tick(): Promise<void> {
 
   console.log(`claimed ${job.queue} job ${job.id} (${job.owner}/${job.repo})`)
   try {
-    const landedNode = await runJob(job)
-    await graphqlRequest(COMPLETE_MUTATION, { job_id: job.id, queue: job.queue, landed_node: landedNode ?? null })
+    await runJob(job)
+    await graphqlRequest(COMPLETE_MUTATION, { job_id: job.id, queue: job.queue })
     console.log(`completed ${job.queue} job ${job.id}`)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)

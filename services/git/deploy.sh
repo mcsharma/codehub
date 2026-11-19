@@ -61,7 +61,6 @@ echo "== git stack deploy — $STACK @ $HOST $($DRY_RUN && echo '(dry run)') =="
 echo "-- syncing services/git/ to $REMOTE_DIR --"
 run rsync -az --delete \
   --exclude 'vm/.env.*' \
-  --exclude 'vm/hook-config.*.env' \
   --exclude '.git' \
   "$DIR/" "$HOST:$REMOTE_DIR/"
 

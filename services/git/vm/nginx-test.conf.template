@@ -32,10 +32,9 @@ server {
     location ~ ^/[^/]+/[^/]+/(HEAD|info/refs|objects/.*|git-upload-pack|git-receive-pack)$ {
         auth_request /internal/auth-check;
         error_page 401 = @auth_denied;
-        # Lets post-receive attribute a review to the actual pushing human
-        # instead of the git-app container's own service account — see
-        # services/git/hooks/post-receive and web/bff/src/index.ts's
-        # X-CodeHub-User response header.
+        # git-http-backend only enables receive-pack (push) when REMOTE_USER
+        # is set, so the authenticated username from web/bff/src/index.ts's
+        # X-CodeHub-User response header is forwarded as REMOTE_USER below.
         auth_request_set $codehub_user $upstream_http_x_codehub_user;
 
         include fastcgi_params;
