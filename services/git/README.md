@@ -117,18 +117,30 @@ the way it would for a browsed website — and since hg is expected to be
 removed at some point after git support lands, this also avoids building
 shared-infra machinery that would just get unwound shortly after.
 
-TLS for `git.greensnippet.com` needs a **DNS-01** Certbot challenge (or a
-one-off port-80 listener during issuance/renewal) — the HTTP-01 default
-validates over port 80, which this server doesn't listen on. Not automated
-here; a manual one-time setup step, same as pointing DNS at the VM in the
-first place.
+TLS for `git.greensnippet.com` is a Let's Encrypt cert, **auto-renewed** by the
+VM's `certbot.timer` using the `standalone` authenticator (HTTP-01 on port
+80). Port 80 on this VM is owned by `codehub-prod-hgweb-proxy-1` (hg's nginx),
+so the renewal config carries hooks that free and restore it:
 
-**Renewal is manual, not automatic.** Issued via
-`certbot certonly --manual --preferred-challenges dns -d git.greensnippet.com`
-(no `--manual-auth-hook`, since that'd need a DNS-provider-specific script) —
-Certbot explicitly warns this cert won't auto-renew. Current cert expires
-**2026-11-02**; re-run the same command before then (prints a new
-`_acme-challenge` TXT record to add, same as the first time).
+- `pre_hook`: `docker stop codehub-prod-hgweb-proxy-1`
+- `post_hook`: `docker start codehub-prod-hgweb-proxy-1 && docker restart
+  codehub-git-prod-git-proxy-1` (restart is needed so nginx loads the new cert)
+
+hg's cert (`hg.greensnippet.com`) uses the identical setup — this is also why
+`certbot renew` previously failed for hg: it was configured with the `nginx`
+authenticator, which drives a host nginx that no longer exists now that nginx
+runs in Docker. Each renewal causes a few seconds of hg/git unavailability.
+
+Both certs were reissued this way on 2026-11-18 (expire 2027-02-16; certbot
+renews ~30 days before expiry). To check or reissue by hand:
+
+```bash
+ssh root@143.110.207.184 certbot certificates
+ssh root@143.110.207.184 certbot renew --dry-run   # note: certbot sleeps up to ~5 min first
+```
+
+If renewal ever breaks again, the symptom is TLS errors on `hg.`/`git.`
+while `www.` (Railway) stays fine.
 
 ## Redeploying a change
 
